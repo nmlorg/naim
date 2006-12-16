@@ -1,36 +1,35 @@
+== This Wiki ==
+This wiki is currently incomplete.  http://naimdoc.net is the original naim wiki and will
+be ported/copied/moves here in time.
+
 == Notices ==
 
-'''Please read [Latest Issues] before asking for help with naim'''
+*Please read [http://code.google.com/p/naim/w/LatestIssues Latest Issues] before asking
+for help with naim*
 
 The current release of naim is 0.11.8.2.1.
 (http://naim.googlecode.com/files/naim-0.11.8.2.1.tar.bz2)
 
 The latest dev versions of naim now have built-in support for Lua (see http://www.lua.org
-for info on what Lua is).  For more info on how Lua applies to naim, check out the [Lua]
-page, or visit #naim on EFnet.
+for info on what Lua is).  For more info on how Lua applies to naim visit #naim on EFnet.
 
-If you're having trouble finding a link to download NAIM here, check http://naim.n.ml.org.
 
-This main page (and a few others) are now protected to prevent them from being spammed. 
-If you want to make a change to a protected page, join #naim on EFnet and let n, Eminence
-or m4x know.
+== Welcome to the naim wiki ==
 
-== Welcome to naimdoc.net! ==
-
-The purpose of this site will be to maintain a comprehensive set of documents for naim.
+The purpose of this wiki will be to maintain a comprehensive set of documents for naim.
 
 Feel free to add whatever pages you see necessary, or edit any of the current ones.
 
-New users may find the [FAQ] or the [Quick Start] guide to be helpful, while advanced
-users may find [Key Binding] and [Settings and Preferences] to be more interesting.
-There is also a list of [Commands]. We also maintain a collection of interesting
-naim-related [links].
+New users may find the FAQ or the Quick Start guide to be helpful, while advanced
+users may find Key Binding and Settings and Preferences to be more interesting.
+There is also a list of Commands. We also maintain a collection of interesting
+naim-related links.
 
-[Lost screennames] - Screennames suspended by AOL for unknown reason that used naim. To
+Lost screennames - Screennames suspended by AOL for unknown reason that used naim. To
 be sent to an AOL Rep for possible action / investigation.
 
 === Fun Stuff ===
-[IRC quotes]
+[http://naimdoc.net/index.php/IRC_quotes IRC quotes]
 
 http://www.frappr.com/naim
 
