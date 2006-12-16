@@ -1,11 +1,12 @@
 == Notices ==
 
-'''Please read [[Latest Issues]] before asking for help with naim'''
+'''Please read [Latest Issues] before asking for help with naim'''
 
-The current release of naim is [[Releases|0.11.8.2.1]]. (http://naim.n.ml.org/download)
+The current release of naim is 0.11.8.2.1.
+(http://naim.googlecode.com/files/naim-0.11.8.2.1.tar.bz2)
 
 The latest dev versions of naim now have built-in support for Lua (see http://www.lua.org
-for info on what Lua is).  For more info on how Lua applies to naim, check out the [[Lua]]
+for info on what Lua is).  For more info on how Lua applies to naim, check out the [Lua]
 page, or visit #naim on EFnet.
 
 If you're having trouble finding a link to download NAIM here, check http://naim.n.ml.org.
@@ -20,24 +21,24 @@ The purpose of this site will be to maintain a comprehensive set of documents fo
 
 Feel free to add whatever pages you see necessary, or edit any of the current ones.
 
-New users may find the [[FAQ]] or the [[Quick Start]] guide to be helpful, while advanced
-users may find [[Key Binding]] and [[Settings and Preferences]] to be more interesting.
-There is also a list of [[Commands]]. We also maintain a collection of interesting
-naim-related [[links]].
+New users may find the [FAQ] or the [Quick Start] guide to be helpful, while advanced
+users may find [Key Binding] and [Settings and Preferences] to be more interesting.
+There is also a list of [Commands]. We also maintain a collection of interesting
+naim-related [links].
 
-[[Lost screennames]] - Screennames suspended by AOL for unknown reason that used naim. To
+[Lost screennames] - Screennames suspended by AOL for unknown reason that used naim. To
 be sent to an AOL Rep for possible action / investigation.
 
 === Fun Stuff ===
-[[IRC quotes]]
+[IRC quotes]
 
 http://www.frappr.com/naim
 
 == What is naim? ==
 
 naim is a console client for AOL Instant Messenger (AIM), AOL I Seek You (ICQ), Internet
-Relay Chat (IRC), and The lily CMC. The main developer is [[Daniel Reed]]. (Unofficial but
-very useful patches by [[Joshua Wise]])
+Relay Chat (IRC), and The lily CMC. The main developer is Daniel Reed. (Unofficial but
+very useful patches by Joshua Wise)
 
 *naim includes unique features like zero-configuration peer to peer
 &quot;encryption&quot;, automatic message queueing, and incoming message modification (to
@@ -57,7 +58,7 @@ session.
 naim is maintained by an OPEN, DIRECTED COMMUNITY, and has been in development since
 October, 1998.
 
-*a total revamp of naim called &quot;[[naimng]]&quot; is currently under development for
+*a total revamp of naim called &quot;naimng&quot; is currently under development for
 the next naim release. It will make liberal use of DBUS, and seperate the naim user
 interface from the core program, allowing the development of multiple interfaces to suit
 users needs(GUI, web, curses), as opposed to just the current ncurses interface.
