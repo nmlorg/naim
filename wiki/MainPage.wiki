@@ -8,7 +8,7 @@ be ported/copied/moves here in time.
 for help with naim*
 
 The current release of naim is 0.11.8.2.1.
-(http://naim.googlecode.com/files/naim-0.11.8.2.1.tar.bz2)
+(http://code.google.com/p/naim/downloads/list)
 
 The latest dev versions of naim now have built-in support for Lua (see http://www.lua.org
 for info on what Lua is).  For more info on how Lua applies to naim visit #naim on EFnet.
