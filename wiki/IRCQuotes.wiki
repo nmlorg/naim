@@ -2,34 +2,34 @@
 Musings from the various people in #naim, usually about kitties, robots, lasers, and the like.
 
 === Lasers ===
-<pre>
+{{{
 [01:53:54]  <hule> naim needs a babelfish plugin
 [01:56:19]  <n_> it needs to be shooting lasers more
-</pre>
+}}}
 
-<pre>
+{{{
 [19:16:19]  <joshua_> oh, sort of like "Lasers" or "Kitties" except more dangerous       
-                                                                          
-</pre>
+                                                               
+}}}
 
-<pre>
+{{{
 [20:06:10] * n_ fires more hate lasers
 [20:06:39] <BroknPipe> calm down and stop drinkin the haterade
-</pre>
+}}}
 
-<pre>
+{{{
 [14:39:10]  <joshua_> n, I wonder what the 'lua' way is to do i18n
 [14:50:58]  <Eminence> it involves two kitties, a robots, and some lasers.
 [14:51:17]  <n> delicious
-</pre>
+}}}
 
-<pre>
+{{{
 [01:04:56]  <Eminence> what was the fix?
 [01:05:22]  <n_> firing adequate hate lasers
-</pre>
+}}}
 
 === Lusers ===
-<pre>
+{{{
  5214 XxxXxxxxxx1: what happens if i say something naughty to you
  5241 XxxXxxxxxx1: like a cuss word
  5249 XxxXxxxxxx1: or somethin
@@ -49,67 +49,63 @@ Musings from the various people in #naim, usually about kitties, robots, lasers,
 ...
  5801 *** XxxXxxxxxx1 [User] is now online =)
  5830 XxxXxxxxxx1: what about my other screen names
-</pre>
+}}}
 
 === Kitties ===
-<pre>
+{{{
 [00:28:25] <hule> yay titties
 [00:28:27] <hule> err kitties
-</pre>
+}}}
 
-<pre>
+{{{
 [14:49:28]  <fps> kitty powered?                                                         
-                                                                                         
-                             
 [14:49:36]  <n_> nope                                                                    
-                                                                                         
-                             
 [14:49:56]  <fps> then I fail to see the importance
-</pre>
+}}}
 
-<pre>
+{{{
 [20:33:46] <n_> there were 7 questions about kitties on the LSAT
 [20:33:58] <n_> and the essay question was about proving that kitties are squishy
 [20:34:05] <n_> so I was like, I got this!
-</pre>
+}}}
 
-<pre>
+{{{
 [14:43:24] <LiENUX> do you just substitute kitty for random words?
 [14:43:41] <n> sometimes
 [14:43:47] <n> but only when it makes kitty
-</pre>
+}}}
 
-<pre>
+{{{
 [00:55:57] <joshua_> whoa whoa whoa
 [00:55:59] <joshua_> my ssh key works
 [00:56:34] <Eminence> so does my cat
-</pre>
+}}}
 
-<pre>
+{{{
 [15:07:15] <Grackle> Hmm, I'm going to go against the grain and use
                      my password as my cat's name.
-</pre>
+}}}
 
-<pre>
+{{{
 [21:18:18] <njoshua_> I then looked at w3m's code, went "AUuuuuuuuuuuuuuuuuuuggggh" and
 tripped over the cat.
-</pre>
+}}}
 
 
 === Robots ===
-<pre>
+{{{
 [18:56:22]  <fjord> you guys have got it all wrong - computers were intended to be
                     hacked. hacked by robots. totally sweet huge robots from 
                     space. also sour.
-</pre>
+}}}
 
-<pre>
+{{{
 [23:29:59]  <fjord> he's probably off building super sweet robots
 [23:30:04]  <fjord> and by probably i mean definately
-</pre>
+}}}
 
 === People (or the lack thereof) ===
-<pre>
+{{{
 [04:04:46] <joshua_> I keep a distance between my online identities and my 
                      real life identity.
 [04:05:15] <Eminence> which is probably wise (no pun intended)
@@ -118,54 +114,54 @@ tripped over the cat.
 [04:07:02] <Eminence> hah
 [04:07:42] <n> I've met him, twice!
 [04:08:25] <hule> those were catnip-induced hallucinations
-</pre>
+}}}
 
-<pre>
+{{{
 [00:27:26] <n> I have yet to sign on and not see hule drunk in like 2 years
-</pre>
+}}}
 
-<pre>
+{{{
 [02:02:44] <n_> only some of my personalities are insane
-</pre>
+}}}
 
-<pre>
+{{{
 [03:55:54] <caillon> n just coughed up 3 lungs and a cat
-</pre>
+}}}
 
 === Misc ===
-<pre>
+{{{
 [02:43:37] <n> seriously; people who complain about other people's clients' benign 
                behavior are assholes and shouldn't be tolerated
 [02:44:20] * n goes and gets more Christmas ice cream
-</pre>
+}}}
 
-<pre>
+{{{
 [01:59:24] <n> anyone really turned on by Bugzilla?
 [01:59:49] <hule> the name makes me spontaneously climax
-</pre>
+}}}
 
-<pre>
+{{{
 [02:02:14] <Eminence> but databases are so fun (!)
 [02:03:08] <n> if by fun you mean torturous to the souls of mere mortals, I might agree 
                with you, but I'd have to think about whether torturous was strong enough
-</pre>
+}}}
 
-<pre>
+{{{
 [02:44:09] <hule> that's what naim does for me.  ncurses-induced orgasms, baby!
 [02:44:22] <Eminence> (hule-quoted)
 [02:44:38] <hule> i need to stop typing in public
-</pre>
+}}}
 
-<pre>
+{{{
 [21:47:25] <joshua_> they just go "oh shit, bees!" and longjmp() the fuck out of there
-</pre>
+}}}
 
-<pre>
+{{{
 [23:14:41] <n_> it's too bad Chlamydia has to be a venereal disease, it's 
                 such a pleasant-sounding word
-</pre>
+}}}
 
-<pre>
+{{{
 [14:19:09] <n_> the code you gave me last night or older code?
 [14:19:57] <joshua_> older code including the code I gave you last night
 [14:20:06] <caillon> does it please you to say older code including the code 
@@ -173,16 +169,16 @@ tripped over the cat.
 [14:20:13] <n_> I haven't hit any leaks in older code
 [14:20:21] <caillon> please continue.
 [14:20:28] <joshua_> n_: you can hit him, you know
-</pre>
+}}}
 
-<pre>
+{{{
 [21:12:28] <n_> have you tried that new pizza place on Midnight Road?
 [21:12:32] <n_> what's it selling?
 [21:12:33] <n_> pizza
 [21:12:36] <n_> oh, that's nice
-</pre>
+}}}
 
-<pre>
+{{{
 [21:14:40] <PMT> naim should convert :toot: and similar to <i don't know how to express
 myself without emoticons>
 [21:14:52] <Eminence> haha, indeed
@@ -190,59 +186,59 @@ myself without emoticons>
 [21:15:11] <PMT> that one is all right
 [21:15:14] <PMT> just like baby f--king
 [21:15:17] <PMT> err
-</pre>
+}}}
 
-<pre>
+{{{
 [01:12:49] <n_> I invented IRC
 [01:12:54] <tlp> n is a dinosaur
 [01:12:57] <joshua_> I invented pants.
 [01:12:59] <n_> when I was 7
 [01:13:00] <tlp> hear him roar
-</pre>
+}}}
 
-<pre>
+{{{
 [01:37:11] <hule> n_...go fellate miss piggy
 [01:37:27] <n_> that's disgusting, even for a drunken robot
-</pre>
+}}}
 
-<pre>
+{{{
 [18:53:28] <n_> lies
 [18:53:41] <n_> naim crashed just like you got a Fedora 404 page from google.com
-</pre>
+}}}
 
-<pre>
+{{{
 [18:26:25] <n_> only this morning you refered to me as a cancerous polyp on the anus of
 humanity
 [18:26:35] <n_> in an affectionate way!
-</pre>
+}}}
 
-<pre>
+{{{
 [02:02:15] * n_ sprays hule with cat urine
 [02:02:52] <Eminence> ewwwwwww
 [02:03:35] <hule> n, you know that turns me on
-</pre>
+}}}
 
-<pre>
+{{{
 (spoken) [Eminence (public)] "Missile lock-on?" ...'the fuck is that shit?
-</pre>
+}}}
 
-<pre>
+{{{
 [02:06:07] <caillon> n_ stop making us so horny
 ...
 [02:06:40] * n_ blinks
 [02:06:52] <n_> that was a hule quote coming from caillon
-</pre>
+}}}
 
-<pre>
+{{{
 [02:39:46] <_n> please Lord, let OpenBSD have some kind of backdoor that causes all
 installed machines to 
                 download ISOs of some other operating system (any other operating system),
 mount on loopback,
                 install over OpenBSD, and reboot into it
 [02:40:00] <_n> and please let that trigger soon
-</pre>
+}}}
 
-<pre>
+{{{
 [14:12:26] <joshua_> the tivo is making a lot of noise
 [14:12:30] <joshua_> the hard drive sounds like it's dying
 [14:12:57] <Grackle> Gnrrrrr gbrrr bwon wonk bang.
@@ -255,10 +251,9 @@ mount on loopback,
 something going
                      "kxxxxxxxxxxxxxxxxxxxxxxxPING"
 [14:14:11] <joshua_> Hahahah
-</pre>
+}}}
 
-<pre>
-
+{{{
 [20:46:53] <n_> if you justify their behavior one more time, I will /kill you several times
 [20:47:01] <n_> their behavior is utterly unacceptable
 [20:47:07] <n_> completely, and with no reasonable justification possible
@@ -281,4 +276,4 @@ something going
 [20:49:16] <joshua_> certainly no less than 4
 [20:49:27] *** joshua_ has left group #naim (Killed (n_ (have it your way))).
 [20:49:30] *** joshua_ (joshua@cl-5.chi-01.us.sixxs.net) has joined group #naim.
-</pre>
+}}}
