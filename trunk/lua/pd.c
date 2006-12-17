@@ -173,23 +173,23 @@ static fte_t _nlua_pd_got_data_connecting(struct firetalk_driver_connection_t *c
 	return(FE_UNKNOWN);
 }
 
-static fte_t _nlua_pd_comparenicks(const char *const s1, const char *const s2) {
-//	multival_t val;
-//	int	ret;
-//
-//	ret = _nlua_pdcall(&val, c, "comparenicks", HOOK_T_STRING HOOK_T_STRING, s1, s2);
-//	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
-//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+static fte_t _nlua_pd_comparenicks(struct firetalk_driver_connection_t *c, const char *const s1, const char *const s2) {
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "comparenicks", HOOK_T_STRING HOOK_T_STRING, s1, s2);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
 	return(FE_UNKNOWN);
 }
 
-static fte_t _nlua_pd_isprintable(const int key) {
-//	multival_t val;
-//	int	ret;
-//
-//	ret = _nlua_pdcall(&val, c, "isprintable", HOOK_T_UINT32, key);
-//	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
-//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+static fte_t _nlua_pd_isprintable(struct firetalk_driver_connection_t *c, const int key) {
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "isprintable", HOOK_T_UINT32, key);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
 	return(FE_UNKNOWN);
 }
 
@@ -453,15 +453,14 @@ static char *_nlua_pd_subcode_encode(struct firetalk_driver_connection_t *c, con
 	return(NULL);
 }
 
-static const char *_nlua_pd_room_normalize(const char *const group) {
-//	multival_t val;
-//	int	ret;
-//
-//	ret = _nlua_pdcall(&val, c, "room_normalize", HOOK_T_STRING, group);
-//	if ((ret == 0) && (val.t == HOOK_T_STRING))
-//		return(val.u.string);
-//	return(FE_UNKNOWN);
-	return(group);
+static const char *_nlua_pd_room_normalize(struct firetalk_driver_connection_t *c, const char *const group) {
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "room_normalize", HOOK_T_STRING, group);
+	if ((ret == 0) && (val.t == HOOK_T_STRINGc))
+		return(val.u.string);
+	return(NULL);
 }
 
 static struct firetalk_driver_connection_t *_nlua_pd_create_conn(struct firetalk_driver_cookie_t *cookie) {
