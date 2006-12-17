@@ -12,7 +12,6 @@
 
 #include "naim-int.h"
 #include "snapshot.h"
-#include "help.h"
 
 extern int wsetup_called;
 
@@ -179,9 +178,9 @@ int	main_stub(int argc, char **args) {
 			printf("  -V, --version		Print version information and then exit.\n");
 			printf("\n");
 			printf("See `man naim' for more detailed help.\n");
-			printf("\n");
-			for (i = 0; about[i] != NULL; i++)
-				printf("%s\n", about[i]);
+//			printf("\n");
+//			for (i = 0; about[i] != NULL; i++)
+//				printf("%s\n", about[i]);
 			return(0);
 		  case 'V':
 			if (strcmp(args[0], "naim") == 0)
@@ -220,9 +219,9 @@ int	main_stub(int argc, char **args) {
 			printf("  -V, --version		Print version information and then exit.\n");
 			printf("\n");
 			printf("See `man naim' for more detailed help.\n");
-			printf("\n");
-			for (i = 0; about[i] != NULL; i++)
-				printf("%s\n", about[i]);
+//			printf("\n");
+//			for (i = 0; about[i] != NULL; i++)
+//				printf("%s\n", about[i]);
 		} else {
 			printf("%s: unrecognized option `%s'\n", args[0], args[1]);
 			printf("Try `%s --help' for more information.\n", args[0]);
@@ -355,6 +354,7 @@ int	main_stub(int argc, char **args) {
 				ua_handlecmd("/newconn ICQ IRC");
 			else if (want_lily)
 				ua_handlecmd("/newconn Lily SLCP");
+			ua_handlecmd("/help");
 			echof(curconn, NULL, "You do not have a %s file, so I am using defaults. You can use the <font color=\"#00FF00\">/save</font> command to create a new %s file.",
 				naim_basename(naimrcfilename), naim_basename(naimrcfilename));
 			if (want_aim || want_icq)

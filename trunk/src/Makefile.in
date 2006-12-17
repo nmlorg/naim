@@ -62,15 +62,14 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 @CYGWIN_TRUE@libnaim_core_la_DEPENDENCIES = ../lua/libnlua.la
 am__libnaim_core_la_SOURCES_DIST = alias.c atomizer.c buddy.c cmdar.c \
-	commands.c conio.c echof.c events.c fireio.c hamster.c help.h \
-	help.c helpcmd.c hwprintf.c linux_vsprintf.c main.c naim-int.h \
-	rc.c rodents.c set.c win.c
+	commands.c conio.c echof.c events.c fireio.c hamster.c \
+	hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c rodents.c \
+	set.c win.c
 am__objects_1 = libnaim_core_la-alias.lo libnaim_core_la-atomizer.lo \
 	libnaim_core_la-buddy.lo libnaim_core_la-cmdar.lo \
 	libnaim_core_la-commands.lo libnaim_core_la-conio.lo \
 	libnaim_core_la-echof.lo libnaim_core_la-events.lo \
 	libnaim_core_la-fireio.lo libnaim_core_la-hamster.lo \
-	libnaim_core_la-help.lo libnaim_core_la-helpcmd.lo \
 	libnaim_core_la-hwprintf.lo libnaim_core_la-linux_vsprintf.lo \
 	libnaim_core_la-main.lo libnaim_core_la-rc.lo \
 	libnaim_core_la-rodents.lo libnaim_core_la-set.lo \
@@ -81,15 +80,14 @@ libnaim_core_la_OBJECTS = $(am_libnaim_core_la_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__naim_SOURCES_DIST = alias.c atomizer.c buddy.c cmdar.c commands.c \
-	conio.c echof.c events.c fireio.c hamster.c help.h help.c \
-	helpcmd.c hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c \
-	rodents.c set.c win.c main_stub.c
+	conio.c echof.c events.c fireio.c hamster.c hwprintf.c \
+	linux_vsprintf.c main.c naim-int.h rc.c rodents.c set.c win.c \
+	main_stub.c
 am__objects_2 = naim-alias.$(OBJEXT) naim-atomizer.$(OBJEXT) \
 	naim-buddy.$(OBJEXT) naim-cmdar.$(OBJEXT) \
 	naim-commands.$(OBJEXT) naim-conio.$(OBJEXT) \
 	naim-echof.$(OBJEXT) naim-events.$(OBJEXT) \
 	naim-fireio.$(OBJEXT) naim-hamster.$(OBJEXT) \
-	naim-help.$(OBJEXT) naim-helpcmd.$(OBJEXT) \
 	naim-hwprintf.$(OBJEXT) naim-linux_vsprintf.$(OBJEXT) \
 	naim-main.$(OBJEXT) naim-rc.$(OBJEXT) naim-rodents.$(OBJEXT) \
 	naim-set.$(OBJEXT) naim-win.$(OBJEXT)
@@ -244,8 +242,6 @@ DISTCLEANFILES = \
 
 EXTRA_DIST = \
 	${pkgdoc_DATA} \
-	cmplhlp2.sh \
-	cmplhelp.sh \
 	gencmdarc.sh \
 	gencmdarh.sh \
 	gencmd2.sh \
@@ -264,9 +260,6 @@ NAIM_CORE = \
 	events.c \
 	fireio.c \
 	hamster.c \
-	help.h \
-	help.c \
-	helpcmd.c \
 	hwprintf.c \
 	linux_vsprintf.c \
 	main.c \
@@ -474,12 +467,6 @@ libnaim_core_la-fireio.lo: fireio.c
 libnaim_core_la-hamster.lo: hamster.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-hamster.lo `test -f 'hamster.c' || echo '$(srcdir)/'`hamster.c
 
-libnaim_core_la-help.lo: help.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-help.lo `test -f 'help.c' || echo '$(srcdir)/'`help.c
-
-libnaim_core_la-helpcmd.lo: helpcmd.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-helpcmd.lo `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
-
 libnaim_core_la-hwprintf.lo: hwprintf.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-hwprintf.lo `test -f 'hwprintf.c' || echo '$(srcdir)/'`hwprintf.c
 
@@ -560,18 +547,6 @@ naim-hamster.o: hamster.c
 
 naim-hamster.obj: hamster.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-hamster.obj `if test -f 'hamster.c'; then $(CYGPATH_W) 'hamster.c'; else $(CYGPATH_W) '$(srcdir)/hamster.c'; fi`
-
-naim-help.o: help.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-help.o `test -f 'help.c' || echo '$(srcdir)/'`help.c
-
-naim-help.obj: help.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-help.obj `if test -f 'help.c'; then $(CYGPATH_W) 'help.c'; else $(CYGPATH_W) '$(srcdir)/help.c'; fi`
-
-naim-helpcmd.o: helpcmd.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-helpcmd.o `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
-
-naim-helpcmd.obj: helpcmd.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-helpcmd.obj `if test -f 'helpcmd.c'; then $(CYGPATH_W) 'helpcmd.c'; else $(CYGPATH_W) '$(srcdir)/helpcmd.c'; fi`
 
 naim-hwprintf.o: hwprintf.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-hwprintf.o `test -f 'hwprintf.c' || echo '$(srcdir)/'`hwprintf.c
@@ -855,12 +830,6 @@ cmdar.h: ${srcdir}/commands.c config.h
 commands.txt: ${srcdir}/commands.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmd2.sh > commands.txt
 
-help.h: ${top_srcdir}/doc/naim.hlp
-	AWK="${AWK}" "${srcdir}/cmplhlp2.sh" < ${top_srcdir}/doc/naim.hlp > help.h
-
-help.c: ${top_srcdir}/doc/naim.hlp
-	AWK="${AWK}" "${srcdir}/cmplhelp.sh" < ${top_srcdir}/doc/naim.hlp > help.c
-
 naim-cmdar.${OBJEXT}: cmdar.h
 libnaim_la-cmdar.${LOBJEXT}: cmdar.h
 naim-commands.${OBJEXT}: cmdar.h
@@ -871,8 +840,6 @@ naim-events.${OBJEXT}: cmdar.h
 libnaim_la-events.${LOBJEXT}: cmdar.h
 naim-fireio.${OBJEXT}: cmdar.h
 libnaim_la-fireio.${LOBJEXT}: cmdar.h
-naim-helpcmd.${OBJEXT}: cmdar.h
-libnaim_la-helpcmd.${LOBJEXT}: cmdar.h
 
 install: install-am install-global-symlink
 

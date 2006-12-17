@@ -36,7 +36,6 @@ cmdar_t	cmdar[] = {
 	{ "topic",	ua_topic,	{ NULL },	"View or change current chat topic",	{ { 0, 's', "topic" }, { -1, -1, NULL } },	0,	1,	C_INCHAT },
 	{ "kick",	ua_kick,	{ NULL },	"Temporarily remove someone from a chat",	{ { 1, 'M', "name" }, { 0, 's', "reason" }, { -1, -1, NULL } },	1,	2,	C_INCHAT },
 	{ "invite",	ua_invite,	{ NULL },	"Invite someone to a chat",	{ { 1, 'A', "name" }, { 0, 's', "chat" }, { -1, -1, NULL } },	1,	2,	C_INCHAT },
-	{ "help",	ua_help,	{ "about", NULL },	"Display topical help on using naim",	{ { 0, 's', "topic" }, { -1, -1, NULL } },	0,	1,	C_ANYWHERE },
 	{ "unblock",	ua_unblock,	{ "unignore", NULL },	"Remove someone from the ignore list",	{ { 1, 'I', "name" }, { -1, -1, NULL } },	1,	1,	C_ANYWHERE },
 	{ "block",	ua_block,	{ NULL },	"Server-enforced /ignore",	{ { 1, 'A', "name" }, { 0, 's', "reason" }, { -1, -1, NULL } },	1,	2,	C_ANYWHERE },
 	{ "ignore",	ua_ignore,	{ NULL },	"Ignore all private/public messages",	{ { 0, 'A', "name" }, { 0, 's', "reason" }, { -1, -1, NULL } },	0,	2,	C_ANYWHERE },

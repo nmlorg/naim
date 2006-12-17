@@ -32,8 +32,6 @@ function naim.internal.rometatable(name)
 	})
 end
 
-naim.help = {}
-
 naim.variables = {}
 
 naim.connections = {}
@@ -184,64 +182,99 @@ function naim.call(table, ...)
 	table.func(conn, arg)
 end
 
-naim.commands.help.min = 0
-naim.commands.help.max = 1
-function naim.commands.help.func(conn, arg)
-	if #arg == 0 then
-		arg[1] = "topics"
-	end
-	naim.echo("Help on " .. tostring(arg[1]) .. ":")
+naim.help = {
+	topics = {
+		"In the top-right corner of your screen is a \"window list\" window, which will display one window for each online buddy once you have signed on. The window highlighted at the top is the current window. Use the Tab key to cycle through the listed windows, or /jump buddyname to jump directly to buddyname's window.",
+		"",
+		"The window list window will hide itself automatically to free up space for conversation, but it will come back if someone other than your current buddy messages you. You can press Ctrl-N to go to the next waiting (yellow) buddy when this happens.",
+	},
+	about = {
+		"naim is a console-mode chat client.",
+		"naim supports AIM, IRC, ICQ, and Lily.",
+		"",
+		"Copyright 1998-2006 Daniel Reed <n@ml.org>",
+		"http://naim.n.ml.org/",
+	},
+}
 
-	local function helpcmd(cmd, t)
-		local str
-		local i
+naim.commands.help = {
+	min = 0,
+	max = 1,
+	desc = "Display topical help on using naim",
+	args = { "topic" },
+	func = function(conn, arg)
+		local found
 
-		str = "Usage: /" .. cmd
-		i = 0
-		while (i < t.min) do
-			str = str .. " <" .. t.args[i+1] .. ">"
-			i = i + 1
+		if #arg == 0 then
+			arg[1] = "topics"
 		end
-		while (i < t.max) do
-			str = str .. " [<" .. t.args[i+1] .. ">"
-			i = i + 1
-		end
-		i = t.min
-		while (i < t.max) do
-			str = str .. "]"
-			i = i + 1
-		end
-		naim.echo(str)
-		if t.desc ~= nil then
-			naim.echo(t.desc)
-		end
-	end
+		--naim.echo("Help on " .. tostring(arg[1]) .. ":")
 
-	if arg[1] == "keys" then
-		naim.echo("Current key bindings can be viewed at any time with /bind:")
-		naim.call(naim.commands.bind)
-		naim.echo("Key names beginning with ^ are entered by holding down the Ctrl key while pressing the listed key: ^N is Ctrl+N.")
-		naim.echo("Key names beginning with M- are entered by holding down the Alt key while pressing the key, or by pressing Esc first, then typing the key: M-a is Alt+A.")
-		naim.echo("IC is Ins and DC is Del on the numeric keypad. NPAGE and PPAGE are PgDn and PgUp.")
-		naim.echo("Type /bind <keyname> \"<script>\" to change a key binding.")
-	elseif arg[1] == "settings" or arg[1] == "variables" then
-		naim.echo("Current configuration settings can be viewed at any time with /set:")
-		naim.call(naim.commands.set)
-		naim.echo("Type /set <varname> \"<new value>\" to change a configuration variable.")
-	elseif arg[1] == "commands" then
-		for cmd,t in pairs(naim.commands) do
-			helpcmd(cmd, t)
-			naim.echo("")
+		local function helpcmd(cmd, t)
+			local str
+			local i
+
+			str = "Usage: /" .. cmd
+			i = 0
+			while (i < t.min) do
+				str = str .. " <" .. t.args[i+1] .. ">"
+				i = i + 1
+			end
+			while (i < t.max) do
+				str = str .. " [<" .. t.args[i+1] .. ">"
+				i = i + 1
+			end
+			i = t.min
+			while (i < t.max) do
+				str = str .. "]"
+				i = i + 1
+			end
+			naim.echo(str)
+			if t.desc ~= nil then
+				naim.echo(t.desc)
+			end
 		end
-	end
 
-	if naim.commands[arg[1]] ~= nil then
-		helpcmd(arg[1], naim.commands[arg[1]])
-	end
+		found = true
+		if arg[1] == "keys" then
+			naim.echo("Current key bindings can be viewed at any time with /bind:")
+			naim.call(naim.commands.bind)
+			naim.echo("Key names beginning with ^ are entered by holding down the Ctrl key while pressing the listed key: ^N is Ctrl+N.")
+			naim.echo("Key names beginning with M- are entered by holding down the Alt key while pressing the key, or by pressing Esc first, then typing the key: M-a is Alt+A.")
+			naim.echo("IC is Ins and DC is Del on the numeric keypad. NPAGE and PPAGE are PgDn and PgUp.")
+			naim.echo("Type /bind <keyname> \"<script>\" to change a key binding.")
+		elseif arg[1] == "settings" or arg[1] == "variables" then
+			naim.echo("Current configuration settings can be viewed at any time with /set:")
+			naim.call(naim.commands.set)
+			naim.echo("Type /set <varname> \"<new value>\" to change a configuration variable.")
+		elseif arg[1] == "commands" then
+			for cmd,t in pairs(naim.commands) do
+				helpcmd(cmd, t)
+				naim.echo("")
+			end
+		else
+			found = false
+		end
 
-	if naim.help[arg[1]] ~= nil then
-		naim.echo(naim.help[arg[1]])
-	end
+		if naim.commands[arg[1]] ~= nil then
+			helpcmd(arg[1], naim.commands[arg[1]])
+			found = true
+		end
 
-	naim.echo("Use the scroll keys (PgUp and PgDn or Ctrl-R and Ctrl-Y) to view the entire help.")
-end
+		if type(naim.help[arg[1]]) == "string" then
+			naim.echo(naim.help[arg[1]])
+			found = true
+		elseif type(naim.help[arg[1]]) == "table" then
+			for i,v in ipairs(naim.help[arg[1]]) do
+				naim.echo(v)
+			end
+			found = true
+		end
+
+		if not found then
+			naim.echo("No help available for " .. arg[1] .. ".")
+		--else
+		--	naim.echo("Use the scroll keys (PgUp and PgDn or Ctrl-R and Ctrl-Y) to view the entire help.")
+		end
+	end,
+}

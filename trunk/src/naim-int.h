@@ -245,6 +245,20 @@ typedef struct {
 		where;
 } cmdar_t;
 
+typedef struct {
+	char	*name;
+	unsigned char gotaway:1;
+} awayar_t;
+
+typedef struct {
+	char	*buf;
+	int	len;
+	unsigned char foundfirst:1,
+		foundmatch:1,
+		foundmult:1;
+} namescomplete_t;
+
+
 
 
 

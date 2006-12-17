@@ -13,7 +13,11 @@ if naimpsych == nil then
 end
 naimpsych.conns = {}
 
-function naim.commands.eliza(arg, conn)
+naim.commands.eliza = {}
+naim.commands.eliza.min = 1
+naim.commands.eliza.max = 1
+naim.commands.eliza.desc = "Begin psychoanalyzing one of your friends"
+function naim.commands.eliza.func(arg, conn)
   if arg == nil then
     naim.curconn():status_echo("[naimpsych] Syntax: /eliza &lt;nick&gt;")
     return
@@ -37,7 +41,6 @@ IT SURE IS NEAT TO HAVE YOU DROP BY. WHAT BRINGS YOU HERE?]])
     naimpsych.conns[cid][arg] = 0
     conn:status_echo("[naimpsych] Psychiatrist session with " .. arg .. " terminated.")
   end
-  
 end
 
 function naimpsych.eliza(conn, sn, dest, text, flags)

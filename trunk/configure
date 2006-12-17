@@ -427,7 +427,7 @@ PACKAGE_VERSION='0.11.8.3'
 PACKAGE_STRING='naim 0.11.8.3'
 PACKAGE_BUGREPORT='Daniel Reed <n@ml.org>'
 
-ac_unique_file="doc/naim.hlp"
+ac_unique_file="src/naim-int.h"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
