@@ -11,7 +11,7 @@
 
 #include "naim-int.h"
 #include "snapshot.h"
-#include "conio_cmds.h"
+#include "cmdar.h"
 
 #ifdef ENABLE_DNSUPDATE
 # include <netdb.h>

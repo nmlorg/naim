@@ -1,10 +1,9 @@
 LOBJEXT = lo
 
 DISTCLEANFILES = \
-	default_lua.h naim_commands.h
+	default_lua.h
 
 EXTRA_DIST = \
-	bindcmds.sh \
 	cmpllua.sh \
 	default.lua \
 	examples/eliza.lua \
@@ -22,9 +21,9 @@ liblua_la_SOURCES = \
 liblua_la_LIBADD = -lm
 
 libnlua_la_SOURCES = \
-	commands.c conn.c moon.c strings.c moon-int.h
+	conn.c moon.c moon-int.h naim_commands.c strings.c
 libnlua_la_LIBADD = liblua.la
-libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk
+libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
 
 noinst_PROGRAMS = lua
 lua_SOURCES = \
@@ -35,6 +34,3 @@ default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
 
 libnlua_la-moon.${LOBJEXT}: default_lua.h
-
-naim_commands.h: ${top_srcdir}/src/commands.c
-	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS} -I${srcdir}/lua511 -I${top_srcdir}/src -I${top_srcdir}/include -I${top_srcdir}/libfiretalk" ${srcdir}/bindcmds.sh > naim_commands.h

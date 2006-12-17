@@ -121,7 +121,7 @@ int	script_setvar(const char *name, const char *val);
 int	script_setvar_int(const char *name, const long val);
 char	*script_expand(const char *instr);
 int	script_script_parse(const char *line);
-int	script_cmd(char *cmd, char *arg, conn_t *conn);
+int	script_cmd(conn_t *conn, char *cmd, char *arg);
 void	script_listvars_start(void);
 char	*script_listvars_next(void);
 void	script_listvars_stop(void);

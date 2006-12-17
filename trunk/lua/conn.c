@@ -45,9 +45,12 @@ void	nlua_hook_delconn(conn_t *conn) {
 
 void	_push_conn_t(lua_State *L, conn_t *conn) {
 	_getsubtable("connections");
-	lua_pushstring(L, conn->winname);
-	lua_gettable(L, -2);
-	lua_remove(L, -2);
+	if (conn != NULL) {
+		lua_pushstring(L, conn->winname);
+		lua_gettable(L, -2);
+		lua_remove(L, -2);
+	} else
+		lua_pushnil(L);
 }
 
 static conn_t *_get_conn_t(lua_State *L, int index) {

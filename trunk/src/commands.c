@@ -19,8 +19,7 @@
 #endif
 
 #ifndef UACPP
-# define COMMANDS_C
-# include "conio_cmds.h"
+# include "cmdar.h"
 #endif
 
 extern win_t	win_input, win_buddy, win_info;
@@ -292,22 +291,14 @@ UAAOPT(string,filename)
 	conn_t	*c = conn;
 	FILE	*file;
 	int	i;
-	extern rc_var_s_t
-		rc_var_s_ar[];
-	extern const int
-		rc_var_s_c;
-	extern rc_var_i_t
-		rc_var_i_ar[];
-	extern const int
-		rc_var_i_c;
-	extern rc_var_i_t
-		rc_var_b_ar[];
-	extern const int
-		rc_var_b_c;
-	extern char
-		naimrcfilename[];
-	const char
-		*filename;
+	extern rc_var_s_t rc_var_s_ar[];
+	extern const int rc_var_s_c;
+	extern rc_var_i_t rc_var_i_ar[];
+	extern const int rc_var_i_c;
+	extern rc_var_i_t rc_var_b_ar[];
+	extern const int rc_var_b_c;
+	extern char naimrcfilename[];
+	const char *filename;
 
 	if (argc == 0)
 		filename = naimrcfilename;
@@ -430,7 +421,7 @@ UAAOPT(string,filename)
 	}
 
 	{
-		faimconf_t	fc;
+		faimconf_t fc;
 
 		rc_initdefs(&fc);
 
@@ -926,7 +917,7 @@ UAALIA(part)
 UADESC(Close a query window or leave a discussion)
 UAAOPT(window,winname)
 UAWHER(NOTSTATUS)
-	buddywin_t	*bwin;
+	buddywin_t *bwin;
 
 	if (argc == 1) {
 		if ((bwin = bgetanywin(conn, args[0])) == NULL) {
@@ -944,7 +935,7 @@ UAWHER(NOTSTATUS)
 UAFUNC(closeall) {
 UADESC(Close stale windows for offline buddies)
 	int	i, l;
-	buddywin_t	*bwin;
+	buddywin_t *bwin;
 
 	if (conn->curbwin == NULL)
 		return;
@@ -955,12 +946,9 @@ UADESC(Close stale windows for offline buddies)
 		l++;
 	} while ((bwin = bwin->next) != conn->curbwin);
 	for (i = 0; i < l; i++) {
-		buddywin_t
-			*bnext = bwin->next;
-		const char
-			*_args[1];
+		buddywin_t *bnext = bwin->next;
+		const char *_args[] = { bwin->winname };
 
-		_args[0] = bwin->winname;
 		if ((bwin->et == BUDDY) && (bwin->e.buddy->offline > 0) && (bwin->pouncec == 0))
 			ua_close(conn, 1, _args);
 		else if ((bwin->et == CHAT) && (bwin->e.chat->offline > 0))
@@ -1006,7 +994,7 @@ UADESC(Perform a /clear on all open windows)
 	conn_t	*c = conn;
 
 	do {
-		buddywin_t	*bwin = c->curbwin;
+		buddywin_t *bwin = c->curbwin;
 
 		if (bwin != NULL)
 			do {
@@ -1042,7 +1030,7 @@ UAAOPT(string,message)
 
 static int do_buddylist(conn_t *conn, const int showon, const int showoff) {
 	if (!inconn || !showon || !showoff || (conn->curbwin->et != CHAT) || (*(conn->curbwin->winname) == ':')) {
-		buddylist_t	*blist;
+		buddylist_t *blist;
 		int	maxname = strlen("Account"), maxgroup = strlen("Group"), maxnotes = strlen("Name"), max;
 		char	*spaces;
 
@@ -1197,7 +1185,7 @@ UAFUNC(join) {
 UADESC(Participate in a chat)
 UAAREQ(string,chat)
 UAAOPT(string,key)
-	buddywin_t	*cwin;
+	buddywin_t *cwin;
 
 	if (((cwin = bgetwin(conn, firetalk_chat_normalize(conn->conn, args[0]), CHAT)) == NULL) || (cwin->e.chat->offline != 0)) {
 		char	buf[1024];
@@ -1416,8 +1404,7 @@ UADESC(Ignore all private/public messages)
 UAAOPT(account,name)
 UAAOPT(string,reason)
 	if (argc == 0) {
-		ignorelist_t
-			*idiotar = conn->idiotar;
+		ignorelist_t *idiotar = conn->idiotar;
 
 		if (idiotar == NULL)
 			echof(conn, NULL, "Ignore list is empty.\n");
@@ -1611,8 +1598,7 @@ UAAOPT(string,action)
 			args[0]);
 }
 
-static html_clean_t
-	ua_filter_defaultar[] = {
+static html_clean_t ua_filter_defaultar[] = {
 	{ "u",		"you"		},
 	{ "ur",		"your"		},
 	{ "lol",	"<grin>"	},
@@ -1732,8 +1718,7 @@ UAFUNC(offer) {
 UADESC(EXPERIMENTAL Offer a file transfer request to someone)
 UAAREQ(account,name)
 UAAREQ(filename,filename)
-	const char
-		*from = args[0],
+	const char *from = args[0],
 		*filename = args[1];
 
 	if (bgetwin(conn, filename, TRANSFER) == NULL) {
@@ -2023,7 +2008,7 @@ UAFUNC(server) {
 UADESC(Connect to a service)
 UAAOPT(string,server)
 UAAOPT(int,port)
-	const char	*na[3];
+	const char *na[3];
 
 	if (argc == 0) {
 		if (conn->port != 0)
@@ -2291,11 +2276,9 @@ UADESC(Load and initialize a dynamic module)
 UAAREQ(filename,module)
 UAAOPT(string,options)
 	lt_dlhandle mod;
-	const lt_dlinfo
-		*dlinfo;
+	const lt_dlinfo *dlinfo;
 	int	(*naim_init)(lt_dlhandle mod, const char *str);
-	const char
-		*options;
+	const char *options;
 
 	if (argc > 1)
 		options = args[1];
@@ -2398,7 +2381,7 @@ UAAOPT(int,height)
 UAFUNC(status) {
 UADESC(Connection status report)
 UAAOPT(string,connection)
-	buddywin_t	*bwin;
+	buddywin_t *bwin;
 	conn_t	*c;
 	int	discussions = 0,
 		users = 0,
@@ -2631,14 +2614,18 @@ void	ua_handlecmd(const char *buf) {
 	} else
 		c = curconn;
 
+//	builtinonly = 0;
 	if (!builtinonly) {
-		if (script_cmd(cmd, arg, c) == 1)
+		if (alias_doalias(cmd, arg) == 1)
 			return;
 
-		if (alias_doalias(cmd, arg) == 1)
+		if (script_cmd(c, cmd, arg) == 1)
 			return;
 	}
 
+#if 1
+	echof(c, cmd, "Unknown command.\n");
+#else
 	if ((com = ua_find_cmd(cmd)) == NULL) {
 		echof(c, cmd, "Unknown command.\n");
 		return;
@@ -2662,6 +2649,7 @@ void	ua_handlecmd(const char *buf) {
 	}
 
 	com->func(c, a, args);
+#endif
 }
 
 void	(*script_client_cmdhandler)(const char *) = ua_handlecmd;
@@ -2840,8 +2828,7 @@ static const char *filename_tabcomplete(conn_t *const conn, const char *start, c
 		if ((strcmp(dire->d_name, ".") == 0) || (strcmp(dire->d_name, "..") == 0))
 			continue;
 		if ((*end == 0) || (strncmp(dire->d_name, end+1, endlen) == 0)) {
-			struct stat
-				statbuf;
+			struct stat statbuf;
 
 			if (((end-start) > 0) && (start[end-start-1] == '/'))
 				snprintf(str, sizeof(str)-1, "%.*s%s", end-start, start, dire->d_name);
@@ -2931,8 +2918,7 @@ const char *conio_tabcomplete(const char *buf, const int bufloc, int *const matc
 		return(NULL);
 	} else {
 		conn_t	*conn = curconn;
-		const char
-			*sp = memchr(buf, ' ', bufloc),
+		const char *sp = memchr(buf, ' ', bufloc),
 			*co = memchr(buf, ':', bufloc),
 			*start = n_strnrchr(buf, ' ', bufloc)+1;
 		char	type;

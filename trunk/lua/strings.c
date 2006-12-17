@@ -176,42 +176,57 @@ void nlua_listvars_stop()
 	lua_pop(lua, 2);
 }
 
-int nlua_luacmd(char *cmd, char *arg, conn_t *conn)
-{
-	char *lcmd;
-	
-	_getmaintable();
-	_getitem("commands");
-	if (!lua_istable(lua, -1))
-	{
+int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
+	char	*lcmd;
+
+	_getmaintable();			// { naim }
+	_getitem("call");			// { naim.call }
+	if (!lua_isfunction(lua, -1)) {
 		static int complained = 0;
-		if (complained)
-			return 0;
-		complained++;
-		status_echof(conn, "naim's Lua commands table went away. This is a bug in a user script. I'll continue for now, but Lua commands will no longer work. Sorry.");
-		return 0;
+
+		lua_pop(lua, 1);		// {}
+		if (!complained && (conn != NULL)) {
+			complained++;
+			status_echof(conn, "naim.call is no longer a function. This is a bug in a user script.");
+		}
+		return(0);
+	}
+
+	_getmaintable();			// { naim, naim.call }
+	_getitem("commands");			// { naim.commands, naim.call }
+	if (!lua_istable(lua, -1)) {
+		static int complained = 0;
+
+		lua_pop(lua, 2);		// {}
+		if (!complained && (conn != NULL)) {
+			complained++;
+			status_echof(conn, "naim's Lua commands table went away. This is a bug in a user script. I'll continue for now, but Lua commands will no longer work. Sorry.");
+		}
+		return(0);
 	}
 	lcmd = strdup(cmd);
 	{
-		char *p;
+		char	*p;
+
 		for (p = lcmd; *p; p++)
-			*p = ((*p >= 'A') && (*p <= 'Z')) ? (*p + 32) : *p;
+			*p = tolower(*p);
 	}
-	lua_pushstring(lua, lcmd);
+	lua_pushstring(lua, lcmd);		// { CMD, naim.commands, naim.call }
 	free(lcmd);
-	lua_gettable(lua, -2);
-	lua_remove(lua, -2);
-	if (!lua_isfunction(lua, -1))
-	{
-		lua_remove(lua, -1);
-		return 0;
+	lua_gettable(lua, -2);			// { naim.commands[CMD], naim.commands, naim.call }
+	lua_remove(lua, -2);			// { naim.commands[CMD], naim.call }
+	if (!lua_istable(lua, -1)) {
+		lua_pop(lua, 2);		// {}
+		if (conn != NULL)
+			status_echof(conn, "naim.commands.%s is not a function table. This is a bug in a user script.", cmd);
+		return(0);
 	}
-	lua_pushstring(lua, arg);
-	_push_conn_t(lua, conn);
-	if (lua_pcall(lua, 2, 0, 0) != 0)
-	{
-		status_echof(conn, "Lua function \"%s\" returned an error: \"%s\"", cmd, lua_tostring(lua, -1));
-		lua_pop(lua, 1);
+	_push_conn_t(lua, conn);		// { CONN, naim.commands[CMD], naim.call }
+	lua_pushstring(lua, arg);		// { ARG, CONN, naim.commands[CMD], naim.call }
+	if (lua_pcall(lua, 3, 0, 0) != 0) {	// {}
+		if (conn != NULL)
+			status_echof(conn, "Lua function \"%s\" returned an error: \"%s\"", cmd, lua_tostring(lua, -1));
+		return(0);
 	}
-	return 1;
+	return(1);
 }
