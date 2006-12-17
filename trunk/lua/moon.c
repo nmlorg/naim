@@ -34,6 +34,16 @@ static int _nlua_curconn(lua_State *L) {
 	return(1);
 }
 
+static int _nlua_curwin(lua_State *L) {
+	if (!inconn)
+		_push_conn_t(L, curconn);
+	else if (curconn->curbwin != NULL)
+		_get_global_ent(L, "naim.connections", curconn->winname, "windows", curconn->curbwin->winname, NULL);
+	else
+		lua_pushnil(L);
+	return(1);
+}
+
 static int _nlua_conio(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	
@@ -48,11 +58,18 @@ static int _nlua_echo(lua_State *L) {
 	return(0);
 }
 
+static int _nlua_statusbar(lua_State *L) {
+	nw_statusbarf("%s", lua_tostring(L, 1));
+	return(0);
+}
+
 static const struct luaL_Reg naimlib[] = {
 	{ "debug",	_nlua_debug },
 	{ "curconn",	_nlua_curconn },
+	{ "curwin",	_nlua_curwin },
 	{ "conio",	_nlua_conio },
 	{ "echo",	_nlua_echo },
+	{ "statusbar",	_nlua_statusbar },
 	{ NULL,		NULL } /* sentinel */
 };
 

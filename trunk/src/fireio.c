@@ -401,7 +401,7 @@ static int fireio_recvfrom_beep(void *userdata, const char *signature, conn_t *c
 }
 
 static int fireio_recvfrom_autobuddy(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
-	if (*dest == NULL) {
+	if ((*dest == NULL) && ((*name)[0] != ':')) {
 		buddylist_t *blist = rgetlist(conn, *name);
 
 		if (getvar_int(conn, "autobuddy")) {

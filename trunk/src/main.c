@@ -26,6 +26,8 @@ extern const char *home G_GNUC_INTERNAL,
 	*sty G_GNUC_INTERNAL,
 	*invocation G_GNUC_INTERNAL;
 extern char naimrcfilename[1024] G_GNUC_INTERNAL;
+extern lt_dlhandle dl_self G_GNUC_INTERNAL;
+
 conn_t	*curconn = NULL;
 faimconf_t faimconf;
 int	stayconnected = 0,
@@ -38,7 +40,7 @@ const char *home = NULL,
 	*sty = NULL,
 	*invocation = NULL;
 char	naimrcfilename[1024] = { 0 };
-
+lt_dlhandle dl_self = NULL;
 
 
 
@@ -252,6 +254,17 @@ int	main_stub(int argc, char **args) {
 
 	changetime = nowf = now = startuptime = time(NULL);
 
+	if (lt_dlinit() != 0) {
+		printf("Unable to initialize module handler: %s.\n", lt_dlerror());
+		return(1);
+	}
+	lt_dlsetsearchpath(DLSEARCHPATH);
+#ifdef DLOPEN_SELF_LIBNAIM_CORE
+	dl_self = lt_dlopen("cygnaim_core-0.dll");
+#else
+	dl_self = lt_dlopen(NULL);
+#endif
+
 	script_init();
 
 	initscr();
@@ -287,13 +300,6 @@ int	main_stub(int argc, char **args) {
 	signal(SIGUSR2, dummy);
 #endif
 	childexit(SIGCHLD);
-
-	if (lt_dlinit() != 0) {
-		echof(curconn, NULL, "Unable to initialize module handler: %s.\n",
-			lt_dlerror());
-		return(1);
-	}
-	lt_dlsetsearchpath(DLSEARCHPATH);
 
 	{
 		const char *args[] = { "dummy", "AIM" };
@@ -454,6 +460,7 @@ int	main_stub(int argc, char **args) {
 	statrefresh();
 	wshutitdown();
 	script_shutdown();
+	lt_dlclose(dl_self);
 	lt_dlexit();
 	return(0);
 }
