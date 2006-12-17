@@ -18,20 +18,20 @@ extern time_t	now, awaytime;
 extern double	nowf;
 extern int	namec;
 extern char	**names;
-extern namescomplete_t	namescomplete;
-extern faimconf_t	faimconf;
+extern namescomplete_t namescomplete;
+extern faimconf_t faimconf;
 extern char	*sty, *statusbar_text;
 
 extern int awayc G_GNUC_INTERNAL;
 extern awayar_t *awayar G_GNUC_INTERNAL;
 int	awayc = 0;
-awayar_t	*awayar = NULL;
+awayar_t *awayar = NULL;
 
 #define NAIM_VERSION_STRING	"naim:" PACKAGE_VERSION NAIM_SNAPSHOT
 static char naim_version[1024];
 
-#define nFIRE_HANDLER(func) static void func (void *sess, void *client, ...)
-#define nFIRE_CTCPHAND(func) static void func (void *sess, void *client, \
+#define nFIRE_HANDLER(func) static void func (struct firetalk_connection_t *sess, conn_t *conn, ...)
+#define nFIRE_CTCPHAND(func) static void func (struct firetalk_connection_t *sess, conn_t *conn, \
 	const char *from, const char *command, const char *args)
 
 static void do_replace(unsigned char *dest, const unsigned char *new, int wordlen, int len) {
@@ -83,8 +83,7 @@ html_clean_t *html_cleanar = NULL;
 int	html_cleanc = 0;
 
 static const unsigned char *html_clean(const unsigned char *str) {
-	static unsigned char
-		buf[1024*4];
+	static unsigned char buf[1024*4];
 	int	i;
 
 	assert(str != NULL);
@@ -98,11 +97,10 @@ static const unsigned char *html_clean(const unsigned char *str) {
 }
 
 nFIRE_HANDLER(naim_newnick) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*newnick;
+	va_list	msg;
+	const char *newnick;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -112,13 +110,12 @@ nFIRE_HANDLER(naim_newnick) {
 }
 
 nFIRE_HANDLER(naim_nickchange) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*oldnick, *newnick;
-	buddywin_t	*bwin;
-	buddylist_t	*buddy = conn->buddyar;
+	va_list	msg;
+	const char *oldnick, *newnick;
+	buddywin_t *bwin;
+	buddylist_t *buddy = conn->buddyar;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	oldnick = va_arg(msg, const char *);
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
@@ -143,7 +140,7 @@ nFIRE_HANDLER(naim_nickchange) {
 	"&nbsp;<br>"		\
 	"Visit <a href=\"http://naim.n.ml.org/\">http://naim.n.ml.org/</a> for the latest naim."
 
-void	naim_set_info(void *sess, const char *str) {
+void	naim_set_info(conn_t *conn, const char *str) {
 	const char *defar[] = {
 "Tepid! Tepid is no good for a star, but it'll do for stardust.<br>\n"
 			STANDARD_TRAILER,
@@ -175,17 +172,17 @@ void	naim_set_info(void *sess, const char *str) {
 	};
 
 	if (str != NULL)
-		firetalk_set_info(sess, str);
+		firetalk_set_info(conn->conn, str);
 	else {
 		int	d;
 
 		d = rand()%sizeof(defar)/sizeof(*defar);
-		firetalk_set_info(sess, defar[d]);
+		firetalk_set_info(conn->conn, defar[d]);
 	}
 }
 
 nFIRE_HANDLER(naim_postselect) {
-	struct timeval	tv;
+	struct timeval tv;
 	char	buf[1024];
 
 	gettimeofday(&tv, NULL);
@@ -196,11 +193,11 @@ nFIRE_HANDLER(naim_postselect) {
 }
 
 void	naim_setversion(conn_t *conn) {
-	const char	*where,
-			*where2,
-			*term,
-			*lang;
-	struct utsname	unbuf;
+	const char *where,
+		*where2,
+		*term,
+		*lang;
+	struct utsname unbuf;
 
 	if ((where = getenv("DISPLAY")) != NULL) {
 		if ((strncmp(where, ":0", 2) == 0) && (getenv("SSH_CLIENT") == NULL))
@@ -233,11 +230,10 @@ void	naim_setversion(conn_t *conn) {
 }
 
 nFIRE_HANDLER(naim_doinit) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*screenname;
+	va_list	msg;
+	const char *screenname;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -250,18 +246,17 @@ nFIRE_HANDLER(naim_doinit) {
 	else
 		status_echof(conn, "Updating profile...\n");
 
-	naim_set_info(sess, conn->profile);
+	naim_set_info(conn, conn->profile);
 
 	if (awaytime > 0)
 		firetalk_set_away(sess, secs_getvar("awaymsg"), 0);
 }
 
 nFIRE_HANDLER(naim_setidle) {
-/*	conn_t	*conn = (conn_t *)client; */
 	va_list	msg;
 	long	*idle, idletime = secs_getvar_int("idletime");
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	idle = va_arg(msg, long *);
 	va_end(msg);
 
@@ -270,12 +265,11 @@ nFIRE_HANDLER(naim_setidle) {
 }
 
 nFIRE_HANDLER(naim_warned) {
-	conn_t	*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
-	int		newlev;
+	va_list	msg;
+	const char *who;
+	int	newlev;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	newlev = va_arg(msg, int);
 	who = va_arg(msg, const char *);
 	va_end(msg);
@@ -286,12 +280,11 @@ nFIRE_HANDLER(naim_warned) {
 }
 
 nFIRE_HANDLER(naim_buddy_idle) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
-	long		idletime;
+	va_list	msg;
+	const char *who;
+	long	idletime;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	idletime = va_arg(msg, long);
 	va_end(msg);
@@ -303,13 +296,12 @@ nFIRE_HANDLER(naim_buddy_idle) {
 }
 
 nFIRE_HANDLER(naim_buddy_eviled) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
-	long		warnval;
-	buddylist_t	*blist;
+	va_list	msg;
+	const char *who;
+	long	warnval;
+	buddylist_t *blist;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	warnval = va_arg(msg, long);
 	va_end(msg);
@@ -319,12 +311,11 @@ nFIRE_HANDLER(naim_buddy_eviled) {
 }
 
 nFIRE_HANDLER(naim_buddy_caps) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who, *caps;
-	buddylist_t	*blist;
+	va_list	msg;
+	const char *who, *caps;
+	buddylist_t *blist;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	caps = va_arg(msg, const char *);
 	va_end(msg);
@@ -363,13 +354,12 @@ nFIRE_HANDLER(naim_buddy_caps) {
 }
 
 nFIRE_HANDLER(naim_buddy_typing) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
-	int		typing;
-	buddylist_t	*blist;
+	va_list	msg;
+	const char *who;
+	int	typing;
+	buddylist_t *blist;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	typing = va_arg(msg, int);
 	va_end(msg);
@@ -379,11 +369,10 @@ nFIRE_HANDLER(naim_buddy_typing) {
 }
 
 nFIRE_HANDLER(naim_buddy_away) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
+	va_list	msg;
+	const char *who;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -391,11 +380,10 @@ nFIRE_HANDLER(naim_buddy_away) {
 }
 
 nFIRE_HANDLER(naim_buddy_unaway) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
+	va_list	msg;
+	const char *who;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -403,12 +391,11 @@ nFIRE_HANDLER(naim_buddy_unaway) {
 }
 
 nFIRE_HANDLER(naim_buddyadded) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*screenname, *group, *friendly;
-	buddylist_t	*blist;
+	va_list	msg;
+	const char *screenname, *group, *friendly;
+	buddylist_t *blist;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	screenname = va_arg(msg, const char *);
 	group = va_arg(msg, const char *);
 	friendly = va_arg(msg, const char *);
@@ -432,13 +419,12 @@ nFIRE_HANDLER(naim_buddyadded) {
 }
 
 nFIRE_HANDLER(naim_buddyremoved) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*screenname;
-	buddywin_t	*bwin;
-	buddylist_t	*blist;
+	va_list	msg;
+	const char *screenname;
+	buddywin_t *bwin;
+	buddylist_t *blist;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -456,11 +442,10 @@ nFIRE_HANDLER(naim_buddyremoved) {
 }
 
 nFIRE_HANDLER(naim_denyadded) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*screenname;
+	va_list	msg;
+	const char *screenname;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -470,11 +455,10 @@ nFIRE_HANDLER(naim_denyadded) {
 }
 
 nFIRE_HANDLER(naim_denyremoved) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*screenname;
+	va_list	msg;
+	const char *screenname;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -486,29 +470,27 @@ nFIRE_HANDLER(naim_denyremoved) {
 HOOK_DECLARE(proto_user_onlineval);
 
 nFIRE_HANDLER(naim_buddy_coming) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
+	va_list	msg;
+	const char *who;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
 	bcoming(conn, who);
-	HOOK_CALL(proto_user_onlineval, (client, conn, who, NULL, NULL, 1));
+	HOOK_CALL(proto_user_onlineval, (sess, conn, who, NULL, NULL, 1));
 }
 
 nFIRE_HANDLER(naim_buddy_going) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
+	va_list	msg;
+	const char *who;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
 	bgoing(conn, who);
-	HOOK_CALL(proto_user_onlineval, (client, conn, who, NULL, NULL, 0));
+	HOOK_CALL(proto_user_onlineval, (sess, conn, who, NULL, NULL, 0));
 }
 
 
@@ -537,7 +519,7 @@ static void naim_recvfrom(conn_t *const conn,
 
 static int recvfrom_ignorelist(conn_t *conn, char **name, char **dest, 
 		unsigned char **message, int *len, int *flags) {
-	ignorelist_t	*ig;
+	ignorelist_t *ig;
 
 	if ((*dest != NULL) && (strcmp(*dest, ":RAW") == 0) && (getvar_int(conn, "showraw") == 0))
 		return(HOOK_STOP);
@@ -554,7 +536,7 @@ static int recvfrom_ignorelist(conn_t *conn, char **name, char **dest,
 static int recvfrom_decrypt(conn_t *conn, char **name, char **dest,
 		unsigned char **message, int *len, int *flags) {
 	if ((*dest == NULL) && !(*flags & RF_ACTION)) {
-		buddylist_t	*blist = rgetlist(conn, *name);
+		buddylist_t *blist = rgetlist(conn, *name);
 
 		if ((blist != NULL) && (blist->crypt != NULL) && ((blist->peer <= 3) || (*flags & RF_ENCRYPTED))) {
 			int	i, j = 0;
@@ -595,7 +577,7 @@ static int recvfrom_beep(conn_t *conn, char **name, char **dest,
 static int recvfrom_autobuddy(conn_t *conn, char **name, char **dest,
 		unsigned char **message, int *len, int *flags) {
 	if (*dest == NULL) {
-		buddylist_t	*blist = rgetlist(conn, *name);
+		buddylist_t *blist = rgetlist(conn, *name);
 
 		if ((getvar_int(conn, "autobuddy") == 1)
 			&& (bgetwin(conn, *name, BUDDY) == NULL)) {
@@ -620,8 +602,8 @@ static int recvfrom_autobuddy(conn_t *conn, char **name, char **dest,
 
 static int recvfrom_display_user(conn_t *conn, char **name, char **dest,
 		unsigned char **message, int *len, int *flags) {
-	buddylist_t	*blist;
-	buddywin_t	*bwin;
+	buddylist_t *blist;
+	buddywin_t *bwin;
 
 	if (*dest != NULL)
 		return(HOOK_CONTINUE);
@@ -710,7 +692,7 @@ static int recvfrom_display_user(conn_t *conn, char **name, char **dest,
 }
 
 static void recvfrom_display_chat_print(buddywin_t *bwin, const int flags, const int istome, const char *name, const char *prefix, const unsigned char *message) {
-	const char	*format;
+	const char *format;
 
 	if (prefix == NULL)
 		prefix = "&gt;";
@@ -749,10 +731,10 @@ void	chat_flush(buddywin_t *bwin) {
 
 static int recvfrom_display_chat(conn_t *conn, char **name, char **dest,
 		unsigned char **message, int *len, int *flags) {
-	buddywin_t	*bwin;
-	int		istome;
-	char		*prefix = NULL;
-	unsigned char	*message_save;
+	buddywin_t *bwin;
+	int	istome;
+	char	*prefix = NULL;
+	unsigned char *message_save;
 
 	if (*dest == NULL)
 		return(HOOK_CONTINUE);
@@ -805,7 +787,7 @@ static int recvfrom_display_chat(conn_t *conn, char **name, char **dest,
 		assert(bwin->e.chat->last.name != NULL);
 		if ((add > off) && isalpha(tmp[off]) && !isalpha(tmp[off+add-1])) {
 			if (strncasecmp(tmp+off, bwin->e.chat->last.name, strlen(bwin->e.chat->last.name)) == 0) {
-				static int	sent_carat_desc = 0;
+				static int sent_carat_desc = 0;
 
 				if (!sent_carat_desc) {
 					statusbar_text = strdup("A ^ near a speaker name indicates that message was addressed to the previous speaker.");
@@ -814,7 +796,7 @@ static int recvfrom_display_chat(conn_t *conn, char **name, char **dest,
 				prefix = "^";
 				memmove((*message)+off, (*message)+off+add, strlen((*message)+off+add)+1);
 			} else if (strncasecmp(*message, bwin->e.chat->last.line, off+add) == 0) {
-				static int	sent_plus_desc = 0;
+				static int sent_plus_desc = 0;
 
 				if (!sent_plus_desc) {
 					statusbar_text = strdup("A + near a speaker name indicates that message was addressed to the same person as the previous message.");
@@ -859,14 +841,12 @@ void	fireio_hook_init(void) {
 
 
 nFIRE_HANDLER(naim_im_handle) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*name;
-	const unsigned char
-			*message;
-	int		isautoreply;
+	va_list	msg;
+	const char *name;
+	const unsigned char *message;
+	int	isautoreply;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	name = va_arg(msg, const char *);
 	isautoreply = va_arg(msg, int);
 	message = html_clean(va_arg(msg, const unsigned char *));
@@ -879,14 +859,12 @@ nFIRE_HANDLER(naim_im_handle) {
 }
 
 nFIRE_HANDLER(naim_act_handle) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*who;
-	const unsigned char
-			*message;
-	int		isautoreply;
+	va_list	msg;
+	const char *who;
+	const unsigned char *message;
+	int	isautoreply;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	isautoreply = va_arg(msg, int);
 	message = va_arg(msg, const unsigned char *);
@@ -900,14 +878,12 @@ nFIRE_HANDLER(naim_act_handle) {
 }
 
 nFIRE_HANDLER(naim_chat_getmessage) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*room, *who;
-	const unsigned char
-			*message;
-	int		isautoreply;
+	va_list	msg;
+	const char *room, *who;
+	const unsigned char *message;
+	int	isautoreply;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	isautoreply = va_arg(msg, int);
@@ -924,14 +900,12 @@ nFIRE_HANDLER(naim_chat_getmessage) {
 }
 
 nFIRE_HANDLER(naim_chat_act_handle) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*room, *who;
-	const unsigned char
-			*message;
-	int		isautoreply;
+	va_list	msg;
+	const char *room, *who;
+	const unsigned char *message;
+	int	isautoreply;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	isautoreply = va_arg(msg, int);
@@ -953,8 +927,7 @@ void	naim_awaylog(conn_t *conn, const char *src, const char *msg) {
 }
 
 nFIRE_HANDLER(naim_connected) {
-	conn_t		*conn = (conn_t *)client;
-	buddywin_t	*bwin = conn->curbwin;
+	buddywin_t *bwin = conn->curbwin;
 
 	if (conn->online > 0) {
 		status_echof(conn, "naim just received notification that you have connected to %s at %lu,"
@@ -988,12 +961,11 @@ static const char naim_tolower_first(const char *const str) {
 }
 
 nFIRE_HANDLER(naim_connectfailed) {
-	conn_t		*conn = (conn_t *)client;
-	int		err;
-	va_list		msg;
-	const char	*reason;
+	int	err;
+	va_list	msg;
+	const char *reason;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	err = va_arg(msg, int);
 	reason = va_arg(msg, const char *);
 	va_end(msg);
@@ -1029,13 +1001,12 @@ nFIRE_HANDLER(naim_connectfailed) {
 }
 
 nFIRE_HANDLER(naim_error_msg) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	int		error;
-	const char	*target, *desc;
-	buddywin_t	*bwin;
+	va_list	msg;
+	int	error;
+	const char *target, *desc;
+	buddywin_t *bwin;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	error = va_arg(msg, int);
 	target = va_arg(msg, const char *);
 	desc = va_arg(msg, const char *);
@@ -1071,11 +1042,10 @@ nFIRE_HANDLER(naim_error_msg) {
 }
 
 nFIRE_HANDLER(naim_error_disconnect) {
-	conn_t	*conn = (conn_t *)client;
 	va_list	msg;
 	int	error;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	error = va_arg(msg, int);
 	va_end(msg);
 
@@ -1094,13 +1064,12 @@ nFIRE_HANDLER(naim_error_disconnect) {
 }
 
 nFIRE_HANDLER(naim_needpass) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	char		*pass;
-	int		len;
-	const char	*mypass;
+	va_list	msg;
+	char	*pass;
+	int	len;
+	const char *mypass;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	pass = va_arg(msg, char *);
 	len = va_arg(msg, int);
 	va_end(msg);
@@ -1123,14 +1092,12 @@ nFIRE_HANDLER(naim_needpass) {
 }
 
 nFIRE_HANDLER(naim_userinfo_handler) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*SN;
-	const unsigned char
-			*info;
-	long		warning, online, idle, class;
+	va_list	msg;
+	const char *SN;
+	const unsigned char *info;
+	long	warning, online, idle, class;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	SN = va_arg(msg, const char *);
 	info = va_arg(msg, const unsigned char *);
 	warning = va_arg(msg, long);
@@ -1164,8 +1131,7 @@ nFIRE_HANDLER(naim_userinfo_handler) {
 			}
 	}
 
-	echof(conn, NULL, "Information about %s:\n",
-		SN);
+	echof(conn, NULL, "Information about %s:\n", SN);
 
 	if (class & (FF_SUBSTANDARD|FF_NORMAL|FF_ADMIN))
 	  echof(conn, NULL,
@@ -1199,7 +1165,7 @@ nFIRE_HANDLER(naim_userinfo_handler) {
 
 
 buddywin_t *cgetwin(conn_t *conn, const char *roomname) {
-	buddywin_t	*bwin;
+	buddywin_t *bwin;
 
 	if (*roomname != ':')
 		roomname = firetalk_chat_normalize(conn->conn, roomname);
@@ -1215,12 +1181,11 @@ buddywin_t *cgetwin(conn_t *conn, const char *roomname) {
 }
 
 nFIRE_HANDLER(naim_chat_joined) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -1229,7 +1194,7 @@ nFIRE_HANDLER(naim_chat_joined) {
 	if (getvar_int(conn, "autonames") == 0)
 		window_echof(bwin, "You are now participating in the %s discussion.\n", room);
 	else {
-		const char	*args[1] = { bwin->winname };
+		const char *args[1] = { bwin->winname };
 
 		window_echof(bwin, "You are now participating in the %s discussion. Checking for current participants...\n", room);
 		conio_names(conn, 1, args);
@@ -1238,12 +1203,11 @@ nFIRE_HANDLER(naim_chat_joined) {
 }
 
 nFIRE_HANDLER(naim_chat_left) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*room;
-	buddywin_t	*bwin;
+	va_list	msg;
+	const char *room;
+	buddywin_t *bwin;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	va_end(msg);
 
@@ -1255,12 +1219,11 @@ nFIRE_HANDLER(naim_chat_left) {
 }
 
 nFIRE_HANDLER(naim_chat_kicked) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *by, *reason, *q;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *by, *reason, *q;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
 	reason = va_arg(msg, const char *);
@@ -1280,11 +1243,10 @@ nFIRE_HANDLER(naim_chat_kicked) {
 }
 
 nFIRE_HANDLER(naim_chat_invited) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*room, *who, *message, *q;
+	va_list	msg;
+	const char *room, *who, *message, *q;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	message = va_arg(msg, const char *);
@@ -1296,12 +1258,11 @@ nFIRE_HANDLER(naim_chat_invited) {
 }
 
 nFIRE_HANDLER(naim_chat_JOIN) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *who, *q, *extra;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *who, *q, *extra;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	extra = va_arg(msg, const char *);
@@ -1324,12 +1285,11 @@ nFIRE_HANDLER(naim_chat_JOIN) {
 }
 
 nFIRE_HANDLER(naim_chat_PART) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *who, *reason, *q;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *who, *reason, *q;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	reason = va_arg(msg, const char *);
@@ -1350,12 +1310,11 @@ nFIRE_HANDLER(naim_chat_PART) {
 }
 
 nFIRE_HANDLER(naim_chat_KICK) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *who, *by, *reason, *q;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *who, *by, *reason, *q;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
@@ -1373,12 +1332,11 @@ nFIRE_HANDLER(naim_chat_KICK) {
 }
 
 nFIRE_HANDLER(naim_chat_KEYCHANGED) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *what, *by;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *what, *by;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	what = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
@@ -1406,12 +1364,11 @@ nFIRE_HANDLER(naim_chat_KEYCHANGED) {
 
 #ifdef RAWIRCMODES
 nFIRE_HANDLER(naim_chat_MODECHANGED) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *mode, *by;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *mode, *by;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	mode = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
@@ -1429,12 +1386,11 @@ nFIRE_HANDLER(naim_chat_MODECHANGED) {
 #endif
 
 nFIRE_HANDLER(naim_chat_oped) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *by;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *by;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
 	va_end(msg);
@@ -1447,12 +1403,11 @@ nFIRE_HANDLER(naim_chat_oped) {
 }
 
 nFIRE_HANDLER(naim_chat_OP) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *who, *by;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *who, *by;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
@@ -1470,12 +1425,11 @@ nFIRE_HANDLER(naim_chat_OP) {
 }
 
 nFIRE_HANDLER(naim_chat_deoped) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *by;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *by;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
 	va_end(msg);
@@ -1488,12 +1442,11 @@ nFIRE_HANDLER(naim_chat_deoped) {
 }
 
 nFIRE_HANDLER(naim_chat_DEOP) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *who, *by;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *who, *by;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	who = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
@@ -1512,12 +1465,11 @@ nFIRE_HANDLER(naim_chat_DEOP) {
 }
 
 nFIRE_HANDLER(naim_chat_TOPIC) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *topic, *by, *q;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *topic, *by, *q;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	topic = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
@@ -1539,12 +1491,11 @@ nFIRE_HANDLER(naim_chat_TOPIC) {
 }
 
 nFIRE_HANDLER(naim_chat_NICK) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	const char	*room, *oldnick, *newnick;
+	va_list	msg;
+	buddywin_t *bwin;
+	const char *room, *oldnick, *newnick;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	oldnick = va_arg(msg, const char *);
 	newnick = va_arg(msg, const char *);
@@ -1564,7 +1515,7 @@ nFIRE_HANDLER(naim_chat_NAMES) {
 	int		oped;
 //	int		i, j;
 
-	va_start(msg, client);
+	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	nick = va_arg(msg, const char *);
 	oped = va_arg(msg, int);
@@ -1617,13 +1568,26 @@ nFIRE_HANDLER(naim_chat_NAMES) {
 //	namesbuf[j+1] = 0;
 }
 
-transfer_t *fnewtransfer(void *handle, const char *filename,
-		const char *from, long size) {
-	transfer_t	*transfer;
+static int qsort_strcasecmp(const void *p1, const void *p2) {
+	register char **b1 = (char **)p1, **b2 = (char **)p2;
 
-	transfer = calloc(1, sizeof(transfer_t));
+	return(strcasecmp(*b1, *b2));
+}
+
+void	naim_chat_listmembers(conn_t *conn, const char *const chat) {
+	firetalk_chat_listmembers(conn->conn, chat);
+	if (names != NULL)
+		qsort(names, namec, sizeof(*names), qsort_strcasecmp);
+}
+
+transfer_t *fnewtransfer(struct firetalk_transfer_t *handle, buddywin_t *bwin, const char *filename,
+		const char *from, long size) {
+	transfer_t *transfer;
+
+	transfer = calloc(1, sizeof(*transfer));
 	assert(transfer != NULL);
 	transfer->handle = handle;
+	transfer->bwin = bwin;
 	transfer->size = size;
 	STRREPLACE(transfer->from, from);
 	STRREPLACE(transfer->remote, filename);
@@ -1639,16 +1603,15 @@ void	fremove(transfer_t *transfer) {
 }
 
 nFIRE_HANDLER(naim_file_offer) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	void		*handle;
-	const char	*from,
-			*filename;
-	long		size;
+	va_list	msg;
+	buddywin_t *bwin;
+	struct firetalk_transfer_t *handle;
+	const char *from,
+		*filename;
+	long	size;
 
-	va_start(msg, client);
-	handle = va_arg(msg, void *);
+	va_start(msg, conn);
+	handle = va_arg(msg, struct firetalk_transfer_t *);
 	from = va_arg(msg, const char *);
 	filename = va_arg(msg, const char *);
 	size = va_arg(msg, long);
@@ -1659,7 +1622,7 @@ nFIRE_HANDLER(naim_file_offer) {
 		bwin = bgetwin(conn, filename, TRANSFER);
 		assert(bwin != NULL);
 		bwin->waiting = 1;
-		bwin->e.transfer = fnewtransfer(handle, filename, from, size);
+		bwin->e.transfer = fnewtransfer(handle, bwin, filename, from, size);
 		echof(conn, NULL, "File transfer request from <font color=\"#00FFFF\">%s</font> (%s, %lu B).\n",
 			from, filename, size);
 		window_echof(bwin, "File transfer request from <font color=\"#00FFFF\">%s</font> (%s, %lu B).\n",
@@ -1673,35 +1636,37 @@ nFIRE_HANDLER(naim_file_offer) {
 }
 
 nFIRE_HANDLER(naim_file_start) {
-/*	conn_t		*conn = (conn_t *)client; */
-	va_list		msg;
-	buddywin_t	*bwin;
-	void		*handle;
+	va_list	msg;
+	transfer_t *transfer;
+	buddywin_t *bwin;
+	struct firetalk_transfer_t *handle;
 
-	va_start(msg, client);
-	handle = va_arg(msg, void *);
-	bwin = (buddywin_t *)va_arg(msg, void *);
+	va_start(msg, conn);
+	handle = va_arg(msg, struct firetalk_transfer_t *);
+	transfer = va_arg(msg, transfer_t *);
 	va_end(msg);
 
+	bwin = transfer->bwin;
 	window_echof(bwin, "Transfer of %s has begun.\n", bwin->e.transfer->remote);
 	bwin->e.transfer->started = nowf-0.1;
 }
 
 nFIRE_HANDLER(naim_file_progress) {
-/*	conn_t		*conn = (conn_t *)client; */
-	va_list		msg;
-	buddywin_t	*bwin;
-	void		*handle;
-	long		bytes,
-			size;
+	va_list	msg;
+	transfer_t *transfer;
+	buddywin_t *bwin;
+	struct firetalk_transfer_t *handle;
+	long	bytes,
+		size;
 
-	va_start(msg, client);
-	handle = va_arg(msg, void *);
-	bwin = (buddywin_t *)va_arg(msg, void *);
+	va_start(msg, conn);
+	handle = va_arg(msg, struct firetalk_transfer_t *);
+	transfer = va_arg(msg, transfer_t *);
 	bytes = va_arg(msg, long);
 	size = va_arg(msg, long);
 	va_end(msg);
 
+	bwin = transfer->bwin;
 	assert(bwin->et == TRANSFER);
 	if (bwin->e.transfer->handle == NULL)
 		bwin->e.transfer->handle = handle;
@@ -1723,18 +1688,19 @@ nFIRE_HANDLER(naim_file_progress) {
 }
 
 nFIRE_HANDLER(naim_file_finish) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	void		*handle;
-	long		size;
+	va_list	msg;
+	transfer_t *transfer;
+	buddywin_t *bwin;
+	struct firetalk_transfer_t *handle;
+	long	size;
 
-	va_start(msg, client);
-	handle = va_arg(msg, void *);
-	bwin = (buddywin_t *)va_arg(msg, void *);
+	va_start(msg, conn);
+	handle = va_arg(msg, struct firetalk_transfer_t *);
+	transfer = va_arg(msg, transfer_t *);
 	size = va_arg(msg, long);
 	va_end(msg);
 
+	bwin = transfer->bwin;
 	assert(handle == bwin->e.transfer->handle);
 	if (size != bwin->e.transfer->size) {
 		window_echof(bwin, "File size for %s changed from %lu to %lu.\n",
@@ -1752,29 +1718,28 @@ nFIRE_HANDLER(naim_file_finish) {
 }
 
 nFIRE_HANDLER(naim_file_error) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	buddywin_t	*bwin;
-	void		*handle;
-	int		error;
+	va_list	msg;
+	transfer_t *transfer;
+	buddywin_t *bwin;
+	struct firetalk_transfer_t *handle;
+	int	error;
 
-	va_start(msg, client);
-	handle = va_arg(msg, void *);
-	bwin = (buddywin_t *)va_arg(msg, void *);
+	va_start(msg, conn);
+	handle = va_arg(msg, struct firetalk_transfer_t *);
+	transfer = va_arg(msg, transfer_t *);
 	error = va_arg(msg, int);
 	va_end(msg);
 
+	bwin = transfer->bwin;
 	assert(handle == bwin->e.transfer->handle);
 	echof(conn, NULL, "Error receiving %s: %s.\n",
 		bwin->e.transfer->remote, firetalk_strerror(error));
 	bwin->waiting = 1;
 }
 
-static time_t	lastctcp = 0;
+static time_t lastctcp = 0;
 
 nFIRE_CTCPHAND(naim_ctcp_VERSION) {
-	conn_t	*conn = (conn_t *)client;
-
 	if (lastctcp < now-1) {
 		firetalk_subcode_send_reply(sess, from, "VERSION", (*naim_version)?naim_version:NAIM_VERSION_STRING);
 		lastctcp = now;
@@ -1784,8 +1749,6 @@ nFIRE_CTCPHAND(naim_ctcp_VERSION) {
 }
 
 nFIRE_CTCPHAND(naim_ctcp_PING) {
-	conn_t	*conn = (conn_t *)client;
-
 	if (lastctcp < now-1) {
 		firetalk_subcode_send_reply(sess, from, "PING", args);
 		lastctcp = now;
@@ -1795,8 +1758,6 @@ nFIRE_CTCPHAND(naim_ctcp_PING) {
 }
 
 nFIRE_CTCPHAND(naim_ctcp_LC) {
-	conn_t	*conn = (conn_t *)client;
-
 	if ((args == NULL) || (*args == 0))
 		return;
 
@@ -1822,7 +1783,7 @@ nFIRE_CTCPHAND(naim_ctcp_HEXTEXT) {
 	echof(curconn, "HEXTEXT", "<-- %s %s %s", from, args, buf);
 #endif
 
-	naim_recvfrom(client, from, NULL, buf, i/2, RF_ENCRYPTED);
+	naim_recvfrom(conn, from, NULL, buf, i/2, RF_ENCRYPTED);
 }
 
 nFIRE_CTCPHAND(naim_ctcprep_HEXTEXT) {
@@ -1840,13 +1801,12 @@ nFIRE_CTCPHAND(naim_ctcprep_HEXTEXT) {
 	echof(curconn, "HEXTEXT", "<-- %s %s %s", from, args, buf);
 #endif
 
-	naim_recvfrom(client, from, NULL, buf, i/2, RF_ENCRYPTED | RF_AUTOMATIC);
+	naim_recvfrom(conn, from, NULL, buf, i/2, RF_ENCRYPTED | RF_AUTOMATIC);
 }
 
 nFIRE_CTCPHAND(naim_ctcp_AUTOPEER) {
-	conn_t		*conn = (conn_t *)client;
-	buddylist_t	*blist;
-	char		*str;
+	buddylist_t *blist;
+	char	*str;
 
 	if ((args == NULL) || (*args == 0))
 		return;
@@ -2008,8 +1968,6 @@ nFIRE_CTCPHAND(naim_ctcp_AUTOPEER) {
 }
 
 nFIRE_CTCPHAND(naim_ctcp_default) {
-	conn_t	*conn = (conn_t *)client;
-
 	if (getvar_int(conn, "ctcpverbose") > 0) {
 		if (args == NULL)
 			echof(conn, "CTCP", "Unknown CTCP %s from <font color=\"#00FFFF\">%s</font>.\n",
@@ -2021,7 +1979,6 @@ nFIRE_CTCPHAND(naim_ctcp_default) {
 }
 
 nFIRE_CTCPHAND(naim_ctcprep_VERSION) {
-	conn_t	*conn = (conn_t *)client;
 	char	*str = strdup(args), *ver, *env;
 	int	i, show = 1;
 
@@ -2046,10 +2003,9 @@ nFIRE_CTCPHAND(naim_ctcprep_VERSION) {
 }
 
 nFIRE_CTCPHAND(naim_ctcprep_AWAY) {
-	conn_t	*conn = (conn_t *)client;
 	int	time;
-	const char	*rest;
-	buddywin_t	*bwin;
+	const char *rest;
+	buddywin_t *bwin;
 
 	if ((args == NULL) || (*args == 0))
 		return;
@@ -2096,8 +2052,6 @@ nFIRE_CTCPHAND(naim_ctcprep_AWAY) {
 }
 
 nFIRE_CTCPHAND(naim_ctcprep_default) {
-	conn_t	*conn = (conn_t *)client;
-
 	if (args == NULL)
 		echof(conn, NULL, "CTCP %s reply from <font color=\"#00FFFF\">%s</font>.\n",
 			command, from);

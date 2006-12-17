@@ -53,8 +53,8 @@ LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
 libfiretalk_a_AR = $(AR) $(ARFLAGS)
 libfiretalk_a_LIBADD =
-am_libfiretalk_a_OBJECTS = aim.$(OBJEXT) firetalk.$(OBJEXT) \
-	irc.$(OBJEXT) lily.$(OBJEXT) toc2.$(OBJEXT)
+am_libfiretalk_a_OBJECTS = firetalk.$(OBJEXT) irc.$(OBJEXT) \
+	lily.$(OBJEXT) pdutil.$(OBJEXT) toc2.$(OBJEXT)
 libfiretalk_a_OBJECTS = $(am_libfiretalk_a_OBJECTS)
 am_tester_OBJECTS = tester.$(OBJEXT)
 tester_OBJECTS = $(am_tester_OBJECTS)
@@ -196,12 +196,11 @@ target_alias = @target_alias@
 EXTRA_DIST = firetalk.m4
 noinst_LIBRARIES = libfiretalk.a
 libfiretalk_a_SOURCES = \
-	aim.c \
-	aim.h \
 	firetalk.c \
 	firetalk-int.h \
 	irc.c \
 	lily.c \
+	pdutil.c \
 	toc2.c \
 	toc2_uuids.h
 
