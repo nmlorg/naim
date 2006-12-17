@@ -17,7 +17,7 @@
 
 #define NLUA_STRING_GET(ctype, varname) \
 static int _nlua_ ## ctype ## _get_ ## varname(lua_State *L) { \
-	ctype	*obj = _get_ ## ctype(L, 1); \
+	ctype	*obj = (ctype *)lua_touserdata(L, 1); \
 	\
 	lua_pushstring(L, obj->varname?obj->varname:""); \
 	return(1); \
@@ -47,13 +47,19 @@ void nlua_hook_delconn(conn_t *conn)
 
 void _push_conn_t(lua_State *L, conn_t *conn) {
 	_getsubtable("connections");
-	lua_pushstring(lua, conn->winname);
-	lua_gettable(lua, -2);
-	lua_remove(lua, -2);
+	lua_pushstring(L, conn->winname);
+	lua_gettable(L, -2);
+	lua_remove(L, -2);
 }
 
 static conn_t *_get_conn_t(lua_State *L, int index) {
-	return((conn_t *)lua_touserdata(L, index));
+	conn_t	*obj;
+
+	lua_pushstring(L, "handle");
+	lua_gettable(L, index);
+	obj = (conn_t *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return(obj);
 }
 
 NLUA_STRING_GET(conn_t, sn);
@@ -153,7 +159,13 @@ void	nlua_hook_delwin(conn_t *conn, buddywin_t *bwin) {
 }
 
 static buddywin_t *_get_buddywin_t(lua_State *L, int index) {
-	return((buddywin_t *)lua_touserdata(L, index));
+	buddywin_t *obj;
+
+	lua_pushstring(L, "handle");
+	lua_gettable(L, index);
+	obj = (buddywin_t *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return(obj);
 }
 
 NLUA_STRING_GET(buddywin_t, winname);
