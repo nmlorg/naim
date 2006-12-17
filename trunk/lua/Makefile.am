@@ -7,7 +7,7 @@ EXTRA_DIST = \
 	cmpllua.sh \
 	default.lua \
 	examples/eliza.lua \
-	examples/testnaim.lua
+	examples/i-r-elite-script.lua
 
 noinst_LTLIBRARIES = liblua.la libnlua.la
 liblua_la_SOURCES = \
@@ -24,6 +24,7 @@ libnlua_la_SOURCES = \
 	commands.c \
 	conn.c \
 	garbage.c \
+	hooks.c \
 	moon.c \
 	moon-int.h \
 	script.c \

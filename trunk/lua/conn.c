@@ -1,11 +1,14 @@
 /*  _ __   __ _ ___ __  __
 ** | '_ \ / _` |_ _|  \/  | naim
 ** | | | | | | || || |\/| | Copyright 1998-2006 Daniel Reed <n@ml.org>
-** | | | | |_| || || |  | | moon_conn.c Copyright 2006 Joshua Wise <joshua@joshuawise.com>
+** | | | | |_| || || |  | | conn.c Copyright 2006 Joshua Wise <joshua@joshuawise.com>
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
 #include "moon-int.h"
+#include <naim/naim.h>
+
+extern faimconf_t faimconf;
 
 #define NLUA_STRING_GET(ctype, varname) \
 static int _nlua_ ## ctype ## _get_ ## varname(lua_State *L) { \
@@ -87,6 +90,17 @@ static int _nlua_conn_t_status_echo(lua_State *L) {
 	return(0);
 }
 
+static int _nlua_conn_t_x_hprint(lua_State *L) {
+	conn_t	*conn;
+	const unsigned char *text;
+
+	if ((conn = _get_conn_t(L, 1)) == NULL)
+		return(luaL_error(L, "No connection object; use naim.connections[CONN]:x_hprint instead of naim.connections[CONN].x_hprint."));
+	text = luaL_checkstring(L, 2);
+	hwprintf(&(conn->nwin), C(CONN,TEXT), "%s", text);
+	return(0);
+}
+
 #define NLUA_CONN_COMMAND(name) \
 static int _nlua_conn_t_ ## name(lua_State *L) { \
 	extern void ua_ ## name(conn_t *conn, int argc, const char **args); \
@@ -137,6 +151,7 @@ const struct luaL_reg naim_prototypes_connectionslib[] = {
 	{ "get_server",		_nlua_conn_t_get_server },
 	{ "get_profile",	_nlua_conn_t_get_profile },
 	{ "status_echo",	_nlua_conn_t_status_echo },
+	{ "x_hprint",		_nlua_conn_t_x_hprint },
 #define NN(x) { #x, _nlua_conn_t_ ## x },
 CONN_COMMANDS
 #undef NN
@@ -184,6 +199,28 @@ static buddywin_t *_get_buddywin_t(lua_State *L, int index) {
 
 NLUA_STRING_GET(buddywin_t, winname);
 
+static int _nlua_buddywin_t_echo(lua_State *L) {
+	buddywin_t *bwin;
+	const char *str;
+
+	if ((bwin = _get_buddywin_t(L, 1)) == NULL)
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:echo instead of naim.connections[CONN].buddies[BUDDY].echo."));
+	str = luaL_checkstring(L, 2);
+	window_echof(bwin, "%s\n", str);
+	return(0);
+}
+
+static int _nlua_buddywin_t_x_hprint(lua_State *L) {
+	buddywin_t *bwin;
+	const char *text;
+
+	if ((bwin = _get_buddywin_t(L, 1)) == NULL)
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:x_hprint instead of naim.connections[CONN].buddies[BUDDY].x_hprint."));
+	text = luaL_checkstring(L, 2);
+	hwprintf(&(bwin->nwin), C(IMWIN,TEXT), "%s", text);
+	return(0);
+  }
+
 #define NLUA_BUDDYWIN_T_COMMAND(name) \
 static int _nlua_buddywin_t_ ## name(lua_State *L) { \
 	extern void ua_ ## name(conn_t *conn, int argc, const char **args); \
@@ -213,6 +250,8 @@ BUDDYWIN_COMMANDS
 
 const struct luaL_reg naim_prototypes_windowslib[] = {
 	{ "get_winname",	_nlua_buddywin_t_get_winname },
+	{ "echo",		_nlua_buddywin_t_echo },
+	{ "x_hprint",		_nlua_buddywin_t_x_hprint },
 #define NN(x) { #x, _nlua_buddywin_t_ ## x },
 BUDDYWIN_COMMANDS
 #undef NN
