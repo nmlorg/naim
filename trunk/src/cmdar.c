@@ -25,7 +25,7 @@ cmdar_t	cmdar[] = {
 	{ "clearall",	ua_clearall,	{ NULL },	"Perform a /clear on all open windows",	{ { -1, -1, NULL } },	0,	0,	C_ANYWHERE },
 	{ "load",	ua_load,	{ NULL },	"Load a command file (such as .naimrc)",	{ { 1, 'F', "filename" }, { -1, -1, NULL } },	1,	1,	C_ANYWHERE },
 	{ "away",	ua_away,	{ NULL },	"Set or unset away status",	{ { 0, 's', "message" }, { -1, -1, NULL } },	0,	1,	C_ANYWHERE },
-	{ "names",	ua_names,	{ "buddylist", NULL },	"Display buddy list or members of a chat",	{ { 0, 'C', "chat" }, { -1, -1, NULL } },	0,	1,	C_ANYWHERE },
+	{ "buddylist",	ua_buddylist,	{ NULL },	"Display buddy list",	{ { 0, 's', "type" }, { -1, -1, NULL } },	0,	1,	C_ANYWHERE },
 	{ "join",	ua_join,	{ NULL },	"Participate in a chat",	{ { 1, 's', "chat" }, { 0, 's', "key" }, { -1, -1, NULL } },	1,	2,	C_ANYWHERE },
 	{ "namebuddy",	ua_namebuddy,	{ NULL },	"Change the real name for a buddy",	{ { 1, 'A', "name" }, { 0, 's', "realname" }, { -1, -1, NULL } },	1,	2,	C_ANYWHERE },
 	{ "groupbuddy",	ua_groupbuddy,	{ NULL },	"Change the group membership for a buddy",	{ { 1, 'A', "account" }, { 0, 's', "group" }, { -1, -1, NULL } },	1,	2,	C_ANYWHERE },

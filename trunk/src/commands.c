@@ -1039,157 +1039,114 @@ UAAOPT(string,message)
 	}
 }
 
-static int do_buddylist(conn_t *conn, const int showon, const int showoff) {
-	if (!inconn || !showon || !showoff || (conn->curbwin->et != CHAT) || (*(conn->curbwin->winname) == ':')) {
-		buddylist_t *blist;
-		int	maxname = strlen("Account"), maxgroup = strlen("Group"), maxnotes = strlen("Name"), max;
-		char	*spaces;
+UAFUNC(buddylist) {
+UADESC(Display buddy list)
+UAAOPT(string,type)
+	buddylist_t *blist;
+	int	showon = 1, showoff = 1,
+		maxname = strlen("Account"), maxgroup = strlen("Group"), maxnotes = strlen("Name"), max;
+	char	*spaces;
 
-		if (conn->buddyar == NULL) {
-			echof(conn, NULL, "Your buddy list is empty, try <font color=\"#00FF00\">/addbuddy buddyname</font>.\n");
-			return(1);
-		}
+	if ((argc > 0) && (strcasecmp(args[0], "ON") == 0))
+		showoff = 0;
+	else if ((argc > 0) && (strcasecmp(args[0], "OFF") == 0))
+		showon = 0;
 
-		echof(conn, NULL, "Buddy list:");
+	if (conn->buddyar == NULL) {
+		echof(conn, NULL, "Your buddy list is empty, try <font color=\"#00FF00\">/addbuddy buddyname</font>.\n");
+		return;
+	}
 
-		blist = conn->buddyar;
-		do {
-			const char	*name = USER_ACCOUNT(blist),
-					*nameq = ((*name == 0) || strchr(name, ' '))?"\"":"",
-					*group = USER_GROUP(blist),
-					*groupq = ((*group == 0) || strchr(group, ' '))?"\"":"",
-					*notes = USER_NAME(blist),
-					*notesq = ((*notes == 0) || strchr(notes, ' '))?"\"":"";
-			int		namelen = strlen(name)+2*strlen(nameq),
-					grouplen = strlen(group)+2*strlen(groupq),
-					noteslen = strlen(notes)+2*strlen(notesq);
+	echof(conn, NULL, "Buddy list:");
 
-			if (namelen > maxname)
-				maxname = namelen;
-			if (grouplen > maxgroup)
-				maxgroup = grouplen;
-			if (noteslen > maxnotes)
-				maxnotes = noteslen;
-		} while ((blist = blist->next) != NULL);
+	blist = conn->buddyar;
+	do {
+		const char	*name = USER_ACCOUNT(blist),
+				*nameq = ((*name == 0) || strchr(name, ' '))?"\"":"",
+				*group = USER_GROUP(blist),
+				*groupq = ((*group == 0) || strchr(group, ' '))?"\"":"",
+				*notes = USER_NAME(blist),
+				*notesq = ((*notes == 0) || strchr(notes, ' '))?"\"":"";
+		int		namelen = strlen(name)+2*strlen(nameq),
+				grouplen = strlen(group)+2*strlen(groupq),
+				noteslen = strlen(notes)+2*strlen(notesq);
 
-		if (maxname > maxgroup)
-			max = maxname;
-		else
-			max = maxgroup;
-		if (maxnotes > max)
-			max = maxnotes;
+		if (namelen > maxname)
+			maxname = namelen;
+		if (grouplen > maxgroup)
+			maxgroup = grouplen;
+		if (noteslen > maxnotes)
+			maxnotes = noteslen;
+	} while ((blist = blist->next) != NULL);
 
-		if ((spaces = malloc(max*6 + 1)) == NULL)
-			return(1);
-		*spaces = 0;
-		while (max > 0) {
-			strcat(spaces, "&nbsp;");
-			max--;
-		}
+	if (maxname > maxgroup)
+		max = maxname;
+	else
+		max = maxgroup;
+	if (maxnotes > max)
+		max = maxnotes;
 
+	if ((spaces = malloc(max*6 + 1)) == NULL)
+		return;
+	*spaces = 0;
+	while (max > 0) {
+		strcat(spaces, "&nbsp;");
+		max--;
+	}
+
+	echof(conn, NULL, "</B>&nbsp; %s"
+		" <font color=\"#800000\">%s<B>%s</B>%s</font>%.*s"
+		" <font color=\"#008000\">%s<B>%s</B>%s</font>%.*s"
+		" <font color=\"#000080\">%s<B>%s</B>%s</font>%.*s<B>%s\n",
+		"&nbsp; &nbsp;",
+		"", "Group", "",
+		6*(maxgroup - strlen("Group")), spaces,
+		"", "Account", "",
+		6*(maxname - strlen("Account")), spaces,
+		"", "Name", "",
+		6*(maxnotes - strlen("Name")), spaces,
+		" flags");
+
+	blist = conn->buddyar;
+	do {
+		const char	*name = USER_ACCOUNT(blist),
+				*nameq = ((*name == 0) || strchr(name, ' '))?"\"":"",
+				*group = USER_GROUP(blist),
+				*groupq = ((*group == 0) || strchr(group, ' '))?"\"":"",
+				*notes = USER_NAME(blist),
+				*notesq = ((*notes == 0) || strchr(notes, ' '))?"\"":"";
+		int		namelen = strlen(name)+2*strlen(nameq),
+				grouplen = strlen(group)+2*strlen(groupq),
+				noteslen = strlen(notes)+2*strlen(notesq);
+
+		if ((blist->offline == 0) && !showon)
+			continue;
+		else if ((blist->offline != 0) && !showoff)
+			continue;
 		echof(conn, NULL, "</B>&nbsp; %s"
 			" <font color=\"#800000\">%s<B>%s</B>%s</font>%.*s"
 			" <font color=\"#008000\">%s<B>%s</B>%s</font>%.*s"
-			" <font color=\"#000080\">%s<B>%s</B>%s</font>%.*s<B>%s\n",
-			"&nbsp; &nbsp;",
-			"", "Group", "",
-			6*(maxgroup - strlen("Group")), spaces,
-			"", "Account", "",
-			6*(maxname - strlen("Account")), spaces,
-			"", "Name", "",
-			6*(maxnotes - strlen("Name")), spaces,
-			" flags");
-
-		blist = conn->buddyar;
-		do {
-			const char	*name = USER_ACCOUNT(blist),
-					*nameq = ((*name == 0) || strchr(name, ' '))?"\"":"",
-					*group = USER_GROUP(blist),
-					*groupq = ((*group == 0) || strchr(group, ' '))?"\"":"",
-					*notes = USER_NAME(blist),
-					*notesq = ((*notes == 0) || strchr(notes, ' '))?"\"":"";
-			int		namelen = strlen(name)+2*strlen(nameq),
-					grouplen = strlen(group)+2*strlen(groupq),
-					noteslen = strlen(notes)+2*strlen(notesq);
-
-			if ((blist->offline == 0) && !showon)
-				continue;
-			else if ((blist->offline != 0) && !showoff)
-				continue;
-			echof(conn, NULL, "</B>&nbsp; %s"
-				" <font color=\"#800000\">%s<B>%s</B>%s</font>%.*s"
-				" <font color=\"#008000\">%s<B>%s</B>%s</font>%.*s"
-				" <font color=\"#000080\">%s<B>%s</B>%s</font>%.*s<B>%s%s%s%s%s%s%s\n",
-				blist->offline?"OFF":"<B>ON</B>&nbsp;",
-				groupq, group, groupq,
-				6*(maxgroup - grouplen), spaces,
-				nameq, name, nameq,
-				6*(maxname - namelen), spaces,
-				notesq, notes, notesq,
-				6*(maxnotes - noteslen), spaces,
-				USER_PERMANENT(blist)?"":" NON-PERMANENT",
-				blist->crypt?" CRYPT":"",
-				blist->tzname?" TZNAME":"",
-				blist->tag?" TAGGED":"",
-				blist->isaway?" AWAY":"",
-				blist->isidle?" IDLE":"",
-				blist->warnval?" WARNED":"",
-				blist->typing?" TYPING":"",
-				(blist->peer > 0)?" PEER":"");
-		} while ((blist = blist->next) != NULL);
-		free(spaces);
-		spaces = NULL;
-		echof(conn, NULL, "Use the <font color=\"#00FF00\">/namebuddy</font> command to change a buddy's name, or <font color=\"#00FF00\">/groupbuddy</font> to change a buddy's group.");
-		return(1);
-	}
-	return(0);
-}
-
-UAFUNC(names) {
-UAALIA(buddylist)
-UADESC(Display buddy list or members of a chat)
-UAAOPT(chat,chat)
-	const char *chat;
-	buddywin_t *bwin;
-
-	if ((argc == 0) || (strcasecmp(args[0], "ON") == 0) || (strcasecmp(args[0], "OFF") == 0)) {
-		int	showon = 1, showoff = 1;
-
-		if ((argc > 0) && (strcasecmp(args[0], "ON") == 0))
-			showoff = 0;
-		else if ((argc > 0) && (strcasecmp(args[0], "OFF") == 0))
-			showon = 0;
-
-		if (do_buddylist(conn, showon, showoff))
-			return;
-		chat = conn->curbwin->winname;
-	} else
-		chat = args[0];
-
-	bwin = cgetwin(conn, chat);
-	assert(bwin != NULL);
-	naim_chat_listmembers(conn, chat);
-	if (names == NULL)
-		window_echof(bwin, "Nobody on %s\n", chat);
-	else {
-		int	i, namesbuflen = 0;
-		char	*namesbuf = NULL;
-
-		for (i = 0; i < namec; i++) {
-			int	len = strlen(names[i])+1;
-
-			namesbuf = realloc(namesbuf, (namesbuflen+len+1)*sizeof(*namesbuf));
-			sprintf(namesbuf+namesbuflen, "%s ", names[i]);
-			namesbuflen += len;
-			free(names[i]);
-			names[i] = NULL;
-		}
-		free(names);
-		names = NULL;
-		namec = 0;
-		window_echof(bwin, "Users on %s: %s\n", chat, namesbuf);
-		free(namesbuf);
-	}
+			" <font color=\"#000080\">%s<B>%s</B>%s</font>%.*s<B>%s%s%s%s%s%s%s\n",
+			blist->offline?"OFF":"<B>ON</B>&nbsp;",
+			groupq, group, groupq,
+			6*(maxgroup - grouplen), spaces,
+			nameq, name, nameq,
+			6*(maxname - namelen), spaces,
+			notesq, notes, notesq,
+			6*(maxnotes - noteslen), spaces,
+			USER_PERMANENT(blist)?"":" NON-PERMANENT",
+			blist->crypt?" CRYPT":"",
+			blist->tzname?" TZNAME":"",
+			blist->tag?" TAGGED":"",
+			blist->isaway?" AWAY":"",
+			blist->isidle?" IDLE":"",
+			blist->warnval?" WARNED":"",
+			blist->typing?" TYPING":"",
+			(blist->peer > 0)?" PEER":"");
+	} while ((blist = blist->next) != NULL);
+	free(spaces);
+	spaces = NULL;
+	echof(conn, NULL, "Use the <font color=\"#00FF00\">/namebuddy</font> command to change a buddy's name, or <font color=\"#00FF00\">/groupbuddy</font> to change a buddy's group.");
 }
 
 UAFUNC(join) {

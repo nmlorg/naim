@@ -190,10 +190,10 @@ end
 
 
 
-function naim.call(table, ...)
+function naim.call(tab, ...)
 	local conn
-	local min = table.min
-	local max = table.max
+	local min = tab.min
+	local max = tab.max
 
 	local isconn = function(conn)
 		for k,v in pairs(naim.connections) do
@@ -203,32 +203,19 @@ function naim.call(table, ...)
 		end
 		return(nil)
 	end
-	local shift = function(t)
-		local n = {}
-
-		for i,v in ipairs(t) do
-			if i > 1 then
-				n[i-1] = v
-			end
-		end
-		return(n)
-	end
 
 	arg.n = nil
 
 	if arg[1] == nil or type(arg[1]) == "string" then
 		conn = naim.curconn()
+	elseif isconn(arg[1]) then
+		conn = table.remove(arg, 1)
+	elseif arg[1].conn == nil then
+		naim.echo("invalid first argument to " .. tostring(tab))
+		return
 	else
-		if isconn(arg[1]) then
-			conn = arg[1]
-			arg = shift(arg)
-		elseif arg[1].conn == nil then
-			naim.echo("invalid first argument to " .. tostring(table))
-			return
-		else
-			conn = arg[1].conn
-			arg[1] = tostring(arg[1])
-		end
+		conn = arg[1].conn
+		arg[1] = tostring(arg[1])
 	end
 
 	if #arg == 1 then
@@ -255,7 +242,7 @@ function naim.call(table, ...)
 		return
 	end
 
-	table.func(conn, arg)
+	tab.func(conn, arg)
 end
 
 naim.help = {
@@ -453,6 +440,49 @@ naim.commands.on = {
 	end,
 }
 
+naim.commands.names = {
+	min = 0,
+	max = 1,
+	desc = "List the users of a group",
+	args = { "group" },
+	func = function(conn, arg)
+		local window
+
+		if #arg > 0 and conn.windows[string.lower(arg[1])] then
+			window = conn.windows[string.lower(arg[1])]
+		else
+			window = conn:curwin()
+		end
+
+		local group = conn.groups[string.lower(tostring(window))]
+
+		if not group then
+			return naim.call(naim.commands.buddylist, conn, unpack(arg))
+		end
+
+		local maxlen = 0
+
+		for member,info in pairs(group.members) do
+			local mlen = member:len() + (info.admin and 1 or 0)
+
+			if mlen > maxlen then
+				maxlen = mlen
+			end
+		end
+
+		local t = {}
+
+		for member,info in pairs(group.members) do
+			local mlen = member:len() + (info.admin and 1 or 0)
+
+			table.insert(t, (info.admin and "@" or "") .. member .. string.rep("&nbsp;", maxlen-mlen))
+		end
+
+		local p = "Users in group " .. tostring(window) .. ":"
+
+		window:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, " "))
+	end,
+}
 
 
 
@@ -496,27 +526,7 @@ naim.hooks.add('proto_chat_synched', function(conn, chat)
 	group.synched = true
 
 	if window and naim.variables.autonames and tonumber(naim.variables.autonames) > 0 then
-		local maxlen = 0
-
-		for member,info in pairs(group.members) do
-			local mlen = member:len() + (info.admin and 1 or 0)
-
-			if mlen > maxlen then
-				maxlen = mlen
-			end
-		end
-
-		local t = {}
-
-		for member,info in pairs(group.members) do
-			local mlen = member:len() + (info.admin and 1 or 0)
-
-			table.insert(t, (info.admin and "@" or "") .. member .. string.rep("&nbsp;", maxlen-mlen))
-		end
-
-		local p = "Users in group " .. chat .. ":"
-
-		window:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, " "))
+		naim.call(naim.commands.names, conn, chat)
 	end
 end, 100)
 

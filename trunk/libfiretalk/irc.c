@@ -189,7 +189,7 @@ static fte_t irc_isprint(const int c) {
 }
 
 static fte_t irc_isnickfirst(const int c) {
-	return(isalpha(c) || (c == '[') || (c == ']') || (c == '\\') || (c == '`') || (c == '^') || (c == '{') || (c == '}'));
+	return(isalpha(c) || (c == '_') || (c == '[') || (c == ']') || (c == '\\') || (c == '`') || (c == '^') || (c == '{') || (c == '}'));
 }
 
 #if 0
