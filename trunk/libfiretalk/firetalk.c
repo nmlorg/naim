@@ -1,4 +1,4 @@
-/* firetalk.c - FireTalk wrapper definitions
+/* firetalk.c - FireTalk protocol interface
 ** Copyright (C) 2000 Ian Gulliver
 ** Copyright 2002-2006 Daniel Reed <n@ml.org>
 ** 
@@ -83,14 +83,11 @@ int	firetalk_find_protocol(const char *strprotocol) {
 }
 
 
-static int _connection_canary = 0;
-#define CONNECTION_CANARY	(&_connection_canary)
+int	firetalk_connection_canary = 0;
+#define CONNECTION_CANARY	(&firetalk_connection_canary)
 
-#define DEBUG
-
-#ifdef DEBUG
-# define VERIFYCONN \
-	do { \
+#ifdef DEBUG_ECHO
+# define VERIFYCONN	do { \
 		assert(handle_head != NULL); \
 		if (firetalk_check_handle(conn) != FE_SUCCESS) \
 			abort(); \
@@ -106,13 +103,12 @@ static fte_t firetalk_check_handle(firetalk_connection_t *c) {
 	return(FE_BADHANDLE);
 }
 #else
-# define VERIFYCONN \
-	do { \
+# define VERIFYCONN	do { \
 	} while(0)
 #endif
 
 /* firetalk_find_by_toc searches the firetalk handle list for the toc handle passed, and returns the firetalk handle */
-firetalk_connection_t *firetalk_find_handle(struct firetalk_driver_connection_t *c) {
+firetalk_connection_t *firetalk_find_handle(const struct firetalk_driver_connection_t *const c) {
 	firetalk_connection_t *conn;
 
 	for (conn = handle_head; conn != NULL; conn = conn->next)
@@ -162,14 +158,11 @@ firetalk_deny_t *firetalk_im_internal_add_deny(firetalk_connection_t *conn, cons
 			break; /* not an error, user is in buddy list */
 
 	if (iter == NULL) {
-		iter = calloc(1, sizeof(*iter));
-		if (iter == NULL)
+		if ((iter = firetalk_deny_t_new()) == NULL)
 			abort();
 		iter->next = conn->deny_head;
 		conn->deny_head = iter;
-		iter->nickname = strdup(nickname);
-		if (iter->nickname == NULL)
-			abort();
+		STRREPLACE(iter->nickname, nickname);
 	}
 
 	firetalk_callback_im_buddyonline(conn->handle, nickname, 0);
@@ -331,14 +324,11 @@ fte_t	firetalk_chat_internal_add_room(firetalk_connection_t *conn, const char *c
 		if (firetalk_protocols[conn->protocol]->comparenicks(iter->name, name) == FE_SUCCESS)
 			return(FE_DUPEROOM); /* not an error, we're already in room */
 
-	iter = calloc(1, sizeof(*iter));
-	if (iter == NULL)
+	if ((iter = firetalk_room_t_new()) == NULL)
 		abort();
 	iter->next = conn->room_head;
 	conn->room_head = iter;
-	iter->name = strdup(name);
-	if (iter->name == NULL)
-		abort();
+	STRREPLACE(iter->name, name);
 
 	return(FE_SUCCESS);
 }
@@ -360,14 +350,11 @@ fte_t	firetalk_chat_internal_add_member(firetalk_connection_t *conn, const char 
 		if (firetalk_protocols[conn->protocol]->comparenicks(memberiter->nickname, nickname) == FE_SUCCESS)
 			return(FE_SUCCESS);
 
-	memberiter = calloc(1, sizeof(*memberiter));
-	if (memberiter == NULL)
+	if ((memberiter = firetalk_member_t_new()) == NULL)
 		abort();
 	memberiter->next = iter->member_head;
 	iter->member_head = memberiter;
-	memberiter->nickname = strdup(nickname);
-	if (memberiter->nickname == NULL)
-		abort();
+	STRREPLACE(memberiter->nickname, nickname);
 
 	return(FE_SUCCESS);
 }
@@ -613,24 +600,13 @@ void	firetalk_callback_im_buddyaway(struct firetalk_driver_connection_t *c, cons
 static firetalk_buddy_t *firetalk_im_insert_buddy(firetalk_connection_t *conn, const char *const name, const char *const group, const char *const friendly) {
 	firetalk_buddy_t *iter;
 
-	iter = calloc(1, sizeof(*iter));
-	if (iter == NULL)
+	if ((iter = firetalk_buddy_t_new()) == NULL)
 		abort();
 	iter->next = conn->buddy_head;
 	conn->buddy_head = iter;
-	iter->nickname = strdup(name);
-	if (iter->nickname == NULL)
-		abort();
-	iter->group = strdup(group);
-	if (iter->group == NULL)
-		abort();
-	if (friendly == NULL)
-		iter->friendly = NULL;
-	else {
-		iter->friendly = strdup(friendly);
-		if (iter->friendly == NULL)
-			abort();
-	}
+	STRREPLACE(iter->nickname, name);
+	STRREPLACE(iter->group, group);
+	STRREPLACE(iter->friendly, friendly);
 	if (conn->callbacks[FC_IM_BUDDYADDED] != NULL)
 		conn->callbacks[FC_IM_BUDDYADDED](conn, conn->clientstruct, iter->nickname, iter->group, iter->friendly);
 	return(iter);
@@ -1163,22 +1139,15 @@ void	firetalk_callback_file_offer(struct firetalk_driver_connection_t *c, const 
 	firetalk_connection_t *conn = firetalk_find_handle(c);
 	firetalk_transfer_t *iter;
 
-	iter = calloc(1, sizeof(*iter));
-	if (iter == NULL)
+	if ((iter = firetalk_transfer_t_new()) == NULL)
 		abort();
 	iter->next = conn->file_head;
 	conn->file_head = iter;
-	iter->who = strdup(from);
-	if (iter->who == NULL)
-		abort();
-	iter->filename = strdup(filename);
-	if (iter->filename == NULL)
-		abort();
+	STRREPLACE(iter->who, from);
+	STRREPLACE(iter->filename, filename);
 	iter->size = size;
 	iter->state = FF_STATE_WAITLOCAL;
 	iter->direction = FF_DIRECTION_RECEIVING;
-	firetalk_sock_init(&(iter->sock));
-	iter->filefd = -1;
 	iter->port = htons(port);
 	iter->type = type;
 	if (inet_aton(ipstring, &iter->inet_ip) == 0) {
@@ -1193,7 +1162,7 @@ void	firetalk_callback_file_offer(struct firetalk_driver_connection_t *c, const 
 			iter->tryinet6 = 1;
 #endif
 	if (conn->callbacks[FC_FILE_OFFER])
-		conn->callbacks[FC_FILE_OFFER](conn, conn->clientstruct, iter, from, filename, size);
+		conn->callbacks[FC_FILE_OFFER](conn, conn->clientstruct, iter, iter->who, iter->filename, iter->size);
 }
 
 void	firetalk_handle_receive(firetalk_connection_t *c, firetalk_transfer_t *filestruct) {
@@ -1376,16 +1345,12 @@ firetalk_connection_t *firetalk_create_handle(const int protocol, struct firetal
 		firetalkerror = FE_BADPROTO;
 		return(NULL);
 	}
-	c = calloc(1, sizeof(*c));
-	if (c == NULL)
+	if ((c = firetalk_connection_t_new()) == NULL)
 		abort();
-	c->canary = CONNECTION_CANARY;
 	c->next = handle_head;
 	handle_head = c;
 	c->clientstruct = clientstruct;
 	c->protocol = protocol;
-	firetalk_sock_init(&(c->sock));
-	firetalk_buffer_init(&(c->buffer));
 	firetalk_buffer_alloc(&(c->buffer), firetalk_protocols[protocol]->default_buffersize);
 	c->handle = firetalk_protocols[protocol]->create_handle();
 	return(c);
@@ -1826,21 +1791,17 @@ fte_t	firetalk_subcode_register_request_callback(firetalk_connection_t *conn, co
 	if (command == NULL) {
 		if (conn->subcode_request_default != NULL)
 			firetalk_subcode_callback_t_delete(conn->subcode_request_default);
-		conn->subcode_request_default = calloc(1, sizeof(*conn->subcode_request_default));
-		if (conn->subcode_request_default == NULL)
+		if ((conn->subcode_request_default = firetalk_subcode_callback_t_new()) == NULL)
 			abort();
 		conn->subcode_request_default->callback = (ptrtofnct)callback;
 	} else {
 		firetalk_subcode_callback_t *iter;
 
-		iter = calloc(1, sizeof(*iter));
-		if (iter == NULL)
+		if ((iter = firetalk_subcode_callback_t_new()) == NULL)
 			abort();
 		iter->next = conn->subcode_request_head;
 		conn->subcode_request_head = iter;
-		iter->command = strdup(command);
-		if (iter->command == NULL)
-			abort();
+		STRREPLACE(iter->command, command);
 		iter->callback = (ptrtofnct)callback;
 	}
 	return(FE_SUCCESS);
@@ -1852,26 +1813,18 @@ fte_t	firetalk_subcode_register_request_reply(firetalk_connection_t *conn, const
 	if (command == NULL) {
 		if (conn->subcode_request_default != NULL)
 			firetalk_subcode_callback_t_delete(conn->subcode_request_default);
-		conn->subcode_request_default = calloc(1, sizeof(*conn->subcode_request_default));
-		if (conn->subcode_request_default == NULL)
+		if ((conn->subcode_request_default = firetalk_subcode_callback_t_new()) == NULL)
 			abort();
-		conn->subcode_request_default->staticresp = strdup(reply);
-		if (conn->subcode_request_default->staticresp == NULL)
-			abort();
+		STRREPLACE(conn->subcode_request_default->staticresp, reply);
 	} else {
 		firetalk_subcode_callback_t *iter;
 
-		iter = calloc(1, sizeof(*iter));
-		if (iter == NULL)
+		if ((iter = firetalk_subcode_callback_t_new()) == NULL)
 			abort();
 		iter->next = conn->subcode_request_head;
 		conn->subcode_request_head = iter;
-		iter->command = strdup(command);
-		if (iter->command == NULL)
-			abort();
-		iter->staticresp = strdup(reply);
-		if (iter->staticresp == NULL)
-			abort();
+		STRREPLACE(iter->command, command);
+		STRREPLACE(iter->staticresp, reply);
 	}
 	return(FE_SUCCESS);
 }
@@ -1882,21 +1835,17 @@ fte_t	firetalk_subcode_register_reply_callback(firetalk_connection_t *conn, cons
 	if (command == NULL) {
 		if (conn->subcode_reply_default)
 			firetalk_subcode_callback_t_delete(conn->subcode_reply_default);
-		conn->subcode_reply_default = calloc(1, sizeof(*conn->subcode_reply_default));
-		if (conn->subcode_reply_default == NULL)
+		if ((conn->subcode_reply_default = firetalk_subcode_callback_t_new()) == NULL)
 			abort();
 		conn->subcode_reply_default->callback = (ptrtofnct)callback;
 	} else {
 		firetalk_subcode_callback_t *iter;
 
-		iter = calloc(1, sizeof(*iter));
-		if (iter == NULL)
+		if ((iter = firetalk_subcode_callback_t_new()) == NULL)
 			abort();
 		iter->next = conn->subcode_reply_head;
 		conn->subcode_reply_head = iter;
-		iter->command = strdup(command);
-		if (iter->command == NULL)
-			abort();
+		STRREPLACE(iter->command, command);
 		iter->callback = (ptrtofnct)callback;
 	}
 	return(FE_SUCCESS);
@@ -1911,17 +1860,12 @@ fte_t	firetalk_file_offer(firetalk_connection_t *conn, const char *const nicknam
 
 	VERIFYCONN;
 
-	iter = calloc(1, sizeof(*iter));
-	if (iter == NULL)
+	if ((iter = firetalk_transfer_t_new()) == NULL)
 		abort();
 	iter->next = conn->file_head;
 	conn->file_head = iter;
-	iter->who = strdup(nickname);
-	if (iter->who == NULL)
-		abort();
-	iter->filename = strdup(filename);
-	if (iter->filename == NULL)
-		abort();
+	STRREPLACE(iter->who, nickname);
+	STRREPLACE(iter->filename, filename);
 	iter->clientfilestruct = clientfilestruct;
 
 	iter->filefd = open(filename, O_RDONLY);
@@ -1941,7 +1885,6 @@ fte_t	firetalk_file_offer(firetalk_connection_t *conn, const char *const nicknam
 
 	iter->size = (long)s.st_size;
 
-	firetalk_sock_init(&(iter->sock));
 	iter->sock.fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (iter->sock.fd == -1) {
 		assert(conn->file_head == iter);

@@ -26,24 +26,14 @@ typedef struct toc_room_t {
 		joined:1;
 } toc_room_t;
 
+ZERO_CTOR(toc_room_t);
+TYPE_NEW(toc_room_t);
 static inline void toc_room_t_dtor(toc_room_t *this) {
 	free(this->name);
 	memset(this, 0, sizeof(*this));
 }
-
-static inline void toc_room_t_delete(toc_room_t *this) {
-	toc_room_t_dtor(this);
-	free(this);
-}
-
-static inline void toc_room_t_list_delete(toc_room_t *head) {
-	if (head != NULL) {
-		toc_room_t *next = head->next;
-
-		toc_room_t_delete(head);
-		toc_room_t_list_delete(next);
-	}
-}
+TYPE_DELETE(toc_room_t);
+LIST_DELETE(toc_room_t);
 
 typedef struct toc_infoget_t {
 	struct toc_infoget_t *next;
@@ -51,25 +41,19 @@ typedef struct toc_infoget_t {
 	firetalk_buffer_t buffer;
 } toc_infoget_t;
 
+static inline void toc_infoget_t_ctor(toc_infoget_t *this) {
+	memset(this, 0, sizeof(*this));
+	firetalk_sock_t_ctor(&(this->sock));
+	firetalk_buffer_t_ctor(&(this->buffer));
+}
+TYPE_NEW(toc_infoget_t);
 static inline void toc_infoget_t_dtor(toc_infoget_t *this) {
 	firetalk_sock_t_dtor(&(this->sock));
 	firetalk_buffer_t_dtor(&(this->buffer));
 	memset(this, 0, sizeof(*this));
 }
-
-static inline void toc_infoget_t_delete(toc_infoget_t *this) {
-	toc_infoget_t_dtor(this);
-	free(this);
-}
-
-static inline void toc_infoget_t_list_delete(toc_infoget_t *head) {
-	if (head != NULL) {
-		toc_infoget_t *next = head->next;
-
-		toc_infoget_t_delete(head);
-		toc_infoget_t_list_delete(next);
-	}
-}
+TYPE_DELETE(toc_infoget_t);
+LIST_DELETE(toc_infoget_t);
 
 typedef struct firetalk_driver_connection_t {
 	uint16_t local_sequence;		/* our sequence number */
@@ -93,6 +77,12 @@ typedef struct firetalk_driver_connection_t {
 	int	denybuflen;
 } toc_conn_t;
 
+static inline void toc_conn_t_ctor(toc_conn_t *this) {
+	memset(this, 0, sizeof(*this));
+	this->lasttalk = time(NULL);
+	STRREPLACE(this->buddybuflastgroup, "");
+}
+TYPE_NEW(toc_conn_t);
 static inline void toc_conn_t_dtor(toc_conn_t *this) {
 	free(this->nickname);
 	free(this->awaymsg);
@@ -101,11 +91,9 @@ static inline void toc_conn_t_dtor(toc_conn_t *this) {
 	free(this->buddybuflastgroup);
 	memset(this, 0, sizeof(*this));
 }
+TYPE_DELETE(toc_conn_t);
 
-static inline void toc_conn_t_delete(toc_conn_t *this) {
-	toc_conn_t_dtor(this);
-	free(this);
-}
+
 
 #define SFLAP_FRAME_SIGNON ((uint8_t)1)
 #define SFLAP_FRAME_DATA ((uint8_t)2)
@@ -179,7 +167,7 @@ static void toc_echo_send(toc_conn_t *c, const char *const where, const unsigned
 
 /* Internal Function Definitions */
 
-static fte_t toc_find_packet(toc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos, char *outbuffer, const int frametype, uint16_t *l) {
+static fte_t toc_find_packet(toc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos, char *outbuffer, uint16_t outbuffersize, const int frametype, uint16_t *l) {
 	uint8_t	ft;
 	uint16_t sequence,
 		length;
@@ -188,22 +176,27 @@ static fte_t toc_find_packet(toc_conn_t *c, unsigned char *buffer, uint16_t *buf
 		return(FE_NOTFOUND);
 
 	length = toc_get_length_from_header(buffer);
-	if (length > (TOC_SERVERSEND_MAXLEN - TOC_HEADER_LENGTH)) {
+	if ((TOC_HEADER_LENGTH + length) > TOC_SERVERSEND_MAXLEN) {
+		toc_internal_disconnect(c, FE_PACKETSIZE);
+		return(FE_DISCONNECT);
+	}
+	if ((length+1) > outbuffersize) {
 		toc_internal_disconnect(c, FE_PACKETSIZE);
 		return(FE_DISCONNECT);
 	}
 
-	if (*bufferpos < length + TOC_HEADER_LENGTH) /* don't have the whole packet yet */
+	if (*bufferpos < (TOC_HEADER_LENGTH + length)) /* don't have the whole packet yet */
 		return(FE_NOTFOUND);
 
 	ft = toc_get_frame_type_from_header(buffer);
 	sequence = toc_get_sequence_from_header(buffer);
 
-	memcpy(outbuffer, &buffer[TOC_HEADER_LENGTH], length);
-	*bufferpos -= length + TOC_HEADER_LENGTH;
-	memmove(buffer, &buffer[TOC_HEADER_LENGTH + length], *bufferpos);
-	outbuffer[length] = '\0';
+	memcpy(outbuffer, buffer+TOC_HEADER_LENGTH, length);
+	outbuffer[length] = 0;
 	*l = length;
+
+	*bufferpos -= TOC_HEADER_LENGTH + length;
+	memmove(buffer, buffer+TOC_HEADER_LENGTH+length, *bufferpos);
 
 #ifdef DEBUG_ECHO
 	if (ft != 5) {
@@ -747,14 +740,11 @@ static int toc_internal_disconnect(toc_conn_t *c, const fte_t error) {
 static int toc_internal_add_room(toc_conn_t *c, const char *const name, const int exchange) {
 	toc_room_t *iter;
 
-	iter = calloc(1, sizeof(*iter));
-	if (iter == NULL)
+	if ((iter = toc_room_t_new()) == NULL)
 		abort();
 	iter->next = c->room_head;
 	c->room_head = iter;
-	iter->name = strdup(name);
-	if (iter->name == NULL)
-		abort();
+	STRREPLACE(iter->name, name);
 	iter->exchange = exchange;
 	return(FE_SUCCESS);
 }
@@ -983,13 +973,8 @@ static fte_t toc_isprint(const int c) {
 static toc_conn_t *toc_create_handle() {
 	toc_conn_t *c;
 
-	c = calloc(1, sizeof(*c));
-	if (c == NULL)
+	if ((c = toc_conn_t_new()) == NULL)
 		abort();
-
-	c->lasttalk = time(NULL);
-	c->buddybuflastgroup = strdup("");
-
 	return(c);
 }
 
@@ -1294,14 +1279,8 @@ static fte_t toc_set_away(toc_conn_t *c, const char *const message, const int au
 		c->awaysince = time(NULL);
 		return(toc_send_printf(c, "toc_set_away %s", message));
 	} else {
-		if (c->awaymsg != NULL) {
-			free(c->awaymsg);
-			c->awaymsg = NULL;
-
-			assert(c->awaysince > 0);
-			c->awaysince = 0;
-		}
-		assert(c->awaysince == 0);
+		FREESTR(c->awaymsg);
+		c->awaysince = 0;
 		return(toc_send_printf(c, "toc_set_away"));
 	}
 }
@@ -1617,7 +1596,7 @@ static fte_t toc_got_data(toc_conn_t *c, unsigned char *buffer, uint16_t *buffer
 	uint16_t l;
 
   got_data_start:
-	r = toc_find_packet(c, buffer, bufferpos, data, SFLAP_FRAME_DATA, &l);
+	r = toc_find_packet(c, buffer, bufferpos, data, sizeof(data), SFLAP_FRAME_DATA, &l);
 	if (r == FE_NOTFOUND)
 		return(FE_SUCCESS);
 	else if (r != FE_SUCCESS)
@@ -2087,13 +2066,10 @@ static fte_t toc_got_data(toc_conn_t *c, unsigned char *buffer, uint16_t *buffer
 			return(FE_INVALIDFORMAT);
 		}
 
-		i = calloc(1, sizeof(*i));
-		if (i == NULL)
+		if ((i = toc_infoget_t_new()) == NULL)
 			abort();
 		i->next = c->infoget_head;
 		c->infoget_head = i;
-		firetalk_sock_init(&(i->sock));
-		firetalk_buffer_init(&(i->buffer));
 		firetalk_buffer_alloc(&(i->buffer), USHRT_MAX);
 		snprintf(i->buffer.buffer, i->buffer.size, "GET /%s HTTP/1.0\r\n\r\n", args[2]);
 		memmove(&(i->sock.remote_addr), firetalk_callback_remotehost4(c), sizeof(i->sock.remote_addr));
@@ -2103,7 +2079,7 @@ static fte_t toc_got_data(toc_conn_t *c, unsigned char *buffer, uint16_t *buffer
 		if (firetalk_sock_connect(&(i->sock)) != FE_SUCCESS) {
 			firetalk_callback_error(c, FE_CONNECT, (lastinfo[0]=='\0')?NULL:lastinfo, "Failed to connect to info server");
 			c->infoget_head = i->next;
-			free(i);
+			toc_infoget_t_delete(i);
 			return(FE_SUCCESS);
 		}
 	} else if (strcmp(arg0, "NEW_BUDDY_REPLY2") == 0) {
@@ -2293,7 +2269,7 @@ static fte_t toc_got_data_connecting(toc_conn_t *c, unsigned char *buffer, uint1
 
 got_data_connecting_start:
 	
-	r = toc_find_packet(c, buffer, bufferpos, data, (c->connectstate==0)?SFLAP_FRAME_SIGNON:SFLAP_FRAME_DATA, &length);
+	r = toc_find_packet(c, buffer, bufferpos, data, sizeof(data), (c->connectstate==0)?SFLAP_FRAME_SIGNON:SFLAP_FRAME_DATA, &length);
 	if (r == FE_NOTFOUND)
 		return(FE_SUCCESS);
 	else if (r != FE_SUCCESS)
