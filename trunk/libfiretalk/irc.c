@@ -1065,6 +1065,7 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 
 			for (loc = 0; args[3][loc] != 0; loc++) {
 				char	*tmp;
+				int	arged;
 
 				if (args[3][loc] == '+') {
 					dir = 1;
@@ -1076,6 +1077,11 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 
 				if (((tmp = strchr(c->chanmodes, args[3][loc])) == NULL) && (strchr(c->chanprefix, args[3][loc]) == NULL))
 					break;
+
+				if ((tmp == NULL) || (tmp[1] == ','))
+					arged = 1;
+				else
+					arged = 0;
 
 				switch (args[3][loc]) {
 				  case 'o':
@@ -1097,13 +1103,13 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 					break;
 				  default:
 					if (dir == 1)
-						firetalk_callback_chat_modeset(c, args[2], source, args[3][loc], (tmp[1] == ',')?args[arg]:NULL);
+						firetalk_callback_chat_modeset(c, args[2], source, args[3][loc], arged?args[arg]:NULL);
 					else
-						firetalk_callback_chat_modeunset(c, args[2], source, args[3][loc], (tmp[1] == ',')?args[arg]:NULL);
+						firetalk_callback_chat_modeunset(c, args[2], source, args[3][loc], arged?args[arg]:NULL);
 					break;
 				}
 
-				if ((tmp == NULL) || (tmp[1] == ','))
+				if (arged)
 					arg++;
 			}
 			return(FE_SUCCESS);
