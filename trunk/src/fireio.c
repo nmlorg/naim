@@ -1002,7 +1002,7 @@ nFIRE_HANDLER(naim_connectfailed) {
 			strcat(str, "_");
 		free(conn->sn);
 		conn->sn = str;
-		conio_connect(conn, 0, NULL);
+		ua_connect(conn, 0, NULL);
 	}
 }
 
@@ -1064,7 +1064,7 @@ nFIRE_HANDLER(naim_error_disconnect) {
 		echof(conn, NULL, "Please wait...\n");
 	else if ((error != FE_USERDISCONNECT) && getvar_int(conn, "autoreconnect")) {
 		echof(conn, NULL, "Attempting to reconnect...\n");
-		conio_connect(conn, 0, NULL);
+		ua_connect(conn, 0, NULL);
 	} else
 		echof(conn, NULL, "Type <font color=\"#00FF00\">/%s:connect</font> to reconnect.\n", conn->winname);
 }
@@ -1203,7 +1203,7 @@ nFIRE_HANDLER(naim_chat_joined) {
 		const char *args[1] = { bwin->winname };
 
 		window_echof(bwin, "You are now participating in the %s discussion. Checking for current participants...\n", room);
-		conio_names(conn, 1, args);
+		ua_names(conn, 1, args);
 	}
 	bupdate();
 }

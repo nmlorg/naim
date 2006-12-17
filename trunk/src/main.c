@@ -298,9 +298,9 @@ int	main_stub(int argc, char **args) {
 
 	{
 		const char *args[] = { "dummy", "AIM" };
-		extern void conio_newconn(conn_t *, int, const char **);
+		extern void ua_newconn(conn_t *, int, const char **);
 
-		conio_newconn(NULL, 2, args);
+		ua_newconn(NULL, 2, args);
 	}
 
 	{
@@ -344,28 +344,28 @@ int	main_stub(int argc, char **args) {
 
 				snprintf(buf, sizeof(buf), "%s:READPROFILE %s/.n%sprofile",
 					conn->winname, home, invocation);
-				conio_handlecmd(buf);
+				ua_handlecmd(buf);
 			} while ((conn = conn->next) != curconn);
 		} else {
 			if (want_aim)
-				conio_handlecmd("/newconn AIM TOC2");
+				ua_handlecmd("/newconn AIM TOC2");
 			else if (want_irc)
-				conio_handlecmd("/newconn EFnet IRC");
+				ua_handlecmd("/newconn EFnet IRC");
 			else if (want_icq)
-				conio_handlecmd("/newconn ICQ IRC");
+				ua_handlecmd("/newconn ICQ IRC");
 			else if (want_lily)
-				conio_handlecmd("/newconn Lily SLCP");
+				ua_handlecmd("/newconn Lily SLCP");
 			echof(curconn, NULL, "You do not have a %s file, so I am using defaults. You can use the <font color=\"#00FF00\">/save</font> command to create a new %s file.",
 				naim_basename(naimrcfilename), naim_basename(naimrcfilename));
 			if (want_aim || want_icq)
-				conio_handlecmd("/addbuddy \"naim help\" \"naim author\" Dan Reed");
+				ua_handlecmd("/addbuddy \"naim help\" \"naim author\" Dan Reed");
 			else if (want_irc || want_lily)
-				conio_handlecmd("/addbuddy n \"naim author\" Dan Reed");
+				ua_handlecmd("/addbuddy n \"naim author\" Dan Reed");
 			if (want_irc) {
-				extern void conio_connect(conn_t *, int, char **);
+				extern void ua_connect(conn_t *, int, char **);
 
-				conio_handlecmd("/join " IRC_SUPPORT_CHANNEL);
-				conio_connect(curconn, argc-1, args+1);
+				ua_handlecmd("/join " IRC_SUPPORT_CHANNEL);
+				ua_connect(curconn, argc-1, args+1);
 			}
 		}
 	}
@@ -375,9 +375,9 @@ int	main_stub(int argc, char **args) {
 
 	if (curconn->next != curconn) {
 		const char *args[] = { "dummy" };
-		extern void conio_delconn(conn_t *, int, const char **);
+		extern void ua_delconn(conn_t *, int, const char **);
 
-		conio_delconn(curconn, 1, args);
+		ua_delconn(curconn, 1, args);
 	}
 
 	statrefresh();

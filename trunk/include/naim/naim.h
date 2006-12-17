@@ -13,7 +13,7 @@
 
 #include <firetalk.h>
 
-#define CONIO_MAXPARMS	10
+#define UA_MAXPARMS	10
 
 enum {
 	cEVENT,
@@ -257,9 +257,9 @@ buddywin_t *bgetbuddywin(conn_t *conn, const buddylist_t *);
 
 /* conio.c */
 void	naim_eval(const char *);
-const char *conio_valid(const char *cmd, conn_t *conn, const int argc);
-void	conio_handlecmd(const char *);
-void	conio_handleline(const char *line);
+const char *ua_valid(const char *cmd, conn_t *conn, const int argc);
+void	ua_handlecmd(const char *);
+void	ua_handleline(const char *line);
 
 /* echof.c */
 void	status_echof(conn_t *conn, const unsigned char *format, ...);

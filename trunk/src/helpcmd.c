@@ -71,7 +71,7 @@ void	help_printhelp(const char *topic) {
 	if (strcasecmp(topic, "keys") == 0) {
 		hwprintf(nwin, col, "Help on <B>%s</B>:<br>", topic);
 		hwprintf(nwin, col, " &nbsp;Current key bindings can be viewed at any time with <font color=\"#00FF00\">/bind</font>:<br>\n");
-		conio_bind(curconn, 0, NULL);
+		ua_bind(curconn, 0, NULL);
 		hwprintf(nwin, col, " &nbsp;Key names beginning with ^ are entered by holding down the Ctrl key while pressing the listed key: ^N is Ctrl+N.<br>\n");
 		hwprintf(nwin, col, " &nbsp;Key names beginning with M- are entered by holding down the Alt key while pressing the key, or by pressing Esc first, then typing the key: M-a is Alt+A.<br>\n");
 		hwprintf(nwin, col, " &nbsp;IC is Ins and DC is Del on the numeric keypad. NPAGE and PPAGE are PgDn and PgUp.<br>\n");
@@ -82,7 +82,7 @@ void	help_printhelp(const char *topic) {
 	} else if ((strcasecmp(topic, "settings") == 0) || (strcasecmp(topic, "variables") == 0)) {
 		hwprintf(nwin, col, "Help on <B>%s</B>:<br>", topic);
 		hwprintf(nwin, col, " &nbsp;Current configuration settings can be viewed at any time with <font color=\"#00FF00\">/set</font>:<br>\n");
-		conio_set(curconn, 0, NULL);
+		ua_set(curconn, 0, NULL);
 		hwprintf(nwin, col, " &nbsp;Type <font color=\"#00FF00\">/set varname \"new value\"</font> to change a configuration variable.<br>");
 		hwprintf(nwin, col, "Use the scroll keys (PgUp and PgDn or Ctrl-R and Ctrl-Y) to view the entire help.<br>");
 		hwprintf(nwin, col, "Type <font color=\"#00FF00\">/help</font> or visit <font color=\"#0000FF\">http://naim.n.ml.org/</font> for more information.<br>");

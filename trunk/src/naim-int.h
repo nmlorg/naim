@@ -236,10 +236,10 @@ static inline int naimisprint(int c) {
 typedef struct {
 	const char *c;
 	void	(*func)();
-	const char *aliases[CONIO_MAXPARMS], *desc;
+	const char *aliases[UA_MAXPARMS], *desc;
 	const struct {
 		const char required, type, *name;
-	}	args[CONIO_MAXPARMS];
+	}	args[UA_MAXPARMS];
 	int	minarg,
 		maxarg,
 		where;
@@ -276,8 +276,8 @@ void	naim_changetime(void) G_GNUC_INTERNAL;
 
 /* commands.c */
 void	commands_hook_init(void) G_GNUC_INTERNAL;
-const cmdar_t *conio_find_cmd(const char *cmd) G_GNUC_INTERNAL;
-const cmdar_t *conio_findn_cmd(const char *cmd, const int len) G_GNUC_INTERNAL;
+const cmdar_t *ua_find_cmd(const char *cmd) G_GNUC_INTERNAL;
+const cmdar_t *ua_findn_cmd(const char *cmd, const int len) G_GNUC_INTERNAL;
 const char *conio_tabcomplete(const char *buf, const int bufloc, int *const match, const char **desc) G_GNUC_INTERNAL;
 
 /* conio.c */
