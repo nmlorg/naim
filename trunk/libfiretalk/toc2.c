@@ -317,7 +317,7 @@ static fte_t toc_send_printf(toc_conn_t *c, const char *const format, ...) {
 #endif
 
 	{
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 		uint16_t length;
 
 		data[datai] = 0;
@@ -966,7 +966,7 @@ static fte_t toc_isprint(const int c) {
 	return(FE_INVALIDFORMAT);
 }
 
-static toc_conn_t *toc_create_handle() {
+static toc_conn_t *toc_create_conn() {
 	toc_conn_t *c;
 
 	if ((c = toc_conn_t_new()) == NULL)
@@ -974,7 +974,7 @@ static toc_conn_t *toc_create_handle() {
 	return(c);
 }
 
-static void toc_destroy_handle(toc_conn_t *c) {
+static void toc_destroy_conn(toc_conn_t *c) {
 	toc_internal_disconnect(c, FE_USERDISCONNECT);
 	toc_conn_t_delete(c);
 	c = NULL;
@@ -990,7 +990,7 @@ static fte_t toc_disconnected(toc_conn_t *c, const fte_t reason) {
 }
 
 static fte_t toc_signon(toc_conn_t *c, const char *const username) {
-	firetalk_connection_t *conn = firetalk_find_handle(c);
+	firetalk_connection_t *conn = firetalk_find_conn(c);
 
 	/* fill & send the flap signon packet */
 
@@ -1012,7 +1012,7 @@ static fte_t toc_signon(toc_conn_t *c, const char *const username) {
 
 #ifdef ENABLE_NEWGROUPS
 static fte_t toc_im_remove_group(toc_conn_t *c, const char *const group) {
-	firetalk_connection_t *fchandle = firetalk_find_handle(c);
+	firetalk_connection_t *fchandle = firetalk_find_conn(c);
 	char	buf[TOC_CLIENTSEND_MAXLEN];
 	int	count = 0, slen = 0;
 
@@ -1146,7 +1146,7 @@ static fte_t toc_im_send_reply(toc_conn_t *c, const char *const dest, const char
 	if (strcasecmp(dest, ":RAW") == 0)
 		return(toc_send_printf(c, "%S", message));
 	else {
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 		return(toc_internal_send_message(c, dest, aim_interpolate_variables(message, dest), 1, &(fchandle->subcode_replies)));
 	}
@@ -1162,7 +1162,7 @@ static fte_t toc_im_send_message(toc_conn_t *c, const char *const dest, const ch
 	if (auto_flag)
 		return(toc_im_send_reply(c, dest, message));
 	else {
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 		return(toc_internal_send_message(c, dest, message, 0, &(fchandle->subcode_requests)));
 	}
@@ -1175,7 +1175,7 @@ static fte_t toc_im_send_action(toc_conn_t *c, const char *const dest, const cha
 	if (strlen(message) > 2042)
 		return(FE_PACKETSIZE);
 	else {
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 		char	tempbuf[TOC_CLIENTSEND_MAXLEN]; 
 
 		snprintf(tempbuf, sizeof(tempbuf), "/me %s", message);
@@ -1866,6 +1866,7 @@ static fte_t toc_got_data(toc_conn_t *c, firetalk_buffer_t *buffer) {
 		}
 		firetalk_callback_capabilities(c, name, capstring);
 	} else if (strcmp(arg0, "BART2") == 0) {
+#ifdef DEBUG_ECHO
 		/* 1 source
 		** 2 base64-encoded strings, unidentified
 		*/
@@ -1881,12 +1882,13 @@ static fte_t toc_got_data(toc_conn_t *c, firetalk_buffer_t *buffer) {
 
 			for (j = 0; j < sizeof(toc_barts)/sizeof(*toc_barts); j++)
 				if (toc_barts[j].val == type) {
-#ifdef DEBUG_ECHO
-					toc_echof(c, "got_data", "BART %i %i: %s: %s [%s]\n", flag, type, toc_barts[j].name, barts[i+2], firetalk_debase64(args[i+2]));
-#endif
+					toc_echof(c, "got_data", "BART %i %i (%s): %s [%s]\n", flag, type, toc_barts[j].name, barts[i+2], firetalk_printable(firetalk_debase64(args[i+2])));
 					break;
 				}
+			if (j == sizeof(toc_barts)/sizeof(*toc_barts))
+				toc_echof(c, "got_data", "BART %i %i (%s): %s [%s]\n", flag, type, "undocumented", barts[i+2], firetalk_printable(firetalk_debase64(args[i+2])));
 		}
+#endif
 	} else if (strcmp(arg0, "NICK") == 0) {
 		/* NICK:<Nickname>
 		**    Tells you your correct nickname (ie how it should be capitalized and
@@ -2291,7 +2293,7 @@ got_data_connecting_start:
 
 		length = toc_fill_header((unsigned char *)data, SFLAP_FRAME_SIGNON, ++c->local_sequence, toc_fill_signon((unsigned char *)&data[TOC_HEADER_LENGTH], c->nickname));
 
-		fchandle = firetalk_find_handle(c);
+		fchandle = firetalk_find_conn(c);
 #ifdef DEBUG_ECHO
 		toc_echo_send(c, "got_data_connecting", data, length);
 #endif
@@ -2401,7 +2403,7 @@ got_data_connecting_start:
 			/* CONFIG2:<config> */
 			char	*nl, *curgroup = strdup("Saved buddy");
 
-			fchandle = firetalk_find_handle(c);
+			fchandle = firetalk_find_conn(c);
 			args = toc_parse_args(data, 2, ':');
 			if (!args[1]) {
 				firetalk_callback_connectfailed(c, FE_INVALIDFORMAT, "CONFIG2");
@@ -2656,7 +2658,7 @@ static fte_t toc_chat_invite(toc_conn_t *c, const char *const room, const char *
 static fte_t toc_file_offer(toc_conn_t *c, const char *const nickname,
 		const char *const filename, const uint32_t localip,
 		const uint16_t port, const long size) {
-	firetalk_connection_t *fchandle = firetalk_find_handle(c);
+	firetalk_connection_t *fchandle = firetalk_find_conn(c);
 	char	args[256];
 
 	snprintf(args, sizeof(args), "SEND %s %lu %u %ld", filename, localip, port, size);
@@ -2747,8 +2749,8 @@ const firetalk_driver_t firetalk_protocol_toc2 = {
 //	subcode_send_reply:	toc_subcode_send_reply,
 	subcode_encode:		toc_ctcp_encode,
 	room_normalize:		aim_normalize_room_name,
-	create_handle:		toc_create_handle,
-	destroy_handle:		toc_destroy_handle,
+	create_conn:		toc_create_conn,
+	destroy_conn:		toc_destroy_conn,
 #ifdef ENABLE_DIRECTORY
 	get_dir:		toc_get_dir,
 #endif

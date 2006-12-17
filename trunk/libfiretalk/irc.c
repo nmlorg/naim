@@ -125,14 +125,14 @@ static const char *const irc_normalize_user_mask(const char *const name) {
 #endif
 
 static void irc_disc_user_rem(irc_conn_t *c, const char *disc, const char *name) {
-	firetalk_connection_t *fchandle = firetalk_find_handle(c);
+	firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 	if (firetalk_user_visible_but(fchandle, disc, name) == FE_NOMATCH)
 		firetalk_callback_im_buddyonline(c, name, 0);
 }
 
 static void irc_disc_rem(irc_conn_t *c, const char *disc) {
-	firetalk_connection_t *fchandle = firetalk_find_handle(c);
+	firetalk_connection_t *fchandle = firetalk_find_conn(c);
 	firetalk_room_t *iter;
 	firetalk_member_t *mem;
 
@@ -605,7 +605,7 @@ static int irc_send_printf(irc_conn_t *c, const char *const format, ...) {
 	datai += 2;
 
 	{
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 		firetalk_internal_send_data(fchandle, data, datai);
 	}
@@ -682,7 +682,7 @@ static fte_t irc_set_password(irc_conn_t *c, const char *const oldpass, const ch
 	return(irc_send_printf(c,"PRIVMSG NickServ :SET PASSWORD %s",newpass));
 }
 
-static void irc_destroy_handle(irc_conn_t *c) {
+static void irc_destroy_conn(irc_conn_t *c) {
 	if (firetalk_internal_get_connectstate(c) != FCS_NOTCONNECTED)
 		irc_send_printf(c, "QUIT :Handle destroyed");
 	irc_internal_disconnect(c, FE_USERDISCONNECT);
@@ -706,7 +706,7 @@ static fte_t irc_disconnected(irc_conn_t *c, const fte_t reason) {
 	return(irc_internal_disconnect(c, reason));
 }
 
-static irc_conn_t *irc_create_handle(void) {
+static irc_conn_t *irc_create_conn(void) {
 	irc_conn_t *c;
 
 	if ((c = irc_conn_t_new()) == NULL)
@@ -1387,7 +1387,7 @@ static fte_t irc_im_send_message(irc_conn_t *c, const char *const dest, const ch
 	if (strcasecmp(dest, ":RAW") == 0)
 		return(irc_send_printf(c, "%s", message));
 
-	fchandle = firetalk_find_handle(c);
+	fchandle = firetalk_find_conn(c);
 	if (auto_flag) {
 		snprintf(buf, sizeof(buf), "NOTICE %s :%s", dest, message);
 		firetalk_queue_append(buf, sizeof(buf), &(fchandle->subcode_replies), dest);
@@ -1422,7 +1422,7 @@ static fte_t irc_chat_kick(irc_conn_t *c, const char *const room, const char *co
 }
 
 static fte_t irc_im_add_buddy(irc_conn_t *c, const char *const name, const char *const group, const char *const friendly) {
-	firetalk_connection_t *fchandle = firetalk_find_handle(c);
+	firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 	if (firetalk_user_visible(fchandle, name) == FE_SUCCESS)
 		firetalk_callback_im_buddyonline(c, name, 1);
@@ -1577,6 +1577,6 @@ const firetalk_driver_t firetalk_protocol_irc = {
 	subcode_encode:		irc_ctcp_encode,
 	set_privacy:		irc_set_privacy,
 	room_normalize:		irc_normalize_room_name,
-	create_handle:		irc_create_handle,
-	destroy_handle:		irc_destroy_handle,
+	create_conn:		irc_create_conn,
+	destroy_conn:		irc_destroy_conn,
 };

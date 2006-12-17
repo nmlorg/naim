@@ -524,7 +524,7 @@ static fte_t lily_send_printf(lily_conn_t *c, const char *const format, ...) {
 	datai += 2;
 
 	{
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 		firetalk_internal_send_data(fchandle, data, datai);
 	}
@@ -733,7 +733,7 @@ static fte_t lily_set_password(lily_conn_t *c, const char *const oldpass, const 
 	return(lily_send_printf(c, "%s", newpass));
 }
 
-static void lily_destroy_handle(lily_conn_t *c) {
+static void lily_destroy_conn(lily_conn_t *c) {
 	lily_internal_disconnect(c, FE_USERDISCONNECT);
 	lily_conn_t_delete(c);
 	c = NULL;
@@ -750,7 +750,7 @@ static fte_t lily_disconnected(lily_conn_t *c, const fte_t reason) {
 	return(lily_internal_disconnect(c, reason));
 }
 
-static lily_conn_t *lily_create_handle(void) {
+static lily_conn_t *lily_create_conn(void) {
 	lily_conn_t *c;
 
 	if ((c = lily_conn_t_new()) == NULL)
@@ -987,7 +987,7 @@ static fte_t lily_got_notify(lily_conn_t *c) {
 				if (lily_chat->ismember != 0) {
 					firetalk_connection_t *conn;
 
-					if ((conn = firetalk_find_handle(c)) != NULL)
+					if ((conn = firetalk_find_conn(c)) != NULL)
 						firetalk_chat_internal_add_member(conn, lily_chat->name, source);
 					firetalk_callback_chat_getmessage(c, lily_chat->name, source, 0, value);
 				}
@@ -1645,7 +1645,7 @@ static fte_t lily_subcode_send_reply(lily_conn_t *c, const char *const to, const
 
 static fte_t lily_im_send_message(lily_conn_t *c, const char *const dest, const char *const message, const int auto_flag) {
 	if (*message == 0) {
-		firetalk_connection_t *fchandle = firetalk_find_handle(c);
+		firetalk_connection_t *fchandle = firetalk_find_conn(c);
 		char	*data;
 
 		if (auto_flag)
@@ -1836,6 +1836,6 @@ const firetalk_driver_t firetalk_protocol_slcp = {
 	set_privacy:		lily_set_privacy,
 	subcode_encode:		lily_ctcp_encode,
 	room_normalize:		lily_normalize_room_name,
-	create_handle:		lily_create_handle,
-	destroy_handle:		lily_destroy_handle,
+	create_conn:		lily_create_conn,
+	destroy_conn:		lily_destroy_conn,
 };

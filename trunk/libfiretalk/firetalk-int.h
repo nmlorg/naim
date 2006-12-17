@@ -333,10 +333,10 @@ typedef struct firetalk_connection_t {
 } firetalk_connection_t;
 
 static inline void firetalk_connection_t_ctor(firetalk_connection_t *this) {
-	extern int firetalk_connection_canary;
+	extern int firetalk_connection_t_canary;
 
 	memset(this, 0, sizeof(*this));
-	this->canary = &firetalk_connection_canary;
+	this->canary = &firetalk_connection_t_canary;
 	firetalk_sock_t_ctor(&(this->sock));
 	firetalk_buffer_t_ctor(&(this->buffer));
 	firetalk_queue_t_ctor(&(this->subcode_requests));
@@ -344,10 +344,10 @@ static inline void firetalk_connection_t_ctor(firetalk_connection_t *this) {
 }
 TYPE_NEW(firetalk_connection_t);
 static inline void firetalk_connection_t_dtor(firetalk_connection_t *this) {
-	extern int firetalk_connection_canary;
+	extern int firetalk_connection_t_canary;
 
 	assert(this != NULL);
-	assert(this->canary == &firetalk_connection_canary);
+	assert(this->canary == &firetalk_connection_t_canary);
 	firetalk_sock_t_dtor(&(this->sock));
 	firetalk_buffer_t_dtor(&(this->buffer));
 	free(this->username);
@@ -408,8 +408,8 @@ typedef struct {
 	fte_t	(*chat_send_action)(struct firetalk_driver_connection_t *c, const char *const, const char *const, const int);
 	char	*(*subcode_encode)(struct firetalk_driver_connection_t *c, const char *const, const char *const);
 	const char *(*room_normalize)(const char *const);
-	struct firetalk_driver_connection_t *(*create_handle)(void);
-	void	(*destroy_handle)(struct firetalk_driver_connection_t *c);
+	struct firetalk_driver_connection_t *(*create_conn)(void);
+	void	(*destroy_conn)(struct firetalk_driver_connection_t *c);
 } firetalk_driver_t;
 
 
@@ -490,7 +490,7 @@ const void *firetalk_peek(firetalk_queue_t *queue, const char *const key);
 void	*firetalk_dequeue(firetalk_queue_t *queue, const char *const key);
 void	firetalk_queue_append(char *buf, int buflen, firetalk_queue_t *queue, const char *const key);
 
-firetalk_connection_t *firetalk_find_handle(const struct firetalk_driver_connection_t *const c);
+firetalk_connection_t *firetalk_find_conn(const struct firetalk_driver_connection_t *const c);
 
 fte_t	firetalk_chat_internal_add_room(firetalk_connection_t *conn, const char *const name);
 fte_t	firetalk_chat_internal_add_member(firetalk_connection_t *conn, const char *const room, const char *const nickname);
@@ -546,5 +546,6 @@ char	*firetalk_htmlclean(const char *str);
 const char *firetalk_nhtmlentities(const char *str, int len);
 const char *firetalk_htmlentities(const char *str);
 const char *firetalk_debase64(const char *const str);
+const char *firetalk_printable(const char *const str);
 
 #endif
