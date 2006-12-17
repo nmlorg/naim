@@ -36,7 +36,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = lua$(EXEEXT)
+noinst_PROGRAMS = luac$(EXEEXT)
 subdir = lua
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -69,9 +69,9 @@ am_libnlua_la_OBJECTS = libnlua_la-commands.lo libnlua_la-conn.lo \
 	libnlua_la-variables.lo
 libnlua_la_OBJECTS = $(am_libnlua_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
-am_lua_OBJECTS = lua511/lua.$(OBJEXT)
-lua_OBJECTS = $(am_lua_OBJECTS)
-lua_DEPENDENCIES = liblua.la
+am_luac_OBJECTS = lua511/luac.$(OBJEXT) lua511/print.$(OBJEXT)
+luac_OBJECTS = $(am_luac_OBJECTS)
+luac_DEPENDENCIES = liblua.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src
 depcomp =
 am__depfiles_maybe =
@@ -83,9 +83,9 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(liblua_la_SOURCES) $(libnlua_la_SOURCES) $(lua_SOURCES)
+SOURCES = $(liblua_la_SOURCES) $(libnlua_la_SOURCES) $(luac_SOURCES)
 DIST_SOURCES = $(liblua_la_SOURCES) $(libnlua_la_SOURCES) \
-	$(lua_SOURCES)
+	$(luac_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -235,10 +235,11 @@ libnlua_la_SOURCES = \
 
 libnlua_la_LIBADD = liblua.la
 libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
-lua_SOURCES = \
-	lua511/lua.c
+luac_SOURCES = \
+	lua511/luac.c \
+	lua511/print.c
 
-lua_LDADD = liblua.la
+luac_LDADD = liblua.la
 all: all-am
 
 .SUFFIXES:
@@ -324,10 +325,11 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-lua511/lua.$(OBJEXT): lua511/$(am__dirstamp)
-lua$(EXEEXT): $(lua_OBJECTS) $(lua_DEPENDENCIES) 
-	@rm -f lua$(EXEEXT)
-	$(LINK) $(lua_LDFLAGS) $(lua_OBJECTS) $(lua_LDADD) $(LIBS)
+lua511/luac.$(OBJEXT): lua511/$(am__dirstamp)
+lua511/print.$(OBJEXT): lua511/$(am__dirstamp)
+luac$(EXEEXT): $(luac_OBJECTS) $(luac_DEPENDENCIES) 
+	@rm -f luac$(EXEEXT)
+	$(LINK) $(luac_LDFLAGS) $(luac_OBJECTS) $(luac_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -383,13 +385,14 @@ mostlyclean-compile:
 	-rm -f lua511/ltablib.lo
 	-rm -f lua511/ltm.$(OBJEXT)
 	-rm -f lua511/ltm.lo
-	-rm -f lua511/lua.$(OBJEXT)
+	-rm -f lua511/luac.$(OBJEXT)
 	-rm -f lua511/lundump.$(OBJEXT)
 	-rm -f lua511/lundump.lo
 	-rm -f lua511/lvm.$(OBJEXT)
 	-rm -f lua511/lvm.lo
 	-rm -f lua511/lzio.$(OBJEXT)
 	-rm -f lua511/lzio.lo
+	-rm -f lua511/print.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
