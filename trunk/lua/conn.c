@@ -27,42 +27,46 @@ static int _lua2conio(lua_State *L, int first, const char **args, const int argm
 
 
 void	nlua_hook_newconn(conn_t *conn) {
-//	_getsubtable("internal");
-//	_getitem("newconn");
+	const int top = lua_gettop(lua);
+
 	_get_global_ent(lua, "naim.internal.newconn", NULL);
 	lua_pushstring(lua, conn->winname);
 	lua_pushlightuserdata(lua, conn);
 	if (lua_pcall(lua, 2, 0, 0))
 		lua_pop(lua, 2);
+	assert(lua_gettop(lua) == top);
 }
 
 void	nlua_hook_delconn(conn_t *conn) {
-//	_getsubtable("internal");
-//	_getitem("delconn");
+	const int top = lua_gettop(lua);
+
 	_get_global_ent(lua, "naim.internal.delconn", NULL);
 	lua_pushstring(lua, conn->winname);
 	if (lua_pcall(lua, 1, 0, 0))
 		lua_pop(lua, 1);
+	assert(lua_gettop(lua) == top);
 }
 
 void	_push_conn_t(lua_State *L, conn_t *conn) {
-//	_getsubtable("connections");
+	const int top = lua_gettop(lua);
+
 	if (conn != NULL)
 		_get_global_ent(lua, "naim.connections", conn->winname, NULL);
-//		lua_pushstring(L, conn->winname);
-//		lua_gettable(L, -2);
-//		lua_remove(L, -2);
 	else
 		lua_pushnil(L);
+	assert(lua_gettop(lua) == top+1);
 }
 
 static conn_t *_get_conn_t(lua_State *L, int index) {
+	const int top = lua_gettop(lua);
 	conn_t	*obj;
 
 	lua_pushstring(L, "handle");
 	lua_gettable(L, index);
 	obj = (conn_t *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
+
+	assert(lua_gettop(lua) == top);
 	return(obj);
 }
 
@@ -143,33 +147,38 @@ CONN_COMMANDS
 
 
 void	nlua_hook_newwin(buddywin_t *bwin) {
-//	_getsubtable("internal");
-//	_getitem("newwin");
+	const int top = lua_gettop(lua);
+
 	_get_global_ent(lua, "naim.internal.newwin", NULL);
 	_push_conn_t(lua, bwin->conn);
 	lua_pushstring(lua, bwin->winname);
 	lua_pushlightuserdata(lua, bwin);
 	if (lua_pcall(lua, 3, 0, 0))
 		lua_pop(lua, 3);
+	assert(lua_gettop(lua) == top);
 }
 
 void	nlua_hook_delwin(buddywin_t *bwin) {
-//	_getsubtable("internal");
-//	_getitem("delwin");
+	const int top = lua_gettop(lua);
+
 	_get_global_ent(lua, "naim.internal.delwin", NULL);
 	_push_conn_t(lua, bwin->conn);
 	lua_pushstring(lua, bwin->winname);
 	if (lua_pcall(lua, 2, 0, 0))
 		lua_pop(lua, 2);
+	assert(lua_gettop(lua) == top);
 }
 
 static buddywin_t *_get_buddywin_t(lua_State *L, int index) {
+	const int top = lua_gettop(L);
 	buddywin_t *obj;
 
 	lua_pushstring(L, "handle");
 	lua_gettable(L, index);
 	obj = (buddywin_t *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
+
+	assert(lua_gettop(lua) == top);
 	return(obj);
 }
 
@@ -214,35 +223,38 @@ BUDDYWIN_COMMANDS
 
 
 void	nlua_hook_newbuddy(buddylist_t *buddy) {
-//	_getsubtable("internal");
-//	_getitem("newbuddy");
+	const int top = lua_gettop(lua);
+
 	_get_global_ent(lua, "naim.internal.newbuddy", NULL);
 	_push_conn_t(lua, buddy->conn);
 	lua_pushstring(lua, USER_ACCOUNT(buddy));
 	lua_pushlightuserdata(lua, buddy);
 	if (lua_pcall(lua, 3, 0, 0))
 		lua_pop(lua, 3);
+	assert(lua_gettop(lua) == top);
 }
 
 void	nlua_hook_changebuddy(buddylist_t *buddy, const char *newaccount) {
-//	_getsubtable("internal");
-//	_getitem("changebuddy");
+	const int top = lua_gettop(lua);
+
 	_get_global_ent(lua, "naim.internal.changebuddy", NULL);
 	_push_conn_t(lua, buddy->conn);
 	lua_pushstring(lua, USER_ACCOUNT(buddy));
 	lua_pushstring(lua, newaccount);
 	if (lua_pcall(lua, 3, 0, 0))
 		lua_pop(lua, 3);
+	assert(lua_gettop(lua) == top);
 }
 
 void	nlua_hook_delbuddy(buddylist_t *buddy) {
-//	_getsubtable("internal");
-//	_getitem("delbuddy");
-	_get_global_ent(lua, "naim.internal.changebuddy", NULL);
+	const int top = lua_gettop(lua);
+
+	_get_global_ent(lua, "naim.internal.delbuddy", NULL);
 	_push_conn_t(lua, buddy->conn);
 	lua_pushstring(lua, USER_ACCOUNT(buddy));
 	if (lua_pcall(lua, 2, 0, 0))
 		lua_pop(lua, 2);
+	assert(lua_gettop(lua) == top);
 }
 
 const struct luaL_reg naim_prototypes_buddieslib[] = {
