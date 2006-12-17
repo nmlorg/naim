@@ -215,6 +215,10 @@ int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
 	free(lcmd);
 	lua_gettable(lua, -2);			// { naim.commands[CMD], naim.commands, naim.call }
 	lua_remove(lua, -2);			// { naim.commands[CMD], naim.call }
+	if (lua_isnil(lua, -1)) {
+		lua_pop(lua, 2);		// {}
+		return(0);
+	}
 	if (!lua_istable(lua, -1)) {
 		lua_pop(lua, 2);		// {}
 		if (conn != NULL)
