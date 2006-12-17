@@ -60,7 +60,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(pkgdocdir)" "$(DESTDIR)$(pkgdocdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-@CYGWIN_TRUE@libnaim_core_la_DEPENDENCIES = ../lua/liblua.la
+@CYGWIN_TRUE@libnaim_core_la_DEPENDENCIES = ../lua/libnlua.la
 am__libnaim_core_la_SOURCES_DIST = alias.c atomizer.c buddy.c conio.c \
 	echof.c events.c fireio.c hamster.c help.h help.c helpcmd.c \
 	hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c rodents.c \
@@ -94,7 +94,7 @@ am__objects_2 = alias.$(OBJEXT) atomizer.$(OBJEXT) buddy.$(OBJEXT) \
 am_naim_OBJECTS = $(am__objects_3)
 naim_OBJECTS = $(am_naim_OBJECTS)
 @CYGWIN_FALSE@am__DEPENDENCIES_1 = ../libfiretalk/libfiretalk.a \
-@CYGWIN_FALSE@	../lua/liblua.la
+@CYGWIN_FALSE@	../lua/libnlua.la
 @CYGWIN_TRUE@am__DEPENDENCIES_1 = libnaim_core.la
 naim_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -269,7 +269,7 @@ NAIM_CORE = \
 @CYGWIN_FALSE@NAIM_LDADD = \
 @CYGWIN_FALSE@	../libfiretalk/libfiretalk.a \
 @CYGWIN_FALSE@	@LIBLTDL@ \
-@CYGWIN_FALSE@	../lua/liblua.la \
+@CYGWIN_FALSE@	../lua/libnlua.la \
 @CYGWIN_FALSE@	@CURSESLIB@ @NETLIB@
 
 @CYGWIN_TRUE@NAIM_LDADD = libnaim_core.la
@@ -277,7 +277,7 @@ NAIM_CORE = \
 @CYGWIN_TRUE@libnaim_core_la_SOURCES = ${NAIM_CORE}
 @CYGWIN_TRUE@libnaim_core_la_CFLAGS = ${AM_CFLAGS} -DDLSEARCHPATH='"${pkgmoddir}"'
 @CYGWIN_TRUE@libnaim_core_la_LIBADD = \
-@CYGWIN_TRUE@	@LIBLTDL@ ../lua/liblua.la \
+@CYGWIN_TRUE@	@LIBLTDL@ ../lua/libnlua.la \
 @CYGWIN_TRUE@	@CURSESLIB@ @NETLIB@
 
 @CYGWIN_TRUE@libnaim_core_la_LDFLAGS = -export-dynamic -no-undefined \

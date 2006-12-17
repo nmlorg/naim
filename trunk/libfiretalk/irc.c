@@ -1282,11 +1282,11 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 static fte_t irc_got_data(irc_conn_t *c, firetalk_buffer_t *buffer) {
 	char	**args;
 
-	assert(firetalk_buffer_valid(buffer));
+	assert(firetalk_buffer_t_valid(buffer));
 	while (((args = irc_recv_parse(c, buffer->buffer, &(buffer->pos))) != NULL) && (args[1] != NULL)) {
 		fte_t	fte;
 
-		assert(firetalk_buffer_valid(buffer));
+		assert(firetalk_buffer_t_valid(buffer));
 		if ((fte = irc_got_data_parse(c, args)) != FE_SUCCESS)
 			return(fte);
 	}
@@ -1297,9 +1297,9 @@ static fte_t irc_got_data(irc_conn_t *c, firetalk_buffer_t *buffer) {
 static fte_t irc_got_data_connecting(irc_conn_t *c, firetalk_buffer_t *buffer) {
 	char	**args;
 
-	assert(firetalk_buffer_valid(buffer));
+	assert(firetalk_buffer_t_valid(buffer));
 	while (((args = irc_recv_parse(c, buffer->buffer, &(buffer->pos))) != NULL) && (args[1] != NULL)) {
-		assert(firetalk_buffer_valid(buffer));
+		assert(firetalk_buffer_t_valid(buffer));
 		if (strcmp(args[1], "ERROR") == 0) {
 			irc_send_printf(c, "QUIT :error");
 			if (args[2] == NULL)

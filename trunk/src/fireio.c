@@ -795,7 +795,7 @@ static int recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char
 				static int sent_carat_desc = 0;
 
 				if (!sent_carat_desc) {
-					statusbar_text = strdup("A ^ near a speaker name indicates that message was addressed to the previous speaker.");
+					STRREPLACE(statusbar_text, "A ^ near a speaker name indicates that message was addressed to the previous speaker.");
 					sent_carat_desc = 1;
 				}
 				prefix = "^";
@@ -804,7 +804,7 @@ static int recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char
 				static int sent_plus_desc = 0;
 
 				if (!sent_plus_desc) {
-					statusbar_text = strdup("A + near a speaker name indicates that message was addressed to the same person as the previous message.");
+					STRREPLACE(statusbar_text, "A + near a speaker name indicates that message was addressed to the same person as the previous message.");
 					sent_plus_desc = 1;
 				}
 				if (firetalk_compare_nicks(conn->conn, *name, bwin->e.chat->last.name) != FE_SUCCESS)

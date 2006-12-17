@@ -34,6 +34,9 @@ function naim.internal.rwmetatable(prototype)
 				rawset(table, key, value)
 			end
 		end,
+		__tostring = function(table)
+			return(table.name)
+		end,
 	})
 end
 
@@ -75,7 +78,9 @@ end
 function naim.internal.newwin(conn, winname, handle)
 	setmetatable(conn.windows, {})
 	conn.windows[winname] = {
-		handle = handle
+		handle = handle,
+		conn = conn,
+		name = winname,
 	}
 	setmetatable(conn.windows[winname], naim.internal.rwmetatable(naim.prototypes.windows))
 	setmetatable(conn.windows, naim.internal.rometatable("windows"))
@@ -90,7 +95,9 @@ end
 function naim.internal.newbuddy(conn, account, handle)
 	setmetatable(conn.buddies, {})
 	conn.buddies[account] = {
-		handle = handle
+		handle = handle,
+		conn = conn,
+		name = account,
 	}
 	setmetatable(conn.buddies[account], naim.internal.rwmetatable(naim.prototypes.buddies))
 	setmetatable(conn.buddies, naim.internal.rometatable("buddies"))
