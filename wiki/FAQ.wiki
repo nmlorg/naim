@@ -311,3 +311,33 @@ your console session. Open /etc/sysconfig/i18n and remove the ".UTF-8" suffix in
 setting and comment out the SYSFONT line entirely. Reboot your system. If you live outside
 of the U.S., I am sorry; you can either have pretty text or internationalization support.
 Please lodge your complaint with the Linux kernel maintainers; I have no control over this. 
+
+==Configuring Mac OSX Terminal to Work with naim==
+The Mac OSX terminal does not play nice with naim by default. For example, PgUp and PgDown
+scroll the terminal window instead of scrolling the current window in naim. This is easy
+to fix:
+
+*Terminal > Window Settings > Keyboard*
+
+For each of the following keys, click edit and change the action to "send string to
+shell:". Then enter the appropriate sequence for each:
+
+*\033[4~*    (end)
+
+\033[1~    (home)
+
+\033[5~    (page up)
+
+\033[6~    (page down)
+
+Keep in mind when you type the backslash ("\"), OSX will automatically change it to a
+double backslash ("\\"). You need to leave the double backslash while you're typing the
+rest of the control sequence. When you're done typing the control sequence it will look
+like this: \\033[4~
+
+Before you click OK you need to use the arrow keys on your keyboard, and then the delete
+key, to remove one of the backslashes. Before clicking OK, the control sequence should
+look like this: \033[4~
+
+
+This was tested on Mac OSX 10.4, but should work on other versions as well. 
