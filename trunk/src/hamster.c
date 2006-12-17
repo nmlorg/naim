@@ -94,14 +94,13 @@ static void naim_sendto(conn_t *conn,
 
 	memmove(message, _message, len);
 	message[len] = 0;
-	HOOK_CALL(sendto, (conn, &name, &dest, &message, &len, &flags));
+	HOOK_CALL(sendto, conn, &name, &dest, &message, &len, &flags);
 	free(name);
 	free(dest);
 	free(message);
 }
 
-static int sendto_encrypt(conn_t *conn, char **name, char **dest,
-		unsigned char **message, int *len, int *flags) {
+static int sendto_encrypt(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (!(*flags & RF_CHAT) && !(*flags & RF_ACTION)) {
 		buddylist_t	*blist = rgetlist(conn, *dest);
 
@@ -126,8 +125,7 @@ static int sendto_encrypt(conn_t *conn, char **name, char **dest,
 	return(HOOK_CONTINUE);
 }
 
-static int sendto_send(conn_t *conn, char **name, char **dest,
-		unsigned char **message, int *len, int *flags) {
+static int sendto_send(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	int	ret;
 
 	if (*flags & RF_ENCRYPTED) {
@@ -174,9 +172,9 @@ static int sendto_send(conn_t *conn, char **name, char **dest,
 void	hamster_hook_init(void) {
 	void	*mod = NULL;
 
-//	HOOK_ADD(sendto, mod, sendto_log, 20);
-	HOOK_ADD(sendto, mod, sendto_encrypt, 50);
-	HOOK_ADD(sendto, mod, sendto_send, 100);
+//	HOOK_ADD(sendto, mod, sendto_log, 20, NULL);
+	HOOK_ADD(sendto, mod, sendto_encrypt, 50, NULL);
+	HOOK_ADD(sendto, mod, sendto_send, 100, NULL);
 }
 
 static void naim_send_message(conn_t *const conn, const char *const dest, const unsigned char *const message, const int ischat, const int isauto, const int isaction) {

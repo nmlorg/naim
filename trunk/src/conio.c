@@ -1718,8 +1718,7 @@ CONIOAOPT(string,chain)
 	self = lt_dlopen(NULL);
 #endif
 	if (self == NULL) {
-		echof(conn, "TABLES", "Unable to perform self-symbol lookup: %s.\n",
-			lt_dlerror());
+		echof(conn, "TABLES", "Unable to perform self-symbol lookup: %s.\n", lt_dlerror());
 		return;
 	}
 	snprintf(buf, sizeof(buf), "chain_%s", args[0]);
@@ -1731,17 +1730,15 @@ CONIOAOPT(string,chain)
 	}
 	lt_dlclose(self);
 
-	echof(conn, NULL, "Chain %s, containing %i hook%s.\n",
-		args[0], chain->count, (chain->count==1)?"":"s");
+	echof(conn, NULL, "Chain %s, containing %i %s.\n",
+		args[0], chain->count, (chain->count==1)?"hook":"hooks");
 	for (i = 0; i < chain->count; i++) {
-		const char
-			*modname, *hookname;
+		const char *modname, *hookname;
 
 		if (chain->hooks[i].mod == NULL)
 			modname = "core";
 		else {
-			const lt_dlinfo
-				*dlinfo = lt_dlgetinfo(chain->hooks[i].mod);
+			const lt_dlinfo *dlinfo = lt_dlgetinfo(chain->hooks[i].mod);
 
 			modname = dlinfo->name;
 		}
@@ -1750,8 +1747,8 @@ CONIOAOPT(string,chain)
 			hookname++;
 		if ((strncmp(hookname, modname, strlen(modname)) == 0) && (hookname[strlen(modname)] == '_'))
 			hookname += strlen(modname)+1;
-		echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>() weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
-			i, modname, hookname, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
+		echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(%#p) weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
+			i, modname, hookname, chain->hooks[i].userdata, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
 	}
 }
 
@@ -2863,7 +2860,7 @@ void	conio_handlecmd(const char *buf) {
 				break;
 		}
 	if (i == cmdc) {
-		HOOK_CALL(getcmd, (c, cmd, a, args));
+		HOOK_CALL(getcmd, c, cmd, a, args);
 		return;
 	}
 	assert(cmdar[i].maxarg <= CONIO_MAXPARMS);
@@ -3788,19 +3785,19 @@ void	gotkey(int c) {
 		gotkey_real(nw_getch());
 }
 
-static int cmd_unknown(conn_t *c, const char *cmd, int argc, const char **args) {
+static int cmd_unknown(void *userdata, conn_t *c, const char *cmd, int argc, const char **args) {
 	echof(c, cmd, "Unknown command.\n");
 	return(HOOK_STOP);
 }
 
-static int conio_preselect(fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
+static int conio_preselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
 	if (*maxfd <= STDIN_FILENO)
 		*maxfd = STDIN_FILENO+1;
 	FD_SET(STDIN_FILENO, rfd);
 	return(HOOK_CONTINUE);
 }
 
-static int conio_postselect(fd_set *rfd, fd_set *wfd, fd_set *efd) {
+static int conio_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd) {
 	if (FD_ISSET(STDIN_FILENO, rfd)) {
 		int	k = nw_getch();
 
@@ -3813,7 +3810,7 @@ static int conio_postselect(fd_set *rfd, fd_set *wfd, fd_set *efd) {
 void	conio_hook_init(void) {
 	void	*mod = NULL;
 
-	HOOK_ADD(getcmd, mod, cmd_unknown, 1000);
-	HOOK_ADD(preselect, mod, conio_preselect, 100);
-	HOOK_ADD(postselect, mod, conio_postselect, 100);
+	HOOK_ADD(getcmd, mod, cmd_unknown, 1000, NULL);
+	HOOK_ADD(preselect, mod, conio_preselect, 100, NULL);
+	HOOK_ADD(postselect, mod, conio_postselect, 100, NULL);
 }

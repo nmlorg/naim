@@ -413,7 +413,7 @@ int	main_stub(int argc, char **args) {
 		FD_ZERO(&wfd);
 		FD_ZERO(&efd);
 
-		HOOK_CALL(preselect, (&rfd, &wfd, &efd, &maxfd));
+		HOOK_CALL(preselect, &rfd, &wfd, &efd, &maxfd);
 
 		if (firetalk_select_custom(maxfd, &rfd, &wfd, &efd, &timeout) != FE_SUCCESS) {
 			if (errno == EINTR) { // SIGWINCH
@@ -435,11 +435,11 @@ int	main_stub(int argc, char **args) {
 		now60 = now-(now%60);
 		if ((now60 - lastcycle) >= 60) {
 			lastcycle = now60;
-			HOOK_CALL(periodic, (NULL, now, nowf));
+			HOOK_CALL(periodic, now, nowf);
 		} else if (lastcycle > now60)
 			lastcycle = now60;
 
-		HOOK_CALL(postselect, (&rfd, &wfd, &efd));
+		HOOK_CALL(postselect, &rfd, &wfd, &efd);
 
 		statrefresh();
 	}
