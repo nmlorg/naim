@@ -1339,21 +1339,22 @@ const char *firetalk_strerror(const fte_t e) {
 }
 
 firetalk_connection_t *firetalk_create_handle(const int protocol, struct firetalk_useragent_connection_t *clientstruct) {
-	firetalk_connection_t *c;
+	firetalk_connection_t *conn;
 
 	if ((protocol < 0) || (protocol >= FP_MAX)) {
 		firetalkerror = FE_BADPROTO;
 		return(NULL);
 	}
-	if ((c = firetalk_connection_t_new()) == NULL)
+	if ((conn = firetalk_connection_t_new()) == NULL)
 		abort();
-	c->next = handle_head;
-	handle_head = c;
-	c->clientstruct = clientstruct;
-	c->protocol = protocol;
-	firetalk_buffer_alloc(&(c->buffer), firetalk_protocols[protocol]->default_buffersize);
-	c->handle = firetalk_protocols[protocol]->create_handle();
-	return(c);
+	conn->next = handle_head;
+	handle_head = conn;
+	conn->clientstruct = clientstruct;
+	conn->protocol = protocol;
+	assert(firetalk_buffer_valid(&(conn->buffer)));
+	firetalk_buffer_alloc(&(conn->buffer), firetalk_protocols[protocol]->default_buffersize);
+	conn->handle = firetalk_protocols[protocol]->create_handle();
+	return(conn);
 }
 
 void	firetalk_destroy_handle(firetalk_connection_t *conn) {
@@ -2193,9 +2194,9 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 			firetalk_protocols[fchandle->protocol]->signon(fchandle->handle, fchandle->username);
 		} else if (fchandle->buffer.readdata) {
 			if (fchandle->sock.state == FCS_ACTIVE)
-				firetalk_protocols[fchandle->protocol]->got_data(fchandle->handle, fchandle->buffer.buffer, &fchandle->buffer.pos);
+				firetalk_protocols[fchandle->protocol]->got_data(fchandle->handle, &(fchandle->buffer));
 			else
-				firetalk_protocols[fchandle->protocol]->got_data_connecting(fchandle->handle, fchandle->buffer.buffer, &fchandle->buffer.pos);
+				firetalk_protocols[fchandle->protocol]->got_data_connecting(fchandle->handle, &(fchandle->buffer));
 			if (fchandle->buffer.pos == fchandle->buffer.size)
 				firetalk_callback_disconnect(fchandle->handle, FE_PACKETSIZE);
 		}
