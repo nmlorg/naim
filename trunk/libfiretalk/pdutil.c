@@ -49,6 +49,12 @@ struct sockaddr_in *firetalk_sock_remotehost4(firetalk_sock_t *sock) {
 	return(&(sock->remote_addr));
 }
 
+struct sockaddr_in *firetalk_sock_localhost4(firetalk_sock_t *sock) {
+	assert(sock->canary == SOCK_CANARY);
+
+	return(&(sock->local_addr));
+}
+
 #ifdef _FC_USE_IPV6
 fte_t	firetalk_sock_resolve6(const char *const host, struct in6_addr *inet6_ip) {
 	struct addrinfo *addr = NULL;  // xxx generalize this so that we can use this with v6 and v4
@@ -77,6 +83,12 @@ struct sockaddr_in6 *firetalk_sock_remotehost6(firetalk_sock_t *sock) {
 	assert(sock->canary == SOCK_CANARY);
 
 	return(&(sock->remote_addr6));
+}
+
+struct sockaddr_in6 *firetalk_sock_localhost6(firetalk_sock_t *sock) {
+	assert(sock->canary == SOCK_CANARY);
+
+	return(&(sock->local_addr6));
 }
 #endif
 
@@ -110,6 +122,9 @@ fte_t	firetalk_sock_connect(firetalk_sock_t *sock) {
 		if ((sock->fd != -1) && (fcntl(sock->fd, F_SETFL, O_NONBLOCK) == 0)) {
 			errno = 0;
 			if ((connect(sock->fd, (const struct sockaddr *)inet6_ip, sizeof(*inet6_ip)) == 0) || (errno == EINPROGRESS)) {
+				unsigned int l = sizeof(sock->local_addr6);
+
+				getsockname(sock->fd, (struct sockaddr *)&sock->local_addr6, &l);
 				sock->state = FCS_WAITING_SYNACK;
 				return(FE_SUCCESS);
 			}
@@ -123,6 +138,9 @@ fte_t	firetalk_sock_connect(firetalk_sock_t *sock) {
 		if ((sock->fd != -1) && (fcntl(sock->fd, F_SETFL, O_NONBLOCK) == 0)) {
 			errno = 0;
 			if ((connect(sock->fd, (const struct sockaddr *)inet4_ip, sizeof(*inet4_ip)) == 0) || (errno == EINPROGRESS)) {
+				unsigned int l = sizeof(sock->local_addr);
+
+				getsockname(sock->fd, (struct sockaddr *)&sock->local_addr, &l);
 				sock->state = FCS_WAITING_SYNACK;
 				return(FE_SUCCESS);
 			}
@@ -152,15 +170,6 @@ fte_t	firetalk_sock_connect_host(firetalk_sock_t *sock, const char *const host, 
 		memset(&(sock->remote_addr), 0, sizeof(sock->remote_addr));
 
 	return(firetalk_sock_connect(sock));
-}
-
-uint32_t firetalk_sock_localip4(firetalk_sock_t *sock) {
-	unsigned int l;
-	struct sockaddr_in addr;
-
-	l = (unsigned int)sizeof(struct sockaddr_in);
-	getsockname(sock->fd, (struct sockaddr *)&addr, &l);
-	return(htonl((uint32_t)addr.sin_addr.s_addr));
 }
 
 fte_t	firetalk_sock_send(firetalk_sock_t *sock, const void *const buffer, const int bufferlen) {

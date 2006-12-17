@@ -115,6 +115,7 @@ typedef struct firetalk_transfer_t {
 	int	type,
 		sockfd,
 		filefd;
+//	firetalk_sock_t sock;
 	struct firetalk_useragent_transfer_t *clientfilestruct;
 } firetalk_transfer_t;
 
@@ -137,11 +138,11 @@ typedef struct {
 	void	*canary;
 	int	fd;
 	firetalk_sock_state_t state;
-	struct sockaddr_in remote_addr;
-	struct in_addr local_addr;
+	struct sockaddr_in remote_addr,
+		local_addr;
 #ifdef _FC_USE_IPV6
-	struct sockaddr_in6 remote_addr6;
-	struct in6_addr local_addr6;
+	struct sockaddr_in6 remote_addr6,
+		local_addr6;
 #endif
 } firetalk_sock_t;
 
@@ -218,9 +219,9 @@ typedef struct {
 	const char *(*room_normalize)(const char *const);
 	struct firetalk_driver_connection_t *(*create_handle)(void);
 	void	(*destroy_handle)(struct firetalk_driver_connection_t *c);
-} firetalk_protocol_t;
+} firetalk_driver_t;
 
-fte_t	firetalk_register_protocol(const firetalk_protocol_t *const proto);
+fte_t	firetalk_register_protocol(const firetalk_driver_t *const proto);
 
 void	firetalk_callback_im_getmessage(struct firetalk_driver_connection_t *c, const char *const sender, const int automessage, const char *const message);
 void	firetalk_callback_im_getaction(struct firetalk_driver_connection_t *c, const char *const sender, const int automessage, const char *const message);
@@ -310,11 +311,12 @@ fte_t	firetalk_sock_connect_host(firetalk_sock_t *sock, const char *const host, 
 fte_t	firetalk_sock_connect(firetalk_sock_t *sock);
 fte_t	firetalk_sock_resolve4(const char *const host, struct in_addr *inet4_ip);
 struct sockaddr_in *firetalk_sock_remotehost4(firetalk_sock_t *sock);
+struct sockaddr_in *firetalk_sock_localhost4(firetalk_sock_t *sock);
 #ifdef _FC_USE_IPV6
 fte_t	firetalk_sock_resolve6(const char *const host, struct in6_addr *inet6_ip);
 struct sockaddr_in6 *firetalk_sock_remotehost6(firetalk_sock_t *sock);
+struct sockaddr_in6 *firetalk_sock_localhost6(firetalk_sock_t *sock);
 #endif
-uint32_t firetalk_sock_localip4(firetalk_sock_t *sock);
 
 void	firetalk_sock_init(firetalk_sock_t *sock);
 void	firetalk_sock_close(firetalk_sock_t *sock);

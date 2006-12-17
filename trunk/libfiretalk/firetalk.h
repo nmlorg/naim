@@ -190,11 +190,8 @@ fte_t	firetalk_set_privacy(struct firetalk_connection_t *conn, const char *const
 fte_t	firetalk_select();
 fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *fd_except, struct timeval *timeout);
 
-#ifndef FIRETALK
 extern fte_t firetalkerror;
-/* internal function, exported because dan reed is lazy */
 int	firetalk_internal_connect_host(const char *const host, const int port);
-#endif
 
 #define FF_SUBSTANDARD                  0x0001
 #define FF_NORMAL                       0x0002

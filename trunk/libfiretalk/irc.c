@@ -1,37 +1,27 @@
-/*
-irc.c - FireTalk IRC protocol driver
-Copyright (C) 2000 Ian Gulliver
-Copyright 2002-2006 Daniel Reed <n@ml.org>
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of version 2 of the GNU General Public License as
-published by the Free Software Foundation.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+/* irc.c - FireTalk IRC protocol driver
+** Copyright (C) 2000 Ian Gulliver
+** Copyright 2002-2006 Daniel Reed <n@ml.org>
+** 
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of version 2 of the GNU General Public License as
+** published by the Free Software Foundation.
+** 
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+** 
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <strings.h>
-#include <sys/time.h>
-#include <time.h>
 
 #include "firetalk-int.h"
 #include "firetalk.h"
@@ -65,21 +55,20 @@ static int irc_compare_nicks_int(const char *const nick1, const char *const nick
 	return(0);
 }
 
-struct s_irc_whois {
-	struct s_irc_whois *next;
+typedef struct irc_whois_t {
+	struct irc_whois_t *next;
 	char	*nickname,
 		*info;
 	int	flags;
 	long	online,
 		idle;
-};
+} irc_whois_t;
 
 typedef struct firetalk_driver_connection_t {
 	char	*nickname,
 		*password,
 		 buffer[512+1];
-	struct s_irc_whois
-		*whois_head;
+	irc_whois_t *whois_head;
 	int	 passchange;	/* whether we are currently changing our pass */
 	unsigned char
 		 usesilence:1,	/* are we on a network that understands SILENCE */
@@ -533,7 +522,7 @@ static char *irc_irc_to_html(const char *const string) {
 }
 
 static int irc_internal_disconnect(irc_conn_t *c, const int error) {
-	struct s_irc_whois *whois_iter, *whois_iter2;
+	irc_whois_t *whois_iter, *whois_iter2;
 
 	if (c->nickname != NULL) {
 		free(c->nickname);
@@ -764,7 +753,7 @@ static fte_t irc_postselect(irc_conn_t *c, fd_set *read, fd_set *write, fd_set *
 }
 
 static void irc_addwhois(irc_conn_t *c, const char *const name, const char *const format, ...) {
-	struct s_irc_whois *whoisiter;
+	irc_whois_t *whoisiter;
 	char	buf[1024];
 	va_list	msg;
 
@@ -785,9 +774,7 @@ static void irc_addwhois(irc_conn_t *c, const char *const name, const char *cons
 }
 
 static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
-	struct s_irc_whois
-		*whoisiter,
-		*whoisiter2;
+	irc_whois_t *whoisiter, *whoisiter2;
 	char	*tempchr;
 
 	{
@@ -1482,20 +1469,16 @@ static fte_t irc_set_privacy(irc_conn_t *c, const char *const mode) {
 }
 
 static fte_t irc_get_info(irc_conn_t *c, const char *const nickname) {
-	struct s_irc_whois *whoistemp;
+	irc_whois_t *iter;
 
-	whoistemp = c->whois_head;
-	c->whois_head = calloc(1, sizeof(struct s_irc_whois));
-	if (c->whois_head == NULL)
+	iter = calloc(1, sizeof(*iter));
+	if (iter == NULL)
 		abort();
-	c->whois_head->nickname = strdup(nickname);
-	if (c->whois_head->nickname == NULL)
+	iter->next = c->whois_head;
+	c->whois_head = iter;
+	iter->nickname = strdup(nickname);
+	if (iter->nickname == NULL)
 		abort();
-	c->whois_head->flags = 0;
-	c->whois_head->online = 0;
-	c->whois_head->idle = 0;
-	c->whois_head->info = NULL;
-	c->whois_head->next = whoistemp;
 	return(irc_send_printf(c, "WHOIS %s", nickname));
 }
 
@@ -1567,7 +1550,7 @@ static char *irc_ctcp_encode(irc_conn_t *c, const char *const command, const cha
 	return(str);
 }
 
-const firetalk_protocol_t firetalk_protocol_irc = {
+const firetalk_driver_t firetalk_protocol_irc = {
 	strprotocol:		"IRC",
 	default_server:		"irc.n.ml.org",
 	default_port:		6667,
