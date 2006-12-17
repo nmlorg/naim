@@ -1,3 +1,6 @@
+/* toc2.c - FireTalk TOC2 protocol driver
+** Copyright 2002-2006 Daniel Reed <n@ml.org>
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,30 +12,25 @@
 #include "firetalk-int.h"
 #include "firetalk.h"
 
-#define TOC_HTML_MAXLEN 65536
 #define TOC_CLIENTSEND_MAXLEN (2*1024)
 #define TOC_SERVERSEND_MAXLEN (8*1024)
 #define ECT_TOKEN	"<font ECT=\""
 #define ECT_ENDING	"\"></font>"
 
-struct s_toc_room {
-	struct s_toc_room *next;
+typedef struct toc_room_t {
+	struct toc_room_t *next;
 	int	exchange;
 	char	*name;
 	long	id;
 	uint8_t	invited:1,
 		joined:1;
-};
+} toc_room_t;
 
-struct s_toc_infoget {
-	int	sockfd;
-	struct s_toc_infoget *next;
-#define TOC_STATE_CONNECTING 0
-#define TOC_STATE_TRANSFERRING 1
-	int	state;
-	char	buffer[TOC_HTML_MAXLEN];
-	int	buflen;
-};
+typedef struct toc_infoget_t {
+	struct toc_infoget_t *next;
+	firetalk_sock_t sock;
+	firetalk_buffer_t buffer;
+} toc_infoget_t;
 
 typedef struct firetalk_driver_connection_t {
 	uint16_t local_sequence;		/* our sequence number */
@@ -40,8 +38,8 @@ typedef struct firetalk_driver_connection_t {
 	char	*nickname,			/* our nickname (correctly spaced) */
 		*awaymsg;
 	time_t	awaysince;
-	struct s_toc_room *room_head;
-	struct s_toc_infoget *infoget_head;
+	toc_room_t *room_head;
+	toc_infoget_t *infoget_head;
 	time_t	lastself,			/* last time we checked our own status */
 		lasttalk;			/* last time we talked */
 	long	lastidle;			/* last idle that we told the server */
@@ -334,8 +332,8 @@ static char *aim_handle_ect(handle_t *conn, const char *const from,
 	return(message);
 }
 
-static void toc_infoget_parse_userinfo(handle_t *c, struct s_toc_infoget *i) {
-	char	*tmp, *str = i->buffer,
+static void toc_infoget_parse_userinfo(handle_t *c, toc_infoget_t *i) {
+	char	*tmp, *str = i->buffer.buffer,
 		*name, *info;
 	int	class = 0, warning;
 	long	online, idle;
@@ -497,24 +495,26 @@ static void toc_infoget_parse_dir(handle_t *c, struct s_toc_infoget *inf) {
 }
 #endif
 
-static void toc_infoget_parse(handle_t *c, struct s_toc_infoget *inf) {
-	inf->buffer[inf->buflen] = 0;
+static void toc_infoget_parse(handle_t *c, toc_infoget_t *inf) {
+	if (inf->buffer.pos == inf->buffer.size)
+		inf->buffer.pos = inf->buffer.size-1;
+	inf->buffer.buffer[inf->buffer.pos] = 0;
 
-	if (strstr(inf->buffer, "Not found.") != NULL)
+	if (strstr(inf->buffer.buffer, "Not found.") != NULL)
 		firetalk_callback_error(c, FE_NOTFOUND, NULL, NULL);
 #ifdef ENABLE_DIRECTORY
-	else if (strstr(inf->buffer, "Dir Information") != NULL)
+	else if (strstr(inf->buffer.buffer, "Dir Information") != NULL)
 		toc_infoget_parse_dir(c, inf);
 #endif
 	else
 		toc_infoget_parse_userinfo(c, inf);
 }
 
-static void toc_infoget_remove(handle_t *c, struct s_toc_infoget *inf, char *error) {
-	struct s_toc_infoget *m, *m2;
+static void toc_infoget_remove(handle_t *c, toc_infoget_t *inf, char *error) {
+	toc_infoget_t *m, *m2;
 
 	if (error != NULL)
-		firetalk_callback_error(c,FE_USERINFOUNAVAILABLE,NULL,error);
+		firetalk_callback_error(c, FE_USERINFOUNAVAILABLE, NULL, error);
 	m = c->infoget_head;
 	m2 = NULL;
 	while (m != NULL) {
@@ -523,8 +523,8 @@ static void toc_infoget_remove(handle_t *c, struct s_toc_infoget *inf, char *err
 				c->infoget_head = m->next;
 			else
 				m2->next = m->next;
-			close(m->sockfd);
-			m->sockfd = -1;
+			firetalk_sock_close(&(m->sock));
+			firetalk_buffer_free(&(m->buffer));
 			free(m);
 			m = NULL;
 			return;
@@ -553,61 +553,32 @@ static fte_t toc_im_add_deny_flush(handle_t *c) {
 }
 
 static fte_t toc_postselect(handle_t *c, fd_set *read, fd_set *write, fd_set *except) {
-	struct s_toc_infoget *i, *i2;
+	toc_infoget_t *i, *i2;
 
 	for (i = c->infoget_head; i != NULL; i = i2) {
+		fte_t	e;
+
 		i2 = i->next;
 
-		if (FD_ISSET(i->sockfd, except))
+		e = firetalk_sock_postselect(&(i->sock), read, write, except, &(i->buffer));
+#ifdef DEBUG_ECHO
+		toc_echof(c, "postselect", "postselecting on fd %i got %s (bufferpos=%i, readdata=%i, state=%i)",
+			i->sock.fd, firetalk_strerror(e), i->buffer.pos, i->buffer.readdata, i->sock.state);
+#endif
+
+		if (e == FE_SUCCESS) {
+			if (i->sock.state == FCS_SEND_SIGNON) {
+#ifdef DEBUG_ECHO
+				toc_echof(c, "postselect", "sock_send(%i, [%s], %i)", i->sock.fd, i->buffer.buffer, strlen(i->buffer.buffer));
+#endif
+				firetalk_sock_send(&(i->sock), i->buffer.buffer, strlen(i->buffer.buffer));
+				i->sock.state = FCS_ACTIVE;
+			}
+		} else if (e == FE_DISCONNECT) {
+			toc_infoget_parse(c, i);
+			toc_infoget_remove(c, i, NULL);
+		} else
 			toc_infoget_remove(c, i, strerror(errno));
-		else if ((i->state == TOC_STATE_CONNECTING) && FD_ISSET(i->sockfd, write)) {
-			int	r;
-			unsigned int o = sizeof(r);
-
-			if (getsockopt(i->sockfd, SOL_SOCKET, SO_ERROR, &r, &o)) {
-				toc_infoget_remove(c, i, strerror(errno));
-				continue;
-			}
-			if (r != 0) {
-				toc_infoget_remove(c, i, strerror(r));
-				continue;
-			}
-			if (send(i->sockfd, i->buffer, i->buflen, 0) != i->buflen) {
-				toc_infoget_remove(c, i, strerror(errno));
-				continue;
-			}
-			i->buflen = 0;
-			i->state = TOC_STATE_TRANSFERRING;
-		} else if ((i->state == TOC_STATE_TRANSFERRING) && FD_ISSET(i->sockfd, read)) {
-			ssize_t	s;
-
-			while (1) {
-				s = recv(i->sockfd, &i->buffer[i->buflen], TOC_HTML_MAXLEN - i->buflen - 1, MSG_DONTWAIT);
-				if (s <= 0)
-					break;
-				i->buflen += s;
-				if (i->buflen == TOC_HTML_MAXLEN - 1) {
-					s = -2;
-					break;
-				}
-			}
-			if (s == -2) {
-				toc_infoget_remove(c, i, "Too much data");
-				continue;
-			}
-			if (s == -1) {
-				if (errno != EAGAIN)
-					toc_infoget_remove(c, i, strerror(errno));
-				continue;
-			}
-			if (s == 0) {
-				/* finished, parse results here */
-				toc_infoget_parse(c, i);
-				toc_infoget_remove(c, i, NULL);
-				continue;
-			}
-
-		}
 	}
 
 	return(FE_SUCCESS);
@@ -729,7 +700,7 @@ static int toc_internal_disconnect(handle_t *c, const int error) {
 	}
 	assert(c->awaysince == 0);
 	if (c->room_head != NULL) {
-		struct s_toc_room *iter, *iternext;
+		toc_room_t *iter, *iternext;
 
 		for (iter = c->room_head; iter != NULL; iter = iternext) {
 			iternext = iter->next;
@@ -740,16 +711,8 @@ static int toc_internal_disconnect(handle_t *c, const int error) {
 		}
 		c->room_head = NULL;
 	}
-	if (c->infoget_head != NULL) {
-		struct s_toc_infoget *iter, *iternext;
-
-		for (iter = c->infoget_head; iter != NULL; iter = iternext) {
-			iternext = iter->next;
-			free(iter);
-			iter = NULL;
-		}
-		c->infoget_head = NULL;
-	}
+	while (c->infoget_head != NULL)
+		toc_infoget_remove(c, c->infoget_head, NULL);
 	if (c->buddybuflastgroup != NULL) {
 		free(c->buddybuflastgroup);
 		c->buddybuflastgroup = strdup("");
@@ -766,23 +729,22 @@ static int toc_internal_disconnect(handle_t *c, const int error) {
 }
 
 static int toc_internal_add_room(handle_t *c, const char *const name, const int exchange) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 
-	iter = c->room_head;
-	c->room_head = calloc(1, sizeof(struct s_toc_room));
+	iter = calloc(1, sizeof(*iter));
 	if (c->room_head == NULL)
 		abort();
-
-	c->room_head->next = iter;
-	c->room_head->name = strdup(name);
-	if (c->room_head->name == NULL)
+	iter->next = c->room_head;
+	c->room_head = iter;
+	iter->name = strdup(name);
+	if (iter->name == NULL)
 		abort();
-	c->room_head->exchange = exchange;
+	iter->exchange = exchange;
 	return(FE_SUCCESS);
 }
 
 static int toc_internal_set_joined(handle_t *c, const long id) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 
 	for (iter = c->room_head; iter != NULL; iter = iter->next)
 		if (iter->joined == 0)
@@ -794,7 +756,7 @@ static int toc_internal_set_joined(handle_t *c, const long id) {
 }
 
 static int toc_internal_set_id(handle_t *c, const char *const name, const int exchange, const long id) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 
 	for (iter = c->room_head; iter != NULL; iter = iter->next)
 		if (iter->joined == 0)
@@ -806,7 +768,7 @@ static int toc_internal_set_id(handle_t *c, const char *const name, const int ex
 }
 	
 static int toc_internal_find_exchange(handle_t *c, const char *const name) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 
 	for (iter = c->room_head; iter != NULL; iter = iter->next)
 		if (iter->joined == 0)
@@ -817,7 +779,7 @@ static int toc_internal_find_exchange(handle_t *c, const char *const name) {
 }
 
 static int toc_internal_find_room_id(handle_t *c, const char *const name) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 	char	*namepart;
 	int	exchange;
 
@@ -833,7 +795,7 @@ static int toc_internal_find_room_id(handle_t *c, const char *const name) {
 }
 
 static char *toc_internal_find_room_name(handle_t *c, const long id) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 	static char newname[TOC_CLIENTSEND_MAXLEN];
 
 	for (iter = c->room_head; iter != NULL; iter = iter->next)
@@ -862,7 +824,7 @@ static const char *toc_get_tlv_value(char **args, int arg, const int type) {
 }
 
 static int toc_internal_set_room_invited(handle_t *c, const char *const name, const int invited) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 
 	for (iter = c->room_head; iter != NULL; iter = iter->next)
 		if (toc_compare_nicks(iter->name,name) == 0) {
@@ -874,7 +836,7 @@ static int toc_internal_set_room_invited(handle_t *c, const char *const name, co
 }
 
 static int toc_internal_get_room_invited(handle_t *c, const char *const name) {
-	struct s_toc_room *iter;
+	toc_room_t *iter;
 
 	for (iter = c->room_head; iter != NULL; iter = iter->next)
 		if (toc_compare_nicks(aim_normalize_room_name(iter->name),name) == 0)
@@ -1234,17 +1196,10 @@ static fte_t toc_im_send_action(handle_t *c, const char *const dest, const char 
 }
 
 static fte_t toc_preselect(handle_t *c, fd_set *read, fd_set *write, fd_set *except, int *n) {
-	struct s_toc_infoget *inf;
+	toc_infoget_t *inf;
 
-	for (inf = c->infoget_head; inf != NULL; inf = inf->next) {
-		if (inf->state == TOC_STATE_CONNECTING)
-			FD_SET(inf->sockfd, write);
-		else if (inf->state == TOC_STATE_TRANSFERRING)
-			FD_SET(inf->sockfd, read);
-		FD_SET(inf->sockfd, read);
-		if (inf->sockfd >= *n)
-			*n = inf->sockfd + 1;
-	}
+	for (inf = c->infoget_head; inf != NULL; inf = inf->next)
+		firetalk_sock_preselect(&(inf->sock), read, write, except, n);
 
 	toc_im_add_buddy_flush(c);
 	toc_im_add_deny_flush(c);
@@ -2117,7 +2072,7 @@ static fte_t toc_got_data(handle_t *c, unsigned char *buffer, uint16_t *bufferpo
 		**    Goto a URL.  Window Name is the suggested internal name of the window
 		**    to use.  (Java supports this.)
 		*/
-		struct s_toc_infoget *i;
+		toc_infoget_t *i;
 
 		/* create a new infoget object and set it to connecting state */
 		args = toc_parse_args(data, 3, ':');
@@ -2128,23 +2083,23 @@ static fte_t toc_got_data(handle_t *c, unsigned char *buffer, uint16_t *bufferpo
 			return(FE_INVALIDFORMAT);
 		}
 
-		i = c->infoget_head;
-		c->infoget_head = calloc(1, sizeof(struct s_toc_infoget));
-		if (c->infoget_head == NULL)
+		i = calloc(1, sizeof(*i));
+		if (i == NULL)
 			abort();
-		snprintf(c->infoget_head->buffer, TOC_HTML_MAXLEN, "GET /%s HTTP/1.0\r\n\r\n", args[2]);
-		c->infoget_head->buflen = strlen(c->infoget_head->buffer);
-		c->infoget_head->next = i;
-		c->infoget_head->state = TOC_STATE_CONNECTING;
-		c->infoget_head->sockfd = firetalk_internal_connect(firetalk_callback_remotehost4(c)
+		i->next = c->infoget_head;
+		c->infoget_head = i;
+		firetalk_sock_init(&(i->sock));
+		firetalk_buffer_init(&(i->buffer));
+		firetalk_buffer_alloc(&(i->buffer), USHRT_MAX);
+		snprintf(i->buffer.buffer, i->buffer.size, "GET /%s HTTP/1.0\r\n\r\n", args[2]);
+		memmove(&(i->sock.remote_addr), firetalk_callback_remotehost4(c), sizeof(i->sock.remote_addr));
 #ifdef _FC_USE_IPV6
-				, firetalk_callback_remotehost6(c)
+		memmove(&(i->sock.remote_addr6), firetalk_callback_remotehost6(c), sizeof(i->sock.remote_addr6));
 #endif
-				);
-		if (c->infoget_head->sockfd == -1) {
+		if (firetalk_sock_connect(&(i->sock)) != FE_SUCCESS) {
 			firetalk_callback_error(c, FE_CONNECT, (lastinfo[0]=='\0')?NULL:lastinfo, "Failed to connect to info server");
-			free(c->infoget_head);
-			c->infoget_head = i;
+			c->infoget_head = i->next;
+			free(i);
 			return(FE_SUCCESS);
 		}
 	} else if (strcmp(arg0, "NEW_BUDDY_REPLY2") == 0) {
@@ -2779,7 +2734,7 @@ static fte_t toc_subcode_send_reply(handle_t *c, const char *const to, const cha
 }
 */
 
-const firetalk_protocol_t firetalk_protocol_toc2 = {
+const firetalk_driver_t firetalk_protocol_toc2 = {
 	strprotocol:		"TOC2",
 	default_server:		"toc.n.ml.org",
 	default_port:		9898,

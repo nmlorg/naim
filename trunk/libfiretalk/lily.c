@@ -1,4 +1,4 @@
-/* lily.c - FireTalk SLCP protocol definitions
+/* lily.c - FireTalk SLCP protocol driver
 ** Copyright 2002-2006 Daniel Reed <n@ml.org>
 */
 #include <assert.h>	/* assert() */
@@ -1803,7 +1803,7 @@ char	*lily_ctcp_encode(lily_conn_t *c, const char *const command, const char *co
 	return(str);
 }
 
-const firetalk_protocol_t firetalk_protocol_slcp = {
+const firetalk_driver_t firetalk_protocol_slcp = {
 	strprotocol:		"SLCP",
 	default_server:		"slcp.n.ml.org",
 	default_port:		7777,
