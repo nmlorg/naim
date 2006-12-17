@@ -85,4 +85,73 @@ type /set autohide 10.
 
 For most other configurable pieces, there are specific /-commands to use, which will be
 described in /help commands. For example, to add me to to your buddy list, just type
-/addbuddy nmlorg or ../addbuddy "n ml org".. 
+/addbuddy nmlorg or /addbuddy "n ml org".
+
+==Is there a way to have naim save my configuration settings for the next time I start
+naim? &bull; Where can I get an example .naimrc (naim configuration file)?==
+naim will read start-up commands from a file called .naimrc in your home directory, so all
+of your configuration commands can be placed there.
+
+naim includes a /save command, which will attempt to create a suitable .naimrc file based
+on your current settings. So, once you have configured naim to your liking, just type
+/save and naim will use the same settings the next time it starts up (including your buddy
+list, channels you have joined on IRC, etc.). The generated .naimrc is also
+auto-documented, so feel free to use /save to create a "default" .naimrc, and customize it
+by hand using a text editor.
+
+You can /set autosave 1 to have naim automatically write .naimrc whenever you /quit
+
+==How do I configure naim to be nice with GNU Screen?==
+Solution under Console Display Issues applies.
+
+==Is it possible to disable the timestamps every 30 minutes?==
+Type /set tprint 0.
+
+==Is there a way to disable sounds in naim?==
+The only sounds naim should make are for $beeponim or $beeponsignon, so you can just /set
+beeponim 0, etc. to shut them off.
+
+==How do I change the colors?==
+The /setcol command will let you manipulate the colors. Type /setcol by itself to see what
+the current values are, then /setcol buddy blue, etc. to change them.
+
+==Does naim support inverse/blinking text, or changing the background for specific buddy
+types separately from the whole buddy list?==
+At present, no. If enough people request that ability, I will add it to the next release.
+
+==Why do some people I talk to have colored text?==
+naim's default behavior is to honor  tags sent by other users, which can unfortunately
+lead to situations in which the other user has chosen a font color that clashes with your
+background. You can either use the /setcol command to change your own background, ask them
+to pick a less offensive foreground, or /set color 0 in naim to disable  tag processing.
+
+=Profiles=
+==How can I get someone's profile?==
+naim includes a /whois (/wi, /info) command to retrieve all information AIM keeps on AIM
+users, including the profile. Unfortunately, AOL users' profiles are not visible to AIM
+users through any mechanism.
+
+==How can I set my own profile?==
+If you have a file called .naimprofile in your home directory when naim starts, naim will
+use its contents instead of the built-in default. You can send SIGHUP (killall -HUP naim)
+from the command line or type /readprofile .naimprofile while naim is running to reload
+your .naimprofile.
+
+==Is there a way to view a user's away message other than sending them a message?==
+Unfortunately, the TOC protocol does not appear to have such a capability. naim uses a
+workaround (it puts your away message in your profile when you go /away), so naim can view
+other naim users' away messages, but I am unfamiliar with any mechanism to retrieve a
+WinAIM, etc. user's message (other than sending them an IM and hoping they send back an
+autoresponse).
+
+==How does Gaim get the away message when you do the GetInfo? Why does naim use TOC
+instead of Oscar? Isn't Oscar newer?==
+Many other AIM clients use an alternative protocol, Oscar, which does have this
+capability. The original AIM protocol was Oscar, and AOL later created TOC to serve the
+needs of their Java client. In 1998 AOL released a public document specifying details of
+the TOC protocol, for use by third-party clients such as naim. Since then, they have made
+many significant changes to the Oscar protocol to discourage third-party client
+maintainers from using Oscar. It is possible for third-party clients to use the Oscar
+protocol, but I would prefer to spend my time working on new features to spending it in
+keeping up with AOL's latest protocol revisions, rush-testing new releases, and
+publicizing the problem and availability of corrected versions.
