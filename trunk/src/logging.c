@@ -4,7 +4,6 @@
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 #include <naim/naim.h>
-#include <utime.h>
 
 #include "naim-int.h"
 
@@ -15,7 +14,7 @@ extern const char *home;
 extern int colormode G_GNUC_INTERNAL;
 int	colormode = COLOR_HONOR_USER;
 
-static const unsigned char *naim_normalize(const unsigned char *const name) {
+const unsigned char *naim_normalize(const unsigned char *const name) {
 	static char newname[2048];
 	int	i, j = 0;
 
@@ -26,15 +25,6 @@ static const unsigned char *naim_normalize(const unsigned char *const name) {
 			newname[j++] = tolower(name[i]);
 	newname[j] = 0;
 	return(newname);
-}
-
-static int touch(const char *filename, time_t atime, time_t mtime) {
-	struct utimbuf buf = {
-		actime: atime,
-		modtime: mtime,
-	};
-
-	return(utime(filename, &buf));
 }
 
 static int makedir(const char *d) {
@@ -68,147 +58,106 @@ static int makedir(const char *d) {
 	return(0);
 }
 
-static void playback_fix(const char *logdir) {
-	struct stat sb;
-	char	nhtml[256];
+static FILE *playback_fopen(conn_t *const conn, buddywin_t *const bwin, const char *const mode) {
+	FILE	*rfile;
+	char	*n, *nhtml, *ptr,
+		buf[256];
 
-	snprintf(nhtml, sizeof(nhtml), "%s.html", logdir);
+	script_setvar("conn", conn->winname);
+	script_setvar("cur", naim_normalize(bwin->winname));
 
-	if ((stat(logdir, &sb) == 0) && S_ISREG(sb.st_mode)) {
-		if ((stat(nhtml, &sb) == 0) && S_ISREG(sb.st_mode))
-			remove(logdir);
-		else
-			rename(logdir, nhtml);
+	n = script_expand(script_getvar("logdir"));
+	snprintf(buf, sizeof(buf), "%s", n);
+	if ((ptr = strrchr(buf, '/')) != NULL) {
+		*ptr = 0;
+		makedir(buf);
 	}
 
-	if (stat(logdir, &sb) != 0)
-		makedir(logdir);
-	else
-		assert(S_ISDIR(sb.st_mode));
-
-	if ((stat(nhtml, &sb) == 0) && S_ISREG(sb.st_mode)) {
-		char	buf[256];
-		struct tm *tm;
-
-		tm = gmtime(&(sb.st_mtime));
-		snprintf(buf, sizeof(buf), "%s/", logdir);
-		strftime(buf+strlen(buf), sizeof(buf)-strlen(buf), "%Y%m%d%H%M-0.html", tm);
-		rename(nhtml, buf);
+	if (strstr(n, ".html") == NULL) {
+		snprintf(buf, sizeof(buf), "%s.html", n);
+		nhtml = buf;
+	} else {
+		nhtml = n;
+		snprintf(buf, sizeof(buf), "%s", nhtml);
+		if ((ptr = strstr(buf, ".html")) != NULL)
+			*ptr = 0;
+		n = buf;
 	}
-}
 
-void	playback_file_estimator(conn_t *const conn, buddywin_t *const bwin, struct h_t *h, FILE *rfile, const int lines) {
-	char	buf[2048];
-	int	maxlen = lines*faimconf.wstatus.widthx;
-	long	filesize, playbackstart, playbacklen, pos;
-	time_t	lastprogress = now;
-
-	fseek(rfile, 0, SEEK_END);
-	while (((filesize = ftell(rfile)) == -1) && (errno == EINTR))
-			;
-	assert(filesize >= 0);
-	if (filesize > maxlen) {
-		fseek(rfile, -maxlen, SEEK_CUR);
-		while ((fgetc(rfile) != '\n') && !feof(rfile))
-			;
-	} else
-		fseek(rfile, 0, SEEK_SET);
-	while (((playbackstart = ftell(rfile)) == -1) && (errno == EINTR))
-		;
-	assert(playbackstart >= 0);
-	pos = 0;
-	playbacklen = filesize-playbackstart;
-	while (fgets(buf, sizeof(buf), rfile) != NULL) {
-		long	len = strlen(buf);
-
-		pos += len;
-		if (buf[len-1] == '\n') {
-			hhprint(h, buf, len-1);
-			hendblock(h);
+	if ((rfile = fopen(n, "r")) != NULL) {
+		fclose(rfile);
+		if ((rfile = fopen(nhtml, "r")) != NULL) {
+			fclose(rfile);
+			status_echof(conn, "Warning: While opening logfile for %s, two versions were found: [%s] and [%s]. I will use [%s], but you may want to look into this discrepency.\n",
+				bwin->winname, n, nhtml, nhtml);
 		} else
-			hhprint(h, buf, len);
-
-		if ((now = time(NULL)) > lastprogress) {
-			nw_statusbarf("Redrawing window for %s (%li lines left).",
-				bwin->winname, lines*(playbacklen-pos)/playbacklen);
-			lastprogress = now;
-		}
+			rename(n, nhtml);
 	}
+
+	return(fopen(nhtml, mode));
 }
 
-void	playback_file(conn_t *const conn, buddywin_t *const bwin, struct h_t *h, FILE *rfile, const int lines) {
-	char	buf[2048];
-	long	filesize, pos;
-	time_t	lastprogress = now;
-
-	fseek(rfile, 0, SEEK_END);
-	while (((filesize = ftell(rfile)) == -1) && (errno == EINTR))
-			;
-	assert(filesize >= 0);
-	fseek(rfile, 0, SEEK_SET);
-	pos = 0;
-	while (fgets(buf, sizeof(buf), rfile) != NULL) {
-		long	len = strlen(buf);
-
-		pos += len;
-		if (buf[len-1] == '\n') {
-			hhprint(h, buf, len-1);
-			hendblock(h);
-		} else
-			hhprint(h, buf, len);
-
-		if ((now = time(NULL)) > lastprogress) {
-			nw_statusbarf("Redrawing window for %s (%li lines left).",
-				bwin->winname, lines*(filesize-pos)/filesize);
-			lastprogress = now;
-		}
-	}
+FILE	*logging_open(conn_t *const conn, buddywin_t *const bwin) {
+	return(playback_fopen(conn, bwin, "a"));
 }
 
-void	logging_playback(conn_t *const conn, buddywin_t *const bwin, int lines) {
-#if 0
+void	logging_playback(conn_t *const conn, buddywin_t *const bwin, const int lines) {
+	FILE	*rfile;
 	struct h_t *h = hhandle(&(bwin->nwin));
-	const char *logdir;
-
-	nw_statusbarf("Redrawing window for %s.", bwin->winname);
 
 	assert(bwin->nwin.logfile != NULL);
 	fflush(bwin->nwin.logfile);
 	bwin->nwin.dirty = 0;
 
-	script_setvar("conn", conn->winname);
-	script_setvar("cur", naim_normalize(bwin->winname));
+	if ((rfile = playback_fopen(conn, bwin, "r")) != NULL) {
+		char	buf[2048];
+		int	maxlen = lines*faimconf.wstatus.widthx;
+		long	filesize, playbackstart, playbacklen, pos;
+		time_t	lastprogress = now;
 
-	logdir = script_expand(script_getvar("logdir"));
-
-	playback_fix(logdir);
-
-	if (script_getvar_int("color"))
-		colormode = COLOR_FORCE_ON;
-	else
-		colormode = COLOR_FORCE_OFF;
-
-	while (lines > 0) {
-		const char *rfilename;
-		FILE	*rfile;
-		int	linesset, linestmp = bwin->nwin.logfilelines;
-
-		if (((rfilename = playback_ffind(logdir, lines, &linesset)) != NULL) && (rfile = fopen(rfilename, "r"))) {
-			if (linesset == 0)
-				playback_file_estimator(conn, bwin, h, rfile, lines);
-			else {
-				playback_file(conn, bwin, h, rfile, linesset);
-				lines -= linesset;
-			}
-			fclose(rfile);
-		} else
-			break;
-	}
-
-	colormode = COLOR_HONOR_USER;
+#ifdef DEBUG_ECHO
+		status_echof(conn, "Redrawing window for %s.", bwin->winname);
 #endif
-}
 
-FILE	*logging_open(conn_t *conn, buddywin_t *bwin) {
-	return(NULL);
+		nw_statusbarf("Redrawing window for %s.", bwin->winname);
+
+		fseek(rfile, 0, SEEK_END);
+		while (((filesize = ftell(rfile)) == -1) && (errno == EINTR))
+			;
+		assert(filesize >= 0);
+		if (filesize > maxlen) {
+			fseek(rfile, -maxlen, SEEK_CUR);
+			while ((fgetc(rfile) != '\n') && !feof(rfile))
+				;
+		} else
+			fseek(rfile, 0, SEEK_SET);
+		while (((playbackstart = ftell(rfile)) == -1) && (errno == EINTR))
+			;
+		assert(playbackstart >= 0);
+		pos = 0;
+		playbacklen = filesize-playbackstart;
+		if (script_getvar_int("color"))
+			colormode = COLOR_FORCE_ON;
+		else
+			colormode = COLOR_FORCE_OFF;
+		while (fgets(buf, sizeof(buf), rfile) != NULL) {
+			long	len = strlen(buf);
+
+			pos += len;
+			//hwprintf(&(bwin->nwin), -C(IMWIN,TEXT)-1, "%s", buf);
+			if (buf[len-1] == '\n') {
+				hhprint(h, buf, len-1);
+				hendblock(h);
+			} else
+				hhprint(h, buf, len);
+
+			if ((now = time(NULL)) > lastprogress) {
+				nw_statusbarf("Redrawing window for %s (%li lines left).",
+					bwin->winname, lines*(playbacklen-pos)/playbacklen);
+				lastprogress = now;
+			}
+		}
+		colormode = COLOR_HONOR_USER;
+		fclose(rfile);
+	}
 }

@@ -63,9 +63,9 @@ void	statrefresh(void) {
 		return;
 
 	if (inconn) {
-		if ((curconn->curbwin->nwin.dirty != 0) || ((scrollbackoff > 0) && (curconn->curbwin->nwin.small != 0)))
+		if (curconn->curbwin->nwin.dirty || ((scrollbackoff > 0) && curconn->curbwin->nwin.small))
 			do_resize(curconn, curconn->curbwin);
-		assert(curconn->curbwin->nwin.dirty == 0);
+		assert(!curconn->curbwin->nwin.dirty);
 		curconn->curbwin->viewtime = nowf;
 	}
 

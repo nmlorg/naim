@@ -360,8 +360,10 @@ static inline void firetalk_connection_t_dtor(firetalk_connection_t *this) {
 	firetalk_transfer_t_list_delete(this->file_head);
 	firetalk_subcode_callback_t_list_delete(this->subcode_request_head);
 	firetalk_subcode_callback_t_list_delete(this->subcode_reply_head);
-	firetalk_subcode_callback_t_delete(this->subcode_request_default);
-	firetalk_subcode_callback_t_delete(this->subcode_reply_default);
+	if (this->subcode_request_default != NULL)
+		firetalk_subcode_callback_t_delete(this->subcode_request_default);
+	if (this->subcode_reply_default != NULL)
+		firetalk_subcode_callback_t_delete(this->subcode_reply_default);
 	firetalk_queue_t_dtor(&(this->subcode_requests));
 	firetalk_queue_t_dtor(&(this->subcode_replies));
 	memset(this, 0, sizeof(*this));
