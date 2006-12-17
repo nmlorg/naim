@@ -1739,14 +1739,6 @@ static fte_t lily_im_remove_deny(lily_conn_t *c, const char *const nickname) {
 	return FE_SUCCESS;
 }
 
-static fte_t lily_im_upload_buddies(lily_conn_t *c) {
-	return FE_SUCCESS;
-}
-
-static fte_t lily_im_upload_denies(lily_conn_t *c) {
-	return FE_SUCCESS;
-}
-
 static fte_t lily_im_evil(lily_conn_t *c, const char *const who) {
 	return FE_SUCCESS;
 }
@@ -1828,8 +1820,6 @@ const firetalk_protocol_t firetalk_protocol_slcp = {
 	im_remove_buddy:	lily_im_remove_buddy,
 	im_add_deny:		lily_im_add_deny,
 	im_remove_deny:		lily_im_remove_deny,
-	im_upload_buddies:	lily_im_upload_buddies,
-	im_upload_denies:	lily_im_upload_denies,
 	im_send_message:	lily_im_send_message,
 	im_send_action:		lily_im_send_action,
 	im_evil:		lily_im_evil,

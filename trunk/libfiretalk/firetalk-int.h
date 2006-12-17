@@ -70,73 +70,72 @@ struct s_firetalk_buddy {
 		*friendly;
 	long	idletime,
 		warnval;
-	unsigned char
-		online:1,
-		away:1;
 	int	typing;
 	char	*capabilities;
+	unsigned char online:1,
+		away:1,
+		uploaded:1;
 };
 
 struct s_firetalk_deny {
 	struct s_firetalk_deny *next;
-	char *nickname;
+	char	*nickname;
+	unsigned char uploaded:1;
 };
 
 struct s_firetalk_member {
 	struct s_firetalk_member *next;
 	char *nickname;
-	unsigned char
-		admin:1;
+	unsigned char admin:1;
 };
 
 struct s_firetalk_room {
 	struct s_firetalk_room *next;
 	struct s_firetalk_member *member_head;
-	char *name;
-	unsigned char
-		admin:1,
+	char	*name;
+	unsigned char admin:1,
 		sentjoin:1;
 };
 
 struct s_firetalk_file {
 	struct s_firetalk_file *next;
-	char *who;
-	char *filename;
+	char	*who;
+	char	*filename;
 	struct in_addr inet_ip;
 #ifdef _FC_USE_IPV6
 	struct in6_addr inet6_ip;
-	int tryinet6;
+	int	tryinet6;
 #endif
 	uint16_t port;
-	long size;
-	long bytes;
+	long	size;
+	long	bytes;
 	uint32_t acked;
 #define FF_STATE_WAITLOCAL	0
 #define FF_STATE_WAITREMOTE	1
 #define FF_STATE_WAITSYNACK	2
 #define FF_STATE_TRANSFERRING	3
-	int state;
+	int	state;
 #define FF_DIRECTION_SENDING	0
 #define FF_DIRECTION_RECEIVING	1
-	int direction;
+	int	direction;
 #define FF_TYPE_DCC		0
 #define FF_TYPE_RAW		1
-	int type;
-	int sockfd;
-	int filefd;
-	void *clientfilestruct;
+	int	type;
+	int	sockfd;
+	int	filefd;
+	void	*clientfilestruct;
 };
 
 struct s_firetalk_subcode_callback {
 	struct s_firetalk_subcode_callback *next;
-	char *command, *staticresp;
+	char	*command, *staticresp;
 	ptrtofnct callback;
 };
 
 struct s_firetalk_handle {
-	void *handle;
-	void *clientstruct;
-	int connected;
+	void	*handle;
+	void	*clientstruct;
+	int	connected;
 	struct sockaddr_in remote_addr;
 	struct in_addr local_addr;
 #ifdef _FC_USE_IPV6
@@ -144,9 +143,9 @@ struct s_firetalk_handle {
 	struct in6_addr local_addr6;
 #endif
 	unsigned long localip;
-	int protocol;
-	char *username;
-	int fd;
+	int	protocol;
+	char	*username;
+	int	fd;
 	ptrtofnct callbacks[FC_MAX];
 	unsigned char *buffer;
 	unsigned short bufferpos;
@@ -189,8 +188,6 @@ typedef struct s_firetalk_protocol_functions {
 	fte_t	(*im_remove_buddy)(client_t, const char *const, const char *const);
 	fte_t	(*im_add_deny)(client_t, const char *const);
 	fte_t	(*im_remove_deny)(client_t, const char *const);
-	fte_t	(*im_upload_buddies)(client_t);
-	fte_t	(*im_upload_denies)(client_t);
 	fte_t	(*im_send_message)(client_t, const char *const, const char *const, const int);
 	fte_t	(*im_send_action)(client_t, const char *const, const char *const, const int);
 	fte_t	(*im_evil)(client_t, const char *const);

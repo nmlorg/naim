@@ -409,13 +409,7 @@ CONIODESC(Add someone to your buddy list or change their group membership)
 CONIOAREQ(buddy,account)
 CONIOAOPT(string,group)
 CONIOAOPT(string,realname)
-	buddylist_t	*blist = rgetlist(conn, args[0]);
-	const char	*group = "Buddy", *name = NULL;
-	int	already = blist?1:0,
-		changed = 0, perm = 1;
-
-	if ((blist != NULL) && !USER_PERMANENT(blist))
-		perm = 0;
+	const char *group = "Buddy", *name = NULL;
 
 	switch (argc) {
 	  default:
@@ -426,73 +420,10 @@ CONIOAOPT(string,realname)
 		break;
 	}
 
-	/* matching groups must be *exact* matches or AOL rejects the add */
-	if (conn->buddyar != NULL) {
-		buddylist_t	*iter;
-
-		for (iter = conn->buddyar; iter != NULL; iter = iter->next)
-			if (firetalk_compare_nicks(conn->conn, iter->_group, group) == FE_SUCCESS) {
-				if (strcmp(group, iter->_group) != 0)
-					group = iter->_group;
-				break;
-			}
-	}
-
-	blist = raddbuddy(conn, args[0], group, name);
-	assert(blist != NULL);
-
-	if (argc == 1) {
-		if (blist->_name != NULL) {
-			echof(conn, NULL, "Removed <font color=\"#00FFFF\">%s</font>'s name (was \"<font color=\"#00FFFF\">%s</font>\").\n",
-				blist->_account, blist->_name);
-			free(blist->_name);
-			blist->_name = NULL;
-			changed = 1;
-		}
-	} else if (argc == 2) {
-		if ((blist->_group == NULL) || (group == NULL) || (strcmp(blist->_group, group) != 0)) {
-			if (group == NULL) {
-				free(blist->_group);
-				blist->_group = NULL;
-			} else
-				STRREPLACE(blist->_group, group);
-			echof(conn, NULL, "Changed <font color=\"#00FFFF\">%s</font>'s group to \"<font color=\"#FF0000\">%s</font>\".\n",
-				USER_ACCOUNT(blist), USER_GROUP(blist));
-			changed = 1;
-		}
-	} else {
-		if ((blist->_name == NULL) || (strcmp(blist->_name, args[2]) != 0)) {
-			echof(conn, NULL, "Changed <font color=\"#00FFFF\">%s</font>'s name from \"<font color=\"#00FFFF\">%s</font>\" to \"<font color=\"#00FFFF\">%s</font>\".\n",
-				USER_ACCOUNT(blist), USER_NAME(blist), args[2]);
-			STRREPLACE(blist->_name, args[2]);
-			changed = 1;
-		}
-	}
-
-	if (USER_PERMANENT(blist)) {
-		if ((changed == 0) || (perm == 0)) {
-			if (already)
-				echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> is now a permanent buddy.\n",
-					user_name(NULL, 0, conn, blist), USER_GROUP(blist));
-			else
-				echof(conn, NULL, "Added <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to your permanent buddy list.\n",
-					user_name(NULL, 0, conn, blist), USER_GROUP(blist));
-		}
-	} else {
-		if ((changed == 0) || (perm == 1)) {
-			if (already)
-				echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> is now a non-permanent buddy.\n",
-					user_name(NULL, 0, conn, blist), USER_GROUP(blist));
-			else
-				echof(conn, NULL, "Added <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to your non-permanent buddy list.\n",
-					user_name(NULL, 0, conn, blist), USER_GROUP(blist));
-		}
-	}
-
 	{
 		fte_t	ret;
 
-		if ((ret = firetalk_im_add_buddy(conn->conn, args[0], USER_GROUP(blist), blist->_name)) != FE_SUCCESS)
+		if ((ret = firetalk_im_add_buddy(conn->conn, args[0], group, name)) != FE_SUCCESS)
 			echof(conn, "ADDBUDDY", "Unable to add buddy: %s.\n", firetalk_strerror(ret));
 	}
 }
@@ -1188,8 +1119,8 @@ CONIOAREQ(buddy,name)
 
 		blist = rgetlist(conn, args[0]);
 		if (blist == NULL) {
-			blist = raddbuddy(conn, args[0], DEFAULT_GROUP, NULL);
-			firetalk_im_add_buddy(conn->conn, args[0], USER_GROUP(blist), NULL);
+			blist = raddbuddy(conn, args[0], "dummy", NULL);
+			firetalk_im_add_buddy(conn->conn, args[0], DEFAULT_GROUP, NULL);
 			added = 1;
 		} else
 			added = 0;
@@ -1582,16 +1513,8 @@ CONIOAOPT(buddy,name)
 	}
 
 	if ((blist = rgetlist(conn, name)) != NULL) {
-		fte_t	ret;
-
-		if ((ret = firetalk_im_remove_buddy(conn->conn, name)) == FE_SUCCESS)
-			status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> from your buddy list.\n",
-				user_name(NULL, 0, conn, blist));
-		else
-			status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> from naim's buddy list, but the server wouldn't remove %s%s%s from your session buddy list: %s.\n", 
-				user_name(NULL, 0, conn, blist), strchr(name, ' ')?"\"":"", name, strchr(name, ' ')?"\"":"",
-				firetalk_strerror(ret));
-		rdelbuddy(conn, name);
+		if (firetalk_im_remove_buddy(conn->conn, name) != FE_SUCCESS)
+			rdelbuddy(conn, name);
 		blist = NULL;
 	} else if (firetalk_im_remove_buddy(conn->conn, name) == FE_SUCCESS)
 		status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> from your session buddy list, but <font color=\"#00FFFF\">%s</font> isn't in naim's buddy list.\n",
@@ -1604,6 +1527,8 @@ CONIOAOPT(buddy,name)
 		free(lastclose);
 		lastclose = NULL;
 	}
+
+	assert(rgetlist(conn, name) == NULL);
 }
 
 CONIOFUNC(op) {

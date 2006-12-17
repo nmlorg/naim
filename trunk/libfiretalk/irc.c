@@ -1494,14 +1494,6 @@ static fte_t irc_im_remove_deny(irc_conn_t *c, const char *const nickname) {
 		return(FE_SUCCESS);
 }
 
-static fte_t irc_im_upload_buddies(irc_conn_t *c) {
-	return(FE_SUCCESS);
-}
-
-static fte_t irc_im_upload_denies(irc_conn_t *c) {
-	return(FE_SUCCESS);
-}
-
 static fte_t irc_im_evil(irc_conn_t *c, const char *const who) {
 	return(FE_SUCCESS);
 }
@@ -1621,8 +1613,6 @@ const firetalk_protocol_t firetalk_protocol_irc = {
 	im_remove_buddy:	irc_im_remove_buddy,
 	im_add_deny:		irc_im_add_deny,
 	im_remove_deny:		irc_im_remove_deny,
-	im_upload_buddies:	irc_im_upload_buddies,
-	im_upload_denies:	irc_im_upload_denies,
 	im_send_message:	irc_im_send_message,
 	im_send_action:		irc_im_send_action,
 	im_evil:		irc_im_evil,

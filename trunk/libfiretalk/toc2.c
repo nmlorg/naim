@@ -1162,21 +1162,6 @@ static fte_t toc_im_remove_deny(client_t c, const char *const name) {
 	return(toc_send_printf(c, "toc2_remove_deny %s", name));
 }
 
-static fte_t toc_im_upload_buddies(client_t c) {
-	struct s_firetalk_handle *fchandle;
-
-	fchandle = firetalk_find_handle(c);
-
-	if (fchandle->buddy_head != NULL) {
-		struct s_firetalk_buddy *buddyiter;
-
-		for (buddyiter = fchandle->buddy_head; buddyiter != NULL; buddyiter = buddyiter->next)
-			toc_im_add_buddy(c, buddyiter->nickname, buddyiter->group, buddyiter->friendly);
-	}
-
-	return(FE_SUCCESS);
-}
-
 static fte_t toc_im_upload_denies(client_t c) {
 	char	data[TOC_CLIENTSEND_MAXLEN];
 	struct s_firetalk_deny *denyiter;
@@ -1350,6 +1335,7 @@ static fte_t toc_set_info(client_t c, const char *const info) {
 	char	profile[1024],	/* profiles can only be a maximum of 1023 characters long, so this is good */
 		*versionctcp = NULL,
 		*awayctcp = NULL;
+	const char *versionctcpconst = NULL;
 	size_t	infolen = strlen(info),
 		extralen = 0;
 
@@ -1364,9 +1350,9 @@ static fte_t toc_set_info(client_t c, const char *const info) {
 		awayctcp = toc_ctcp_encode(c, "AWAY", awaymsg);
 		extralen += strlen(awayctcp);
 	}
-	if ((versionctcp = firetalk_subcode_get_request_reply(c, "VERSION")) == NULL)
-		versionctcp = PACKAGE_NAME ":" PACKAGE_VERSION ":unknown";
-	if ((versionctcp = toc_ctcp_encode(c, "VERSION", versionctcp)) != NULL)
+	if ((versionctcpconst = firetalk_subcode_get_request_reply(c, "VERSION")) == NULL)
+		versionctcpconst = PACKAGE_NAME ":" PACKAGE_VERSION ":unknown";
+	if ((versionctcp = toc_ctcp_encode(c, "VERSION", versionctcpconst)) != NULL)
 		extralen += strlen(versionctcp);
 
 	if (infolen+extralen >= 1024) {
@@ -2382,7 +2368,7 @@ static fte_t toc_got_data_connecting(client_t c, unsigned char *buffer, unsigned
 	char *arg0;
 	char **args;
 	char *tempchr1;
-	firetalk_t fchandle;
+	firetalk_t fchandle = NULL;
 
 got_data_connecting_start:
 	
@@ -2555,14 +2541,14 @@ got_data_connecting_start:
 							else
 								friendly = NULL;
 							if (strcmp(curgroup, "Mobile Device") != 0)
-								firetalk_im_add_buddy(fchandle, args[1], curgroup, friendly);
+								firetalk_callback_buddyadded(c, args[1], curgroup, friendly);
 						}
 						break;
 					  case 'p':	/* Person on permit list */
 						toc_send_printf(c, "toc_add_permit %s", args[1]);
 						break;
 					  case 'd':	/* Person on deny list */
-						firetalk_im_internal_add_deny(fchandle, args[1]);
+						firetalk_callback_denyadded(c, args[1]);
 						break;
 					  case 'm':	/* Permit/Deny Mode.  Possible values are 1 - Permit All 2 - Deny All 3 - Permit Some 4 - Deny Some */
 						c->permit_mode = atoi(args[1]);
@@ -2586,13 +2572,17 @@ got_data_connecting_start:
 #ifdef ENABLE_GETREALNAME
 			char	realname[128];
 #endif
+			struct s_firetalk_buddy *buddyiter;
 
 			/* ask the client to handle its init */
 			firetalk_callback_doinit(c, c->nickname);
-			if (toc_im_upload_buddies(c) != FE_SUCCESS) {
-				firetalk_callback_connectfailed(c, FE_PACKET, "Error uploading buddies");
-				return(FE_PACKET);
-			}
+
+			for (buddyiter = fchandle->buddy_head; buddyiter != NULL; buddyiter = buddyiter->next)
+				if (!buddyiter->uploaded) {
+					toc_im_add_buddy(c, buddyiter->nickname, buddyiter->group, buddyiter->friendly);
+					buddyiter->uploaded = 1;
+				}
+
 			if (toc_im_upload_denies(c) != FE_SUCCESS) {
 				firetalk_callback_connectfailed(c, FE_PACKET, "Error uploading denies");
 				return(FE_PACKET);
@@ -2843,8 +2833,6 @@ const firetalk_protocol_t firetalk_protocol_toc2 = {
 	im_remove_buddy:	toc_im_remove_buddy,
 	im_add_deny:		toc_im_add_deny,
 	im_remove_deny:		toc_im_remove_deny,
-	im_upload_buddies:	toc_im_upload_buddies,
-	im_upload_denies:	toc_im_upload_denies,
 	im_send_message:	toc_im_send_message,
 	im_send_action:		toc_im_send_action,
 	im_evil:		toc_im_evil,

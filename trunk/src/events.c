@@ -143,12 +143,11 @@ void	event_handle(time_t now) {
 					else {
 						char	*name = strdup(bwin->winname);
 
+						status_echof(conn, "Cleaning up auto-added buddy %s.\n", name);
 						bclose(conn, bwin, 1);
 						bwin = NULL;
-						rdelbuddy(conn, name);
-						firetalk_im_remove_buddy(conn->conn, name);
-						status_echof(conn, "Cleaning up auto-added buddy %s.\n",
-							name);
+						if (firetalk_im_remove_buddy(conn->conn, name) != FE_SUCCESS)
+							rdelbuddy(conn, name);
 						free(name);
 					}
 				}
