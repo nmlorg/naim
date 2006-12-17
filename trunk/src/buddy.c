@@ -532,12 +532,8 @@ buddywin_t *bgetwin(conn_t *conn, const char *buddy, et_t et) {
 	if (bwin == NULL)
 		return(NULL);
 	do {
-		if (bwin->et == et) {
-			if (firetalk_compare_nicks(conn->conn, buddy, bwin->winname) == FE_SUCCESS)
-				return(bwin);
-//			if ((bwin->et == BUDDY) && (firetalk_compare_nicks(conn->conn, buddy, USER_NAME(bwin->e.buddy)) == FE_SUCCESS))
-//				return(bwin);
-		}
+		if ((bwin->et == et) && (firetalk_compare_nicks(conn->conn, buddy, bwin->winname) == FE_SUCCESS))
+			return(bwin);
 	} while ((bwin = bwin->next) != conn->curbwin);
 
 	return(NULL);
@@ -553,6 +549,20 @@ buddywin_t *bgetanywin(conn_t *conn, const char *buddy) {
 		if (firetalk_compare_nicks(conn->conn, buddy, bwin->winname) == FE_SUCCESS)
 			return(bwin);
 		if ((bwin->et == BUDDY) && (firetalk_compare_nicks(conn->conn, buddy, USER_NAME(bwin->e.buddy)) == FE_SUCCESS))
+			return(bwin);
+	} while ((bwin = bwin->next) != conn->curbwin);
+
+	return(NULL);
+}
+
+buddywin_t *bgetbuddywin(conn_t *conn, const buddylist_t *blist) {
+	buddywin_t *bwin = conn->curbwin;
+
+	assert(blist != NULL);
+	if (bwin == NULL)
+		return(NULL);
+	do {
+		if ((bwin->et == BUDDY) && (bwin->e.buddy == blist))
 			return(bwin);
 	} while ((bwin = bwin->next) != conn->curbwin);
 
@@ -911,10 +921,10 @@ void	bcoming(conn_t *conn, const char *buddy) {
 	blist = rgetlist(conn, buddy);
 	assert(blist != NULL);
 	STRREPLACE(blist->_account, buddy);
-	if ((bwin = bgetwin(conn, buddy, BUDDY)) == NULL) {
+	if ((bwin = bgetbuddywin(conn, blist)) == NULL) {
 		if (getvar_int(conn, "autoquery") != 0) {
 			bnewwin(conn, buddy, BUDDY);
-			bwin = bgetwin(conn, buddy, BUDDY);
+			bwin = bgetbuddywin(conn, blist);
 			assert(bwin != NULL);
 		}
 	}

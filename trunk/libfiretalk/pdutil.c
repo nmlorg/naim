@@ -1,5 +1,6 @@
 /* Copyright 2006 Daniel Reed <n@ml.org>
 */
+#include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -346,6 +347,8 @@ void	*firetalk_dequeue(firetalk_queue_t *queue, const char *const key) {
 		if (strcmp(queue->keys[i], key) == 0) {
 			void	*data = queue->data[i];
 
+			free(queue->keys[i]);
+			queue->keys[i] = NULL;
 			memmove(queue->keys+i, queue->keys+i+1, (queue->count-i-1)*sizeof(*(queue->keys)));
 			memmove(queue->data+i, queue->data+i+1, (queue->count-i-1)*sizeof(*(queue->data)));
 			queue->count--;
@@ -465,11 +468,26 @@ const char *firetalk_debase64(const char *const str) {
 	static unsigned char out[256];
 	int	s, o, len = strlen(str);
 
-	for (o = s = 0; (s <= (len - 3)) && (o < (sizeof(out)-1)); s += 4, o += 3) {
+	for (o = s = 0; (s <= (len - 3)) && (o < (sizeof(out)-3)); s += 4, o += 3) {
 		out[o]   = (firetalk_debase64_char(str[s])   << 2) | (firetalk_debase64_char(str[s+1]) >> 4);
 		out[o+1] = (firetalk_debase64_char(str[s+1]) << 4) | (firetalk_debase64_char(str[s+2]) >> 2);
 		out[o+2] = (firetalk_debase64_char(str[s+2]) << 6) |  firetalk_debase64_char(str[s+3]);
 	}
 	out[o] = 0;
 	return((char *)out);
+}
+
+const char *firetalk_printable(const char *const str) {
+	static unsigned char out[256];
+	int	s, o;
+
+	for (o = s = 0; (str[s] != 0) && (o < sizeof(out)-4); s++)
+		if (isprint(str[s]) && (((s != 0) && isprint(str[s-1])) || ((str[s+1] != 0) && isprint(str[s+1]))))
+			out[o++] = str[s];
+		else {
+			sprintf(out+o, "\\x%02X", str[s]);
+			o += 4;
+		}
+	out[o] = 0;
+	return(out);
 }
