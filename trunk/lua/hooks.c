@@ -5,13 +5,15 @@
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
+#include <assert.h>
+#include <stdlib.h>
 #include "moon-int.h"
 
 extern conn_t *curconn;
 
 static int _nlua_hook(void *userdata, const char *signature, ...) {
 	va_list	msg;
-	int	ref = (int)userdata, i, top, newtop, args = 0, recoverable = 0;
+	int	ref = (int)userdata, i, top, newtop, args = 0;
 
 	top = lua_gettop(lua);
 
@@ -47,7 +49,6 @@ static int _nlua_hook(void *userdata, const char *signature, ...) {
 				const char **str = va_arg(msg, const char **);
 
 				lua_pushstring(lua, *str);
-				recoverable++;
 				break;
 			}
 		  case HOOK_T_WRLSTRINGc: {
@@ -55,21 +56,18 @@ static int _nlua_hook(void *userdata, const char *signature, ...) {
 				uint32_t *len = va_arg(msg, uint32_t *);
 
 				lua_pushlstring(lua, *str, *len);
-				recoverable++;
 				break;
 			}
 		  case HOOK_T_WRUINT32c: {
 				uint32_t *val = va_arg(msg, uint32_t *);
 
 				lua_pushnumber(lua, *val);
-				recoverable++;
 				break;
 			}
 		  case HOOK_T_WRFLOATc: {
 				double *val = va_arg(msg, double *);
 
 				lua_pushnumber(lua, *val);
-				recoverable++;
 				break;
 			}
 		  default:

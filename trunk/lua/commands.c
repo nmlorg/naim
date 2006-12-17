@@ -5,6 +5,7 @@
 */
 
 #include "moon-int.h"
+#include "naim-int.h"
 #include "cmdar.h"
 
 static int _lua2conio(lua_State *L, int first, const char **args, const int argmax) {

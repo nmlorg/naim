@@ -5,6 +5,7 @@
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
+#include <assert.h>
 #include "moon-int.h"
 
 int	nlua_setvar_int(const char *name, const long value) {

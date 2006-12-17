@@ -5,6 +5,8 @@
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
+#include <assert.h>
+#include <stdlib.h>
 #include "moon-int.h"
 
 extern conn_t *curconn;

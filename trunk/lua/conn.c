@@ -5,6 +5,7 @@
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
+#include <assert.h>
 #include "moon-int.h"
 #include <naim/naim.h>
 
