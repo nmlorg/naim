@@ -85,4 +85,4 @@ type /set autohide 10.
 
 For most other configurable pieces, there are specific /-commands to use, which will be
 described in /help commands. For example, to add me to to your buddy list, just type
-/addbuddy nmlorg or '/addbuddy "n ml org"'. 
+/addbuddy nmlorg or ../addbuddy "n ml org".. 
