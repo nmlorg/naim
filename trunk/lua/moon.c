@@ -285,7 +285,7 @@ static void _remove_conn(conn_t *conn)
 	for (i=0; i<connidmapsize; i++)
 		if (connidmaps[i].conn == conn)
 		{
-			memcpy(&connidmaps[i], &connidmaps[i+1], (connidmapsize - i - 1) * sizeof(struct conn_id_map));
+			memmove(&connidmaps[i], &connidmaps[i+1], (connidmapsize - i - 1) * sizeof(struct conn_id_map));
 			connidmapsize--;
 			return;
 		}

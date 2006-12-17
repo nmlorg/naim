@@ -383,6 +383,6 @@ int	nw_getcol(win_t *win) G_GNUC_INTERNAL;
 int	nw_getrow(win_t *win) G_GNUC_INTERNAL;
 void	nw_getline(win_t *win, char *buf, int buflen) G_GNUC_INTERNAL;
 int	nw_getch(void) G_GNUC_INTERNAL;
-extern void	nw_getpass(win_t *win, char *pass, int len) G_GNUC_INTERNAL;
+void	nw_getpass(win_t *win, char *pass, int len) G_GNUC_INTERNAL;
 
 #endif /* naim_h */
