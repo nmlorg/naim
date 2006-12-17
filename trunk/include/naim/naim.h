@@ -11,7 +11,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <naim/secs.h>
 #include <firetalk.h>
 
 #define CONIO_MAXPARMS	10
@@ -251,6 +250,15 @@ typedef struct {
 
 
 
+/* alias.c */
+void	alias_makealias(const char *, const char *);
+int	alias_doalias(const char *, const char *);
+
+/* atomizer.c */
+char	*firstatom(char *string, char *bounds) G_GNUC_INTERNAL;
+char	*firstwhite(char *string) G_GNUC_INTERNAL;
+char	*atom(char *string) G_GNUC_INTERNAL;
+
 /* buddy.c */
 const unsigned char *naim_normalize(const unsigned char *const name) G_GNUC_INTERNAL;
 void	playback(conn_t *const conn, buddywin_t *const, const int) G_GNUC_INTERNAL;
@@ -338,10 +346,6 @@ const char *dtime(double t) G_GNUC_INTERNAL;
 const char *dsize(double b) G_GNUC_INTERNAL;
 void	htmlstrip(char *bb);
 void	htmlreplace(char *bb, char what);
-
-/* script.c */
-void	alias_makealias(const char *, const char *);
-int	alias_doalias(const char *, const char *);
 
 /* set.c */
 const char *set_tabcomplete(conn_t *const conn, const char *start, const char *buf, const int bufloc, int *const match, const char **desc) G_GNUC_INTERNAL;

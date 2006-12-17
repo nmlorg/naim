@@ -8,8 +8,6 @@
 #include <naim/naim.h>
 #include "naim-int.h"
 
-#ifdef ENABLE_LUA
-
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -107,7 +105,7 @@ static void _getconnstable()
 int nlua_setvar_int(const char *name, const long value)
 {
 	if (name == NULL)
-		return;
+		return(0);
 	
 	_getvarstable();
 	lua_pushstring(lua, name);
@@ -458,5 +456,3 @@ static void _loadfunctions()
 {
 	luaL_register(lua, "naim", naimlib);
 }
-
-#endif

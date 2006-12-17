@@ -419,6 +419,8 @@ CONIOAOPT(string,realname)
 static void do_delconn(conn_t *conn) {
 	bclearall(conn, 1);
 
+	script_hook_delconn(conn);
+
 	firetalk_disconnect(conn->conn);
 	firetalk_destroy_conn(conn->conn);
 	conn->conn = NULL;
@@ -2307,6 +2309,8 @@ CONIOAOPT(string,protocol)
 		echof(newconn, NULL, "You can now <font color=\"#00FF00\">/connect &lt;name&gt; [&lt;server&gt;]</font> to log on.\n");
 	}
 	bupdate();
+
+	script_hook_newconn(newconn);
 }
 
 CONIOFUNC(delconn) {
@@ -2839,6 +2843,9 @@ void	conio_handlecmd(const char *buf) {
 		cmd = tmp+1;
 	} else
 		c = curconn;
+
+	if (script_cmd(cmd, arg, c) == 1)
+		return;
 
 	if (alias_doalias(cmd, arg) == 1)
 		return;
@@ -3689,7 +3696,7 @@ static void gotkey_real(int c) {
 				break;
 			}
 		} else if (binding != NULL)
-			script_script_parse(binding);
+			conio_handlecmd(binding);
 		if (bindfunc != NULL)
 			bindfunc(buf, &bufloc);
 	} else if (naimisprint(c)) {

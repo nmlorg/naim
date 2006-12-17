@@ -144,8 +144,6 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LUA_FALSE = @LUA_FALSE@
-LUA_TRUE = @LUA_TRUE@
 MAKEINFO = @MAKEINFO@
 NETLIB = @NETLIB@
 OBJDUMP = @OBJDUMP@
@@ -206,7 +204,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = libfiretalk libltdl lua secs src CYGWIN-PATCHES
+SUBDIRS = libfiretalk libltdl lua src CYGWIN-PATCHES
 man_MANS = doc/naim.1 doc/nicq.1 doc/nirc.1 doc/nlily.1
 pkgdoc_DATA = FAQ README
 EXTRA_DIST = \
@@ -223,7 +221,7 @@ EXTRA_DIST = \
 bin_SCRIPTS = \
 	contrib/extractbuddy.sh
 
-pkginclude_HEADERS = include/naim/naim.h include/naim/modutil.h include/naim/secs.h
+pkginclude_HEADERS = include/naim/naim.h include/naim/modutil.h
 snapshottime = `date +%Y-%m-%d-%H%M`
 all: all-recursive
 

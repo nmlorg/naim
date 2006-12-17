@@ -479,6 +479,7 @@ int	main_stub(int argc, char **args) {
 	echof(curconn, NULL, "Goodbye.\n");
 	statrefresh();
 	wshutitdown();
+	script_shutdown();
 	lt_dlexit();
 	return(0);
 }

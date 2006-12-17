@@ -48,35 +48,18 @@ CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 liblua_la_DEPENDENCIES =
-am__liblua_la_SOURCES_DIST = liblua/lapi.c liblua/lcode.c \
-	liblua/ldebug.c liblua/ldo.c liblua/ldump.c liblua/lfunc.c \
-	liblua/lgc.c liblua/llex.c liblua/lmem.c liblua/lobject.c \
-	liblua/lopcodes.c liblua/lparser.c liblua/lstate.c \
-	liblua/lstring.c liblua/ltable.c liblua/ltm.c liblua/lundump.c \
-	liblua/lvm.c liblua/lzio.c liblua/lauxlib.c liblua/lbaselib.c \
-	liblua/ldblib.c liblua/liolib.c liblua/lmathlib.c \
-	liblua/loslib.c liblua/ltablib.c liblua/lstrlib.c \
-	liblua/loadlib.c liblua/linit.c liblua/lapi.h liblua/ldebug.h \
-	liblua/lgc.h liblua/lmem.h liblua/lparser.h liblua/ltable.h \
-	liblua/luaconf.h liblua/lvm.h liblua/lauxlib.h liblua/ldo.h \
-	liblua/llex.h liblua/lobject.h liblua/lstate.h liblua/ltm.h \
-	liblua/lualib.h liblua/lzio.h liblua/lcode.h liblua/lfunc.h \
-	liblua/llimits.h liblua/lopcodes.h liblua/lstring.h \
-	liblua/lua.h liblua/lundump.h moon.c
 am__dirstamp = $(am__leading_dot)dirstamp
-@LUA_TRUE@am_liblua_la_OBJECTS = liblua/lapi.lo liblua/lcode.lo \
-@LUA_TRUE@	liblua/ldebug.lo liblua/ldo.lo liblua/ldump.lo \
-@LUA_TRUE@	liblua/lfunc.lo liblua/lgc.lo liblua/llex.lo \
-@LUA_TRUE@	liblua/lmem.lo liblua/lobject.lo liblua/lopcodes.lo \
-@LUA_TRUE@	liblua/lparser.lo liblua/lstate.lo liblua/lstring.lo \
-@LUA_TRUE@	liblua/ltable.lo liblua/ltm.lo liblua/lundump.lo \
-@LUA_TRUE@	liblua/lvm.lo liblua/lzio.lo liblua/lauxlib.lo \
-@LUA_TRUE@	liblua/lbaselib.lo liblua/ldblib.lo liblua/liolib.lo \
-@LUA_TRUE@	liblua/lmathlib.lo liblua/loslib.lo \
-@LUA_TRUE@	liblua/ltablib.lo liblua/lstrlib.lo \
-@LUA_TRUE@	liblua/loadlib.lo liblua/linit.lo moon.lo
+am_liblua_la_OBJECTS = liblua/lapi.lo liblua/lcode.lo liblua/ldebug.lo \
+	liblua/ldo.lo liblua/ldump.lo liblua/lfunc.lo liblua/lgc.lo \
+	liblua/llex.lo liblua/lmem.lo liblua/lobject.lo \
+	liblua/lopcodes.lo liblua/lparser.lo liblua/lstate.lo \
+	liblua/lstring.lo liblua/ltable.lo liblua/ltm.lo \
+	liblua/lundump.lo liblua/lvm.lo liblua/lzio.lo \
+	liblua/lauxlib.lo liblua/lbaselib.lo liblua/ldblib.lo \
+	liblua/liolib.lo liblua/lmathlib.lo liblua/loslib.lo \
+	liblua/ltablib.lo liblua/lstrlib.lo liblua/loadlib.lo \
+	liblua/linit.lo moon.lo
 liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
-@LUA_TRUE@am_liblua_la_rpath =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src
 depcomp =
 am__depfiles_maybe =
@@ -89,7 +72,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(liblua_la_SOURCES)
-DIST_SOURCES = $(am__liblua_la_SOURCES_DIST)
+DIST_SOURCES = $(liblua_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -142,8 +125,6 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LUA_FALSE = @LUA_FALSE@
-LUA_TRUE = @LUA_TRUE@
 MAKEINFO = @MAKEINFO@
 NETLIB = @NETLIB@
 OBJDUMP = @OBJDUMP@
@@ -204,26 +185,26 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@LUA_TRUE@DISTCLEANFILES = \
-@LUA_TRUE@	default_lua.h
+DISTCLEANFILES = \
+	default_lua.h
 
-@LUA_TRUE@EXTRA_DIST = \
-@LUA_TRUE@	cmpllua.sh \
-@LUA_TRUE@	default.lua
+EXTRA_DIST = \
+	cmpllua.sh \
+	default.lua
 
-@LUA_TRUE@noinst_LTLIBRARIES = liblua.la
-@LUA_TRUE@liblua_la_SOURCES = \
-@LUA_TRUE@	liblua/lapi.c liblua/lcode.c liblua/ldebug.c liblua/ldo.c liblua/ldump.c liblua/lfunc.c liblua/lgc.c liblua/llex.c liblua/lmem.c \
-@LUA_TRUE@	liblua/lobject.c liblua/lopcodes.c liblua/lparser.c liblua/lstate.c liblua/lstring.c liblua/ltable.c liblua/ltm.c \
-@LUA_TRUE@	liblua/lundump.c liblua/lvm.c liblua/lzio.c liblua/lauxlib.c liblua/lbaselib.c liblua/ldblib.c liblua/liolib.c \
-@LUA_TRUE@	liblua/lmathlib.c liblua/loslib.c liblua/ltablib.c liblua/lstrlib.c liblua/loadlib.c liblua/linit.c liblua/lapi.h \
-@LUA_TRUE@	liblua/ldebug.h liblua/lgc.h liblua/lmem.h liblua/lparser.h liblua/ltable.h liblua/luaconf.h liblua/lvm.h liblua/lauxlib.h \
-@LUA_TRUE@	liblua/ldo.h liblua/llex.h liblua/lobject.h liblua/lstate.h liblua/ltm.h liblua/lualib.h liblua/lzio.h liblua/lcode.h \
-@LUA_TRUE@	liblua/lfunc.h liblua/llimits.h liblua/lopcodes.h liblua/lstring.h liblua/lua.h liblua/lundump.h \
-@LUA_TRUE@	moon.c
+noinst_LTLIBRARIES = liblua.la
+liblua_la_SOURCES = \
+	liblua/lapi.c liblua/lcode.c liblua/ldebug.c liblua/ldo.c liblua/ldump.c liblua/lfunc.c liblua/lgc.c liblua/llex.c liblua/lmem.c \
+	liblua/lobject.c liblua/lopcodes.c liblua/lparser.c liblua/lstate.c liblua/lstring.c liblua/ltable.c liblua/ltm.c \
+	liblua/lundump.c liblua/lvm.c liblua/lzio.c liblua/lauxlib.c liblua/lbaselib.c liblua/ldblib.c liblua/liolib.c \
+	liblua/lmathlib.c liblua/loslib.c liblua/ltablib.c liblua/lstrlib.c liblua/loadlib.c liblua/linit.c liblua/lapi.h \
+	liblua/ldebug.h liblua/lgc.h liblua/lmem.h liblua/lparser.h liblua/ltable.h liblua/luaconf.h liblua/lvm.h liblua/lauxlib.h \
+	liblua/ldo.h liblua/llex.h liblua/lobject.h liblua/lstate.h liblua/ltm.h liblua/lualib.h liblua/lzio.h liblua/lcode.h \
+	liblua/lfunc.h liblua/llimits.h liblua/lopcodes.h liblua/lstring.h liblua/lua.h liblua/lundump.h \
+	moon.c
 
-@LUA_TRUE@liblua_la_LIBADD = -lm
-@LUA_TRUE@INCLUDES = -I${srcdir}/liblua
+liblua_la_LIBADD = -lm
+INCLUDES = -I${srcdir}/liblua
 all: all-am
 
 .SUFFIXES:
@@ -299,7 +280,7 @@ liblua/lstrlib.lo: liblua/$(am__dirstamp)
 liblua/loadlib.lo: liblua/$(am__dirstamp)
 liblua/linit.lo: liblua/$(am__dirstamp)
 liblua.la: $(liblua_la_OBJECTS) $(liblua_la_DEPENDENCIES) 
-	$(LINK) $(am_liblua_la_rpath) $(liblua_la_LDFLAGS) $(liblua_la_OBJECTS) $(liblua_la_LIBADD) $(LIBS)
+	$(LINK)  $(liblua_la_LDFLAGS) $(liblua_la_OBJECTS) $(liblua_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -552,12 +533,12 @@ uninstall-am: uninstall-info-am
 	uninstall-info-am
 
 
-@LUA_TRUE@default_lua.h: ${srcdir}/default.lua
-@LUA_TRUE@	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
+default_lua.h: ${srcdir}/default.lua
+	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
 
-@LUA_TRUE@moon.lo: ${srcdir}/moon.c default_lua.h
-@LUA_TRUE@	@echo $(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
-@LUA_TRUE@	@$(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
+moon.lo: ${srcdir}/moon.c default_lua.h
+	@echo $(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
+	@$(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
