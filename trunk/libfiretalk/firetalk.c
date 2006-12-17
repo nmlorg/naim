@@ -929,14 +929,14 @@ void	firetalk_callback_chat_gottopic(struct firetalk_driver_connection_t *c, con
 			conn->callbacks[FC_CHAT_GOTTOPIC](conn, conn->clientstruct, room, topic, author);
 }
 
-void	firetalk_callback_chat_modeset(struct firetalk_driver_connection_t *c, const char *const room, const char *const by, const int mode, const char *const arg) {
+void	firetalk_callback_chat_modeset(struct firetalk_driver_connection_t *c, const char *const room, const char *const by, const char *const mode, const char *const arg) {
 	firetalk_connection_t *conn = firetalk_find_conn(c);
 
 	if (conn->callbacks[FC_CHAT_MODESET])
 		conn->callbacks[FC_CHAT_MODESET](conn, conn->clientstruct, room, by, mode, arg);
 }
 
-void	firetalk_callback_chat_modeunset(struct firetalk_driver_connection_t *c, const char *const room, const char *const by, const int mode, const char *const arg) {
+void	firetalk_callback_chat_modeunset(struct firetalk_driver_connection_t *c, const char *const room, const char *const by, const char *const mode, const char *const arg) {
 	firetalk_connection_t *conn = firetalk_find_conn(c);
 
 	if (conn->callbacks[FC_CHAT_MODEUNSET])

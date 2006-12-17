@@ -631,33 +631,31 @@ nFIRE_HANDLER(chat_KEYCHANGED) {
 HOOK_DECLARE(proto_chat_modeset);
 nFIRE_HANDLER(chat_modeset) {
 	va_list	msg;
-	const char *room, *by, *arg;
-	int	mode;
+	const char *room, *by, *mode, *arg;
 
 	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
-	mode = va_arg(msg, int);
+	mode = va_arg(msg, const char *);
 	arg = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_modeset, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32 HOOK_T_STRING, conn, room, by, mode, arg);
+	HOOK_CALL(proto_chat_modeset, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, by, mode, arg);
 }
 
 HOOK_DECLARE(proto_chat_modeunset);
 nFIRE_HANDLER(chat_modeunset) {
 	va_list	msg;
-	const char *room, *by, *arg;
-	int	mode;
+	const char *room, *by, *mode, *arg;
 
 	va_start(msg, conn);
 	room = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
-	mode = va_arg(msg, int);
+	mode = va_arg(msg, const char *);
 	arg = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_modeunset, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32 HOOK_T_STRING, conn, room, by, mode, arg);
+	HOOK_CALL(proto_chat_modeunset, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, by, mode, arg);
 }
 
 HOOK_DECLARE(proto_chat_oped);
