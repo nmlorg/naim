@@ -2264,7 +2264,7 @@ static fte_t toc_got_data_connecting(toc_conn_t *c, firetalk_buffer_t *buffer) {
 	char	*arg0,
 		**args,
 		*tempchr1;
-	firetalk_connection_t *fchandle = NULL;
+	firetalk_connection_t *fchandle = firetalk_find_conn(c);
 
 got_data_connecting_start:
 	assert(firetalk_buffer_valid(buffer));
@@ -2292,8 +2292,6 @@ got_data_connecting_start:
 #endif
 
 		length = toc_fill_header((unsigned char *)data, SFLAP_FRAME_SIGNON, ++c->local_sequence, toc_fill_signon((unsigned char *)&data[TOC_HEADER_LENGTH], c->nickname));
-
-		fchandle = firetalk_find_conn(c);
 #ifdef DEBUG_ECHO
 		toc_echo_send(c, "got_data_connecting", data, length);
 #endif
@@ -2403,7 +2401,6 @@ got_data_connecting_start:
 			/* CONFIG2:<config> */
 			char	*nl, *curgroup = strdup("Saved buddy");
 
-			fchandle = firetalk_find_conn(c);
 			args = toc_parse_args(data, 2, ':');
 			if (!args[1]) {
 				firetalk_callback_connectfailed(c, FE_INVALIDFORMAT, "CONFIG2");
