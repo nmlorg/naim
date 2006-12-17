@@ -73,6 +73,8 @@ static const struct luaL_reg naiminternallib[] = {
 };
 
 extern const struct luaL_reg naimprototypeconnlib[];
+extern const struct luaL_reg naimprototypewindows[];
+extern const struct luaL_reg naimprototypebuddies[];
 
 static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	int ref = (int)userdata;
@@ -149,7 +151,9 @@ static void _loadfunctions()
 {
 	luaL_register(lua, "naim", naimlib);
 	luaL_register(lua, "naim.internal", naiminternallib);
-	luaL_register(lua, "naim.prototypes.connection", naimprototypeconnlib);
+	luaL_register(lua, "naim.prototypes.connections", naimprototypeconnlib);
+	luaL_register(lua, "naim.prototypes.windows", naimprototypewindows);
+	luaL_register(lua, "naim.prototypes.buddies", naimprototypebuddies);
 	luaL_register(lua, "naim.hooks.recvfrom", naimhooksrecvfromlib);
 	lua_register(lua, "cats", naimcats);
 }
@@ -174,9 +178,6 @@ void nlua_init()
 		printf("default.lua run error: %s\n", lua_tostring(lua, -1));
 		abort();
 	}
-
-//	_client_hook_recvfrom("naim.conio(\"echo test 1\")", 100);
-//	_client_hook_recvfrom("naim.conio(\"echo test 2\")", 100);
 }
 
 void nlua_shutdown()

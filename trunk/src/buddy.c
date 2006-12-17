@@ -464,6 +464,9 @@ void	bupdate(void) {
 				if (bwin == curconn->curbwin)
 					back = faimconf.b[cWINLISTHIGHLIGHT];
 
+				assert(fore != -1);
+				assert(back != -1);
+
 				{
 					int	col = nw_COLORS*back + fore;
 
