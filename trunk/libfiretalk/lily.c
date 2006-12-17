@@ -750,7 +750,8 @@ static void lily_destroy_handle(lily_conn_t *c) {
 }
 
 static fte_t lily_disconnect(lily_conn_t *c) {
-	lily_send_printf(c, "/detach");
+	if (firetalk_internal_get_connectstate(c) != FCS_NOTCONNECTED)
+		lily_send_printf(c, "/detach");
 	return(lily_internal_disconnect(c, FE_USERDISCONNECT));
 }
 

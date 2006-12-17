@@ -1253,13 +1253,15 @@ static fte_t toc_set_info(handle_t *c, const char *const info) {
 		firetalk_callback_error(c, FE_MESSAGETRUNCATED, NULL, "Profile too long");
 		return(FE_MESSAGETRUNCATED);
 	}
-	if ((c->awaymsg != NULL) && (c->awaysince)) {
+	if (c->awaymsg != NULL) {
 		char	awaymsg[1024];
 
+		assert(c->awaysince > 0);
 		snprintf(awaymsg, sizeof(awaymsg), "%lu %s", (time(NULL)-(c->awaysince))/60, c->awaymsg);
 		awayctcp = toc_ctcp_encode(c, "AWAY", awaymsg);
 		extralen += strlen(awayctcp);
-	}
+	} else
+		assert(c->awaysince == 0);
 	if ((versionctcpconst = firetalk_subcode_get_request_reply(c, "VERSION")) == NULL)
 		versionctcpconst = PACKAGE_NAME ":" PACKAGE_VERSION ":unknown";
 	if ((versionctcp = toc_ctcp_encode(c, "VERSION", versionctcpconst)) != NULL)
@@ -1293,8 +1295,11 @@ static fte_t toc_set_away(handle_t *c, const char *const message, const int auto
 		if (c->awaymsg != NULL) {
 			free(c->awaymsg);
 			c->awaymsg = NULL;
+
+			assert(c->awaysince > 0);
+			c->awaysince = 0;
 		}
-		c->awaysince = 0;
+		assert(c->awaysince == 0);
 		return(toc_send_printf(c, "toc_set_away"));
 	}
 }
