@@ -80,18 +80,24 @@ static void dummy(int sig) {
 }
 
 #ifdef HAVE_BACKTRACE
-static void naim_segfault(int sig) {
+void naim_faulthandler(int sig) {
 	void	*bt[25];
 	size_t	len;
+	char	**symbols;
+	int	i;
 
-	wshutitdown();
+	signal(sig, SIG_DFL);
 	len = backtrace(bt, sizeof(bt)/sizeof(*bt));
-	fprintf(stderr, "\r\n\r\n\r\n");
-	fprintf(stderr, "Running " PACKAGE_STRING NAIM_SNAPSHOT " for %s.\n", dtime(now - startuptime));
-	fprintf(stderr, "Segmentation violation; partial symbolic backtrace:\r\n");
-	backtrace_symbols_fd(bt, len, STDERR_FILENO);
+	symbols = backtrace_symbols(bt, len);
+//	wshutitdown();
+	fprintf(stderr, "\r\n");
+	fprintf(stderr, "Running " PACKAGE_STRING NAIM_SNAPSHOT " for %s.\r\n", dtime(now - startuptime));
+	fprintf(stderr, "%s; partial symbolic backtrace:\r\n", strsignal(sig));
+	for (i = 0; i < len; i++)
+		fprintf(stderr, "%i: %s\r\n", i, symbols[i]);
 	fprintf(stderr, "\r\nThis information is not a replacement for running naim in gdb. If you are interested in debugging this problem, please re-run naim within gdb and reproduce the fault. When you are presented with the (gdb) prompt again, type \"backtrace\" to receive the full symbolic backtrace and mail this to Daniel Reed <n@ml.org>.\r\n\r\n");
-	abort();
+	free(symbols);
+	raise(sig);
 }
 #endif
 
@@ -284,7 +290,8 @@ int	main_stub(int argc, char **args) {
 	hamster_hook_init();
 
 #ifdef HAVE_BACKTRACE
-	signal(SIGSEGV, naim_segfault);
+	signal(SIGSEGV, naim_faulthandler);
+	signal(SIGABRT, naim_faulthandler);
 #endif
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);

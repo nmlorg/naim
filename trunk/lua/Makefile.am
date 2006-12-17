@@ -36,10 +36,11 @@ libnlua_la_SOURCES = \
 libnlua_la_LIBADD = liblua.la
 libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
 
-noinst_PROGRAMS = lua
-lua_SOURCES = \
-	lua511/lua.c
-lua_LDADD = liblua.la
+noinst_PROGRAMS = luac
+luac_SOURCES = \
+	lua511/luac.c \
+	lua511/print.c
+luac_LDADD = liblua.la
 
 default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
