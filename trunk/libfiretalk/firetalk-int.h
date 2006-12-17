@@ -163,8 +163,7 @@ typedef struct firetalk_room_t {
 	struct firetalk_room_t *next;
 	firetalk_member_t *member_head;
 	char	*name;
-	uint8_t	admin:1,
-		sentjoin:1;
+	uint8_t	admin:1;
 } firetalk_room_t;
 
 ZERO_CTOR(firetalk_room_t);

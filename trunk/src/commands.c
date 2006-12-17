@@ -1463,7 +1463,7 @@ UAAOPT(string,chain)
 			"proto_buddyadded", "proto_buddyremoved", "proto_buddy_coming", "proto_buddy_going", "proto_buddy_away", "proto_buddy_unaway", "proto_buddy_idle", "proto_buddy_eviled", "proto_buddy_capschanged", "proto_buddy_typing",
 			"proto_denyadded", "proto_denyremoved",
 			"proto_recvfrom",
-			"proto_chat_joined", "proto_chat_left", "proto_chat_oped", "proto_chat_deoped", "proto_chat_kicked", "proto_chat_invited",
+			"proto_chat_joined", "proto_chat_synched", "proto_chat_left", "proto_chat_oped", "proto_chat_deoped", "proto_chat_kicked", "proto_chat_invited",
 			"proto_chat_user_joined", "proto_chat_user_left", "proto_chat_user_oped", "proto_chat_user_deoped", "proto_chat_user_kicked", "proto_chat_user_nickchanged",
 			"proto_chat_topicchanged", "proto_chat_keychanged",
 			"proto_file_offer", "proto_file_start", "proto_file_progress", "proto_file_finish", "proto_file_error",

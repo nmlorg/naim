@@ -849,15 +849,16 @@ static int fireio_chat_joined(void *userdata, const char *signature, conn_t *con
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
-	bwin->e.chat->offline = 0;
-	if (!getvar_int(conn, "autonames"))
-		window_echof(bwin, "You are now participating in the %s discussion.\n", room);
-	else {
-		const char *args[1] = { bwin->winname };
+	bupdate();
 
-		window_echof(bwin, "You are now participating in the %s discussion. Checking for current participants...\n", room);
-		ua_names(conn, 1, args);
-	}
+	return(HOOK_CONTINUE);
+}
+
+static int fireio_chat_synched(void *userdata, const char *signature, conn_t *conn, const char *room) {
+	buddywin_t *bwin;
+
+	bwin = cgetwin(conn, room);
+	bwin->e.chat->offline = 0;
 	bupdate();
 
 	return(HOOK_CONTINUE);
@@ -915,12 +916,6 @@ static int fireio_chat_user_joined(void *userdata, const char *signature, conn_t
 	if (getvar_int(conn, "chatverbose") & CH_USERS)
 		bwin->waiting = 1;
 
-	if (extra == NULL)
-		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has joined chat %s%s%s.\n",
-			who, q, room, q);
-	else
-		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> (%s) has joined chat %s%s%s.\n",
-			who, extra, q, room, q);
 	bupdate();
 
 	return(HOOK_CONTINUE);
@@ -935,12 +930,6 @@ static int fireio_chat_user_left(void *userdata, const char *signature, conn_t *
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatverbose") & CH_USERS)
 		bwin->waiting = 1;
-	if (reason == NULL)
-		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has left chat %s%s%s.\n",
-			who, q, room, q);
-	else
-		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has left chat %s%s%s (</B><body>%s</body><B>).\n",
-			who, q, room, q, (*reason != 0)?reason:"quit");
 	bupdate();
 
 	return(HOOK_CONTINUE);
@@ -955,8 +944,6 @@ static int fireio_chat_user_kicked(void *userdata, const char *signature, conn_t
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatter") & CH_ATTACKS)
 		bwin->waiting = 1;
-	window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has been kicked off chat %s%s%s by <font color=\"#00FFFF\">%s</font> (</B><body>%s</body><B>).\n",
-		who, q, room, q, by, reason);
 	bupdate();
 
 	return(HOOK_CONTINUE);
@@ -1253,6 +1240,7 @@ void	fireio_hook_init(void) {
 	HOOK_ADD(proto_recvfrom,	mod, fireio_recvfrom_display_user, 100, NULL);
 	HOOK_ADD(proto_recvfrom,	mod, fireio_recvfrom_display_chat, 150, NULL);
 	HOOK_ADD(proto_chat_joined,	mod, fireio_chat_joined,	100, NULL);
+	HOOK_ADD(proto_chat_synched,	mod, fireio_chat_synched,	100, NULL);
 	HOOK_ADD(proto_chat_left,	mod, fireio_chat_left,		100, NULL);
 	HOOK_ADD(proto_chat_oped,	mod, fireio_chat_oped,		100, NULL);
 	HOOK_ADD(proto_chat_deoped,	mod, fireio_chat_deoped,	100, NULL);

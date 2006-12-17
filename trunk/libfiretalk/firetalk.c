@@ -835,6 +835,8 @@ void	firetalk_callback_chat_joined(struct firetalk_driver_connection_t *c, const
 
 	if (firetalk_chat_internal_add_room(conn, room) != FE_SUCCESS)
 		return;
+	if (conn->callbacks[FC_CHAT_JOINED])
+		conn->callbacks[FC_CHAT_JOINED](conn, conn->clientstruct, room);
 }
 
 void	firetalk_callback_chat_left(struct firetalk_driver_connection_t *c, const char *const room) {
@@ -885,17 +887,13 @@ void	firetalk_callback_chat_user_joined(struct firetalk_driver_connection_t *c, 
 		return;
 
 	if (who == NULL) {
-		if (iter->sentjoin == 0) {
-			iter->sentjoin = 1;
-			if (conn->callbacks[FC_CHAT_JOINED])
-				conn->callbacks[FC_CHAT_JOINED](conn, conn->clientstruct, room);
-		}
+		if (conn->callbacks[FC_CHAT_SYNCHED])
+			conn->callbacks[FC_CHAT_SYNCHED](conn, conn->clientstruct, room);
 	} else {
 		if (firetalk_chat_internal_add_member(conn, room, who) != FE_SUCCESS)
 			return;
-		if (iter->sentjoin == 1)
-			if (conn->callbacks[FC_CHAT_USER_JOINED])
-				conn->callbacks[FC_CHAT_USER_JOINED](conn, conn->clientstruct, room, who, extra);
+		if (conn->callbacks[FC_CHAT_USER_JOINED])
+			conn->callbacks[FC_CHAT_USER_JOINED](conn, conn->clientstruct, room, who, extra);
 	}
 }
 
