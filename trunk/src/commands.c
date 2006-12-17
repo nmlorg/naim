@@ -737,17 +737,27 @@ UAAOPT(int,port)
 		break;
 	  case FE_CONNECT:
 #ifdef HAVE_HSTRERROR
-		if (h_errno != 0)
-			echof(conn, "CONNECT", "Unable to connect: %s (%s).\n",
-				firetalk_strerror(firetalkerror), hstrerror(h_errno));
-		else
+		if (h_errno != 0) {
+			if (firetalkerror != 0)
+				echof(conn, "CONNECT", "Unable to connect: %s (%s).\n",
+					firetalk_strerror(firetalkerror), hstrerror(h_errno));
+			else
+				echof(conn, "CONNECT", "Unable to connect: %s.\n",
+					hstrerror(h_errno));
+		} else
 #endif
-		if (errno != 0)
-			echof(conn, "CONNECT", "Unable to connect: %s (%s).\n",
-				firetalk_strerror(firetalkerror), strerror(errno));
-		else
+		if (errno != 0) {
+			if (firetalkerror != 0)
+				echof(conn, "CONNECT", "Unable to connect: %s (%s).\n",
+					firetalk_strerror(firetalkerror), strerror(errno));
+			else
+				echof(conn, "CONNECT", "Unable to connect: %s.\n",
+					strerror(errno));
+		} else if (firetalkerror != 0)
 			echof(conn, "CONNECT", "Unable to connect: %s.\n",
 				firetalk_strerror(firetalkerror));
+		else
+			echof(conn, "CONNECT", "Unable to connect.\n");
 		break;
 	  default:
 		echof(conn, "CONNECT", "Connection failed in startup, %s.\n",
@@ -1367,6 +1377,7 @@ UAWHER(INCHAT)
 		echof(conn, "INVITE", "Unable to invite %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
+#if 0
 UAFUNC(help) {
 UAALIA(about)
 UADESC(Display topical help on using naim)
@@ -1376,6 +1387,7 @@ UAAOPT(string,topic)
 	else
 		help_printhelp(args[0]);
 }
+#endif
 
 UAFUNC(unblock) {
 UAALIA(unignore)

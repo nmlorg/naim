@@ -14,8 +14,6 @@ DISTCLEANFILES = \
 	
 EXTRA_DIST = \
 	${pkgdoc_DATA} \
-	cmplhlp2.sh \
-	cmplhelp.sh \
 	gencmdarc.sh \
 	gencmdarh.sh \
 	gencmd2.sh \
@@ -36,9 +34,6 @@ NAIM_CORE = \
 	events.c \
 	fireio.c \
 	hamster.c \
-	help.h \
-	help.c \
-	helpcmd.c \
 	hwprintf.c \
 	linux_vsprintf.c \
 	main.c \
@@ -89,12 +84,6 @@ cmdar.h: ${srcdir}/commands.c config.h
 commands.txt: ${srcdir}/commands.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmd2.sh > commands.txt
 
-help.h: ${top_srcdir}/doc/naim.hlp
-	AWK="${AWK}" "${srcdir}/cmplhlp2.sh" < ${top_srcdir}/doc/naim.hlp > help.h
-
-help.c: ${top_srcdir}/doc/naim.hlp
-	AWK="${AWK}" "${srcdir}/cmplhelp.sh" < ${top_srcdir}/doc/naim.hlp > help.c
-
 naim-cmdar.${OBJEXT}: cmdar.h
 libnaim_la-cmdar.${LOBJEXT}: cmdar.h
 naim-commands.${OBJEXT}: cmdar.h
@@ -105,8 +94,6 @@ naim-events.${OBJEXT}: cmdar.h
 libnaim_la-events.${LOBJEXT}: cmdar.h
 naim-fireio.${OBJEXT}: cmdar.h
 libnaim_la-fireio.${LOBJEXT}: cmdar.h
-naim-helpcmd.${OBJEXT}: cmdar.h
-libnaim_la-helpcmd.${LOBJEXT}: cmdar.h
 
 install: install-am install-global-symlink
 

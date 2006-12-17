@@ -78,19 +78,6 @@ enum {
 };
 
 typedef struct {
-	char	*name;
-	unsigned char gotaway:1;
-} awayar_t;
-
-typedef struct {
-	char	*buf;
-	int	len;
-	unsigned char foundfirst:1,
-		foundmatch:1,
-		foundmult:1;
-} namescomplete_t;
-
-typedef struct {
 	void	*win;
 	FILE	*logfile;
 	int	height;
