@@ -165,7 +165,8 @@ void	playback_file(conn_t *const conn, buddywin_t *const bwin, struct h_t *h, FI
 	}
 }
 
-void	playback(conn_t *const conn, buddywin_t *const bwin, int lines) {
+void	logging_playback(conn_t *const conn, buddywin_t *const bwin, int lines) {
+#if 0
 	struct h_t *h = hhandle(&(bwin->nwin));
 	const char *logdir;
 
@@ -205,4 +206,9 @@ void	playback(conn_t *const conn, buddywin_t *const bwin, int lines) {
 	}
 
 	colormode = COLOR_HONOR_USER;
+#endif
+}
+
+FILE	*logging_open(conn_t *conn, buddywin_t *bwin) {
+	return(NULL);
 }

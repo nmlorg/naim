@@ -696,19 +696,17 @@ void	bclose(conn_t *conn, buddywin_t *bwin, int _auto) {
 void	bnewwin(conn_t *conn, const char *name, et_t et) {
 	buddywin_t *bwin;
 	int	i;
+	struct tm *tmptr;
 
 	assert(name != NULL);
 
 	if (bgetwin(conn, name, et) != NULL)
 		return;
 
+	tmptr = localtime(&now);
+
 	bwin = calloc(1, sizeof(buddywin_t));
 	assert(bwin != NULL);
-
-	nw_newwin(&(bwin->nwin));
-	nw_initwin(&(bwin->nwin), cIMWIN);
-	for (i = 0; i < faimconf.wstatus.pady; i++)
-		nw_printf(&(bwin->nwin), 0, 0, "\n");
 
 	bwin->winname = strdup(name);
 	assert(bwin->winname != NULL);
@@ -752,27 +750,27 @@ void	bnewwin(conn_t *conn, const char *name, et_t et) {
 		srchbwin->next = bwin;
 	}
 
-	{
-		if ((bwin->nwin.logfile = playback_fcreate(conn, bwin)) == NULL)
-			status_echof(conn, "Unable to open scrollback buffer file: %s\n",
-				strerror(errno));
-		else {
-			struct tm *tmptr;
-
-			fchmod(fileno(bwin->nwin.logfile), 0600);
-			tmptr = localtime(&now);
-			fprintf(bwin->nwin.logfile, "&nbsp;<br>\n<I>-----</I> <font color=\"#FFFFFF\">Log file opened %04i-%02i-%02iT%02i:%02i</font> <I>-----</I><br>\n",
-				1900+tmptr->tm_year, 1+tmptr->tm_mon, tmptr->tm_mday, tmptr->tm_hour, tmptr->tm_min);
-			if (firetalk_compare_nicks(conn->conn, name, "naim help") == FE_SUCCESS) {
-				fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#808080\">Once you have signed on, anything you type that does not start with a slash is sent as a private message to whoever's window you are in.</font><br>\n");
-				fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#808080\">Right now you are \"in\" a window for <font color=\"#00FF00\">naim help</font>, which is the screen name of naim's maintainer, <font color=\"#00FFFF\">Daniel Reed</font>.</font><br>\n");
-				fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#808080\">If you would like help, first try using naim's online help by typing <font color=\"#00FF00\">/help</font>. If you need further help, feel free to ask your question here, and Mr. Reed will get back to you as soon as possible.</font><br>\n");
-				fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#800000\">If you are using Windows telnet to connect to a shell account to run naim, you may notice severe screen corruption. You may wish to try PuTTy, available for free from www.tucows.com. PuTTy handles both telnet and SSH.</font><br>\n");
-			}
-			nw_resize(&(bwin->nwin), 1, 1);
-			bwin->nwin.dirty = 1;
-			bwin->nwin.logfilelines = 0;
+	if ((bwin->nwin.logfile = logging_open(conn, bwin)) == NULL) {
+		nw_newwin(&(bwin->nwin), faimconf.wstatus.pady, faimconf.wstatus.widthx);
+		nw_initwin(&(bwin->nwin), cIMWIN);
+		for (i = 0; i < faimconf.wstatus.pady; i++)
+			nw_printf(&(bwin->nwin), 0, 0, "\n");
+		hwprintf(&(bwin->nwin), C(IMWIN,TEXT), "<I>-----</I> <font color=\"#FFFFFF\">Session started %04i-%02i-%02iT%02i:%02i</font> <I>-----</I><br>\n",
+			1900+tmptr->tm_year, 1+tmptr->tm_mon, tmptr->tm_mday, tmptr->tm_hour, tmptr->tm_min);
+	} else {
+		fchmod(fileno(bwin->nwin.logfile), 0600);
+		fprintf(bwin->nwin.logfile, "&nbsp;<br>\n<I>-----</I> <font color=\"#FFFFFF\">Log file opened %04i-%02i-%02iT%02i:%02i</font> <I>-----</I><br>\n",
+			1900+tmptr->tm_year, 1+tmptr->tm_mon, tmptr->tm_mday, tmptr->tm_hour, tmptr->tm_min);
+		if (firetalk_compare_nicks(conn->conn, name, "naim help") == FE_SUCCESS) {
+			fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#808080\">Once you have signed on, anything you type that does not start with a slash is sent as a private message to whoever's window you are in.</font><br>\n");
+			fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#808080\">Right now you are \"in\" a window for <font color=\"#00FF00\">naim help</font>, which is the screen name of naim's maintainer, <font color=\"#00FFFF\">Daniel Reed</font>.</font><br>\n");
+			fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#808080\">If you would like help, first try using naim's online help by typing <font color=\"#00FF00\">/help</font>. If you need further help, visit the naim documentation site online at http://naimdoc.net/. If all else fails, feel free to ask your question here and wait patiently :).</font><br>\n");
+			fprintf(bwin->nwin.logfile, "<I>*****</I> <font color=\"#800000\">If you are using Windows telnet to connect to a shell account to run naim, you may notice severe screen corruption. You may wish to try PuTTy, available for free from www.tucows.com. PuTTy handles both telnet and SSH.</font><br>\n");
 		}
+		nw_newwin(&(bwin->nwin), 1, 1);
+		nw_initwin(&(bwin->nwin), cIMWIN);
+		bwin->nwin.dirty = 1;
+		bwin->nwin.logfilelines = 0;
 	}
 
 	bwin->conn = conn;

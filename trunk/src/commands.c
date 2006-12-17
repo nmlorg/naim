@@ -1944,7 +1944,7 @@ UAAOPT(string,protocol)
 	newconn = naim_newconn(proto);
 	assert(newconn != NULL);
 
-	nw_newwin(&(newconn->nwin));
+	nw_newwin(&(newconn->nwin), faimconf.wstatus.pady, faimconf.wstatus.widthx);
 	nw_initwin(&(newconn->nwin), cCONN);
 	nw_erase(&(newconn->nwin));
 	for (i = 0; i < faimconf.wstatus.pady; i++)
