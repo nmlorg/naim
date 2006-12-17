@@ -519,6 +519,18 @@ nFIRE_HANDLER(chat_joined) {
 	HOOK_CALL(proto_chat_joined, HOOK_T_CONN HOOK_T_STRING, conn, room);
 }
 
+HOOK_DECLARE(proto_chat_synched);
+nFIRE_HANDLER(chat_synched) {
+	va_list	msg;
+	const char *room;
+
+	va_start(msg, conn);
+	room = va_arg(msg, const char *);
+	va_end(msg);
+
+	HOOK_CALL(proto_chat_synched, HOOK_T_CONN HOOK_T_STRING, conn, room);
+}
+
 HOOK_DECLARE(proto_chat_left);
 nFIRE_HANDLER(chat_left) {
 	va_list	msg;
@@ -1218,6 +1230,7 @@ conn_t	*naim_newconn(int proto) {
 		firetalk_register_callback(conn->conn, FC_IM_CAPABILITIES,		_firebind_buddy_caps);
 
 		firetalk_register_callback(conn->conn, FC_CHAT_JOINED,			_firebind_chat_joined);
+		firetalk_register_callback(conn->conn, FC_CHAT_SYNCHED,			_firebind_chat_synched);
 		firetalk_register_callback(conn->conn, FC_CHAT_LEFT,			_firebind_chat_left);
 		firetalk_register_callback(conn->conn, FC_CHAT_KICKED,			_firebind_chat_kicked);
 		firetalk_register_callback(conn->conn, FC_CHAT_KEYCHANGED,		_firebind_chat_KEYCHANGED);

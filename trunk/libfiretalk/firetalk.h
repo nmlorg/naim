@@ -58,6 +58,7 @@ enum firetalk_callback {
 	FC_IM_BUDDYAWAY,	/* ..., char *nickname */
 	FC_IM_BUDDYUNAWAY,	/* ..., char *nickname */
 	FC_CHAT_JOINED,		/* ..., char *room */
+	FC_CHAT_SYNCHED,	/* ..., char *room */
 	FC_CHAT_LEFT,		/* ..., char *room */
 	FC_CHAT_KICKED,		/* ..., char *room, char *by, char *reason */
 	FC_CHAT_GETMESSAGE,	/* ..., char *room, char *from, int automessage_flag, char *message */

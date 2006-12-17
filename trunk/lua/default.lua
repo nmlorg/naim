@@ -296,9 +296,43 @@ naim.commands.help = {
 }
 
 naim.hooks.add('proto_chat_joined', function(conn, chat)
+	assert(conn.groups[string.lower(chat)] == nil)
 	conn.groups[string.lower(chat)] = {
 		members = {},
 	}
+
+	if naim.variables.autonames ~= 1 then
+		conn.windows[string.lower(chat)]:echo("You are now participating in the " .. chat .. " group.")
+	else
+		conn.windows[string.lower(chat)]:echo("You are now participating in the " .. chat .. " group. Checking for current participants...")
+	end
+end, 100)
+
+naim.hooks.add('proto_chat_synched', function(conn, chat)
+	assert(conn.groups[string.lower(chat)])
+	conn.groups[string.lower(chat)].synched = true
+
+	local maxlen = 0
+
+	for member,info in pairs(conn.groups[string.lower(chat)].members) do
+		local mlen = member:len() + (info.admin and 1 or 0)
+
+		if mlen > maxlen then
+			maxlen = mlen
+		end
+	end
+
+	local t = {}
+
+	for member,info in pairs(conn.groups[string.lower(chat)].members) do
+		local mlen = member:len() + (info.admin and 1 or 0)
+
+		table.insert(t, (info.admin and "@" or "") .. member .. string.rep("&nbsp;", maxlen-mlen))
+	end
+
+	local p = "Users in group " .. chat .. ":"
+
+	conn.windows[string.lower(chat)]:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, "&nbsp;"))
 end, 100)
 
 naim.hooks.add('proto_chat_left', function(conn, chat)
@@ -309,16 +343,52 @@ naim.hooks.add('proto_chat_kicked', function(conn, chat)
 	conn.groups[string.lower(chat)] = nil
 end, 100)
 
+naim.hooks.add('proto_chat_oped', function(conn, chat, by)
+	conn.groups[string.lower(chat)].admin = true
+end, 100)
+
+naim.hooks.add('proto_chat_deoped', function(conn, chat, by)
+	conn.groups[string.lower(chat)].admin = nil
+end, 100)
+
 naim.hooks.add('proto_chat_user_joined', function(conn, chat, who, extra)
 	conn.groups[string.lower(chat)].members[who] = {}
+
+	if conn.groups[string.lower(chat)].synched then
+		if extra and extra ~= "" then
+			conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> (" .. extra .. ") has joined group " .. chat .. ".")
+		else
+			conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has joined group " .. chat .. ".")
+		end
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_left', function(conn, chat, who, reason)
 	conn.groups[string.lower(chat)].members[who] = nil
+
+	if reason and reason ~= "" then
+		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has left group " .. chat .. " (</b><body>" .. reason .. "</body><b>).")
+	else
+		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has left group " .. chat .. ".")
+	end
 end, 100)
 
-naim.hooks.add('proto_chat_user_kicked', function(conn, chat, who, reason)
+naim.hooks.add('proto_chat_user_kicked', function(conn, chat, who, by, reason)
 	conn.groups[string.lower(chat)].members[who] = nil
+
+	if reason and reason ~= "" then
+		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has been kicked out of group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font> (</b><body>" .. reason .. "</body><b>).")
+	else
+		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has been kicked out of group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font>.")
+	end
+end, 100)
+
+naim.hooks.add('proto_chat_user_oped', function(conn, chat, who, by)
+	conn.groups[string.lower(chat)].members[who].admin = true
+end, 100)
+
+naim.hooks.add('proto_chat_user_deoped', function(conn, chat, who, by)
+	conn.groups[string.lower(chat)].members[who].admin = nil
 end, 100)
 
 naim.hooks.add('proto_chat_user_nickchanged', function(conn, chat, who, newnick)
