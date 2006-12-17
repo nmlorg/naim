@@ -37,7 +37,7 @@ void	nlua_hook_newconn(conn_t *conn) {
 	lua_pushstring(lua, conn->winname);
 	lua_pushlightuserdata(lua, conn);
 	if (lua_pcall(lua, 2, 0, 0))
-		lua_pop(lua, 2);
+		lua_pop(lua, 1);
 	assert(lua_gettop(lua) == top);
 }
 
