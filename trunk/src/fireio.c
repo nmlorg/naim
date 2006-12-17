@@ -139,31 +139,6 @@ nFIRE_HANDLER(naim_nickchange) {
 	}
 }
 
-nFIRE_HANDLER(naim_buddylist) {
-	conn_t		*conn = (conn_t *)client;
-	va_list		msg;
-	const char	*screenname, *group, *friendly;
-	int		online, away;
-	buddylist_t	*blist;
-
-	va_start(msg, client);
-	screenname = va_arg(msg, const char *);
-	group = va_arg(msg, const char *);
-	friendly = va_arg(msg, const char *);
-	online = va_arg(msg, int);
-	away = va_arg(msg, int);
-	va_end(msg);
-
-	if ((blist = rgetlist(conn, screenname)) == NULL)
-		blist = raddbuddy(conn, screenname, group, friendly);
-
-	STRREPLACE(blist->_group, group);
-	if (friendly != NULL)
-		STRREPLACE(blist->_name, friendly);
-	else
-		FREESTR(blist->_name);
-}
-
 #define STANDARD_TRAILER	\
 	"&nbsp;<br>"		\
 	"Visit <a href=\"http://naim.n.ml.org/\">http://naim.n.ml.org/</a> for the latest naim."
@@ -260,8 +235,6 @@ void	naim_setversion(conn_t *conn) {
 nFIRE_HANDLER(naim_doinit) {
 	conn_t		*conn = (conn_t *)client;
 	va_list		msg;
-	buddylist_t	*buddy;
-	ignorelist_t	*idiot;
 	const char	*screenname;
 
 	va_start(msg, client);
@@ -272,22 +245,10 @@ nFIRE_HANDLER(naim_doinit) {
 
 	STRREPLACE(conn->sn, screenname);
 
-	status_echof(conn, "Uploading buddy/block list and profile...\n");
-
-	for (buddy = conn->buddyar; buddy != NULL; buddy = buddy->next) {
-		fte_t	ret;
-
-		ret = firetalk_im_add_buddy(sess, USER_ACCOUNT(buddy), USER_GROUP(buddy), buddy->_name);
-		assert(ret == FE_SUCCESS);
-	}
-
-	for (idiot = conn->idiotar; idiot != NULL; idiot = idiot->next)
-		if (strcasecmp(idiot->notes, "block") == 0) {
-			fte_t	ret;
-
-			ret = firetalk_im_internal_add_deny(sess, idiot->screenname);
-			assert(ret == FE_SUCCESS);
-		}
+	if (awaytime > 0)
+		status_echof(conn, "Updating profile and setting away message...\n");
+	else
+		status_echof(conn, "Updating profile...\n");
 
 	naim_set_info(sess, conn->profile);
 
@@ -454,10 +415,13 @@ nFIRE_HANDLER(naim_buddyadded) {
 	va_end(msg);
 
 	if ((blist = rgetlist(conn, screenname)) == NULL) {
-		if (conn->online > 0)
-			status_echof(conn, "User <font color=\"#00FFFF\">%s</font> was added to your buddy list by another client signed on as you.\n",
-				screenname);
 		blist = raddbuddy(conn, screenname, group, friendly);
+		if (USER_PERMANENT(blist))
+			status_echof(conn, "Added <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to your permanent buddy list.\n",
+				user_name(NULL, 0, conn, blist), USER_GROUP(blist));
+		else
+			status_echof(conn, "Added <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to your non-permanent buddy list.\n",
+				user_name(NULL, 0, conn, blist), USER_GROUP(blist));
 	}
 
 	STRREPLACE(blist->_group, group);
@@ -485,9 +449,8 @@ nFIRE_HANDLER(naim_buddyremoved) {
 	}
 
 	if ((blist = rgetlist(conn, screenname)) != NULL) {
-		if (conn->online > 0)
-			status_echof(conn, "User <font color=\"#00FFFF\">%s</font> was removed from your buddy list by another client signed on as you.\n",
-				screenname);
+		status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> from your buddy list.\n",
+			user_name(NULL, 0, conn, blist), USER_GROUP(blist));
 		rdelbuddy(conn, screenname);
 	}
 }
@@ -988,8 +951,6 @@ nFIRE_HANDLER(naim_connected) {
 				firetalk_chat_join(conn->conn, name);
 			}
 		} while ((bwin = bwin->next) != conn->curbwin);
-
-	firetalk_im_list_buddies(conn->conn);
 }
 
 static const char naim_tolower_first(const char *const str) {
@@ -2177,8 +2138,6 @@ conn_t	*naim_newconn(int proto) {
 			naim_buddy_eviled);
 		firetalk_register_callback(conn->conn, FC_IM_CAPABILITIES,
 			naim_buddy_caps);
-		firetalk_register_callback(conn->conn, FC_IM_LISTBUDDY,
-			naim_buddylist);
 
 		firetalk_register_callback(conn->conn, FC_CHAT_JOINED,
 			naim_chat_joined);

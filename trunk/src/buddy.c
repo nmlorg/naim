@@ -912,10 +912,8 @@ void	bcoming(conn_t *conn, const char *buddy) {
 
 	assert(buddy != NULL);
 
-	if ((blist = rgetlist(conn, buddy)) == NULL) {
-		status_echof(conn, "Adding %s to your buddy list due to sign-on.\n", buddy);
-		blist = raddbuddy(conn, buddy, DEFAULT_GROUP, NULL);
-	}
+	blist = rgetlist(conn, buddy);
+	assert(blist != NULL);
 	STRREPLACE(blist->_account, buddy);
 	if ((bwin = bgetwin(conn, buddy, BUDDY)) == NULL) {
 		if (getvar_int(conn, "autoquery") != 0) {
@@ -1012,10 +1010,9 @@ void	bgoing(conn_t *conn, const char *buddy) {
 				/* assert(bwin->waiting == 0); */
 				bclose(conn, bwin, 1);
 				bwin = NULL;
-				if ((autoclose > 0) && !USER_PERMANENT(blist)) {
-					rdelbuddy(conn, buddy);
-					firetalk_im_remove_buddy(conn->conn, buddy);
-				}
+				if ((autoclose > 0) && !USER_PERMANENT(blist))
+					if (firetalk_im_remove_buddy(conn->conn, buddy) != FE_SUCCESS)
+						rdelbuddy(conn, buddy);
 			}
 			bupdate();
 			return;
@@ -1160,8 +1157,8 @@ void	bclearall(conn_t *conn, int force) {
 
 			do {
 				bnext = blist->next;
-				firetalk_im_remove_buddy(conn->conn, blist->_account);
-				do_delbuddy(blist);
+				if (firetalk_im_remove_buddy(conn->conn, blist->_account) != FE_SUCCESS)
+					do_delbuddy(blist);
 			} while ((blist = bnext) != NULL);
 			conn->buddyar = NULL;
 		} else

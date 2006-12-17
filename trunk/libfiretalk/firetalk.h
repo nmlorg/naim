@@ -23,7 +23,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <unistd.h>
 #include <netinet/in.h>
 
-#define _FC_USE_IPV6
+#ifndef __CYGWIN__
+# define _FC_USE_IPV6
+#endif
 
 #ifndef _HAVE_FIRETALK_T
 typedef void *firetalk_t;
@@ -75,6 +77,10 @@ enum firetalk_callback {
 		/* void *connection, void *clientstruct, char *nickname, char *group, char *friendly */
 	FC_IM_BUDDYREMOVED,
 		/* void *connection, void *clientstruct, char *nickname */
+	FC_IM_DENYADDED,
+		/* void *connection, void *clientstruct, char *nickname */
+	FC_IM_DENYREMOVED,
+		/* void *connection, void *clientstruct, char *nickname */
 	FC_IM_TYPINGINFO,
 		/* void *connection, void *clientstruct, char *nickname, int typing */
 	FC_IM_CAPABILITIES,
@@ -95,8 +101,6 @@ enum firetalk_callback {
 		/* void *connection, void *clientstruct, char *nickname */
 	FC_IM_BUDDYUNAWAY,
 		/* void *connection, void *clientstruct, char *nickname */
-	FC_IM_LISTBUDDY,
-		/* void *connection, void *clientstruct, char *nickname, char *group, char online, char away, long idletime */
 	FC_CHAT_JOINED,
 		/* void *connection, void *clientstruct, char *room */
 	FC_CHAT_LEFT,
@@ -211,11 +215,8 @@ fte_t	firetalk_im_add_buddy(firetalk_t conn, const char *const name, const char 
 fte_t	firetalk_im_remove_buddy(firetalk_t conn, const char *const name);
 fte_t	firetalk_im_add_deny(firetalk_t conn, const char *const name);
 fte_t	firetalk_im_remove_deny(firetalk_t conn, const char *const name);
-fte_t	firetalk_im_upload_buddies(firetalk_t conn);
-fte_t	firetalk_im_upload_denies(firetalk_t conn);
 fte_t	firetalk_im_send_message(firetalk_t conn, const char *const dest, const char *const message, const int auto_flag);
 fte_t	firetalk_im_send_action(firetalk_t conn, const char *const dest, const char *const message, const int auto_flag);
-fte_t	firetalk_im_list_buddies(firetalk_t conn);
 fte_t	firetalk_im_evil(firetalk_t c, const char *const who);
 fte_t	firetalk_im_get_info(firetalk_t conn, const char *const nickname);
 
@@ -230,9 +231,11 @@ fte_t	firetalk_chat_deop(firetalk_t conn, const char *const room, const char *co
 fte_t	firetalk_chat_kick(firetalk_t conn, const char *const room, const char *const who, const char *const reason);
 fte_t	firetalk_chat_listmembers(firetalk_t conn, const char *const room);
 
+/*
 fte_t	firetalk_im_internal_add_deny(firetalk_t conn, const char *const nickname);
 fte_t	firetalk_im_internal_remove_buddy(firetalk_t conn, const char *const nickname);
 fte_t	firetalk_im_internal_remove_deny(firetalk_t conn, const char *const nickname);
+*/
 fte_t	firetalk_subcode_send_reply(firetalk_t conn, const char *const to, const char *const command, const char *const args);
 fte_t	firetalk_subcode_send_request(firetalk_t conn, const char *const to, const char *const command, const char *const args);
 
