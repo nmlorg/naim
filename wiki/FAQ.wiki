@@ -1,1 +1,59 @@
 =General=
+==How do I send an IM? &bull; How do I add someone to my buddy list?==
+To simply send a message to someone who is not in your buddy list, just type /msg
+buddyname hello there. However, if you would like to engage in a conversation with
+someone, you should first add them to your buddy list and create a window for them. Just
+type /addbuddy buddyname or /addbuddy "buddy name" to add them to your list. If they are
+online, a window will be created automatically for them. If they are not online, you can
+type /open buddyname to open a window for them manually.
+
+Once a window has been opened for a buddy, you can use the Tab, Home, and End keys to
+cycle through your list of windows to find them, or type /jump buddyname to go directly to
+their window. Once you are in their window, anything you type that doesn't start with a
+"/" will be sent to them as a message. If the buddy is not online when you type your
+message, the message will be saved and sent the next time your buddy signs on. 
+
+=Navigation=
+==How do I get the buddy list or status window to come back?==
+The window list window and the status window both default to autohide mode: Whenever
+either one of them changes, they will appear on the screen for $autohide seconds, then
+disappear again. However, if you would like to make the window list window stay visible
+permanently, you can use F4 or Ctrl-F to cycle between autohide, always hidden, and always
+visible modes. There is also a /winlist command which will allow you to specify a setting
+to use in your .naimrc file.
+
+==Are there any short cuts to help make talking to multiple people easier?==
+naim separates each conversation into a different window, which you can cycle through
+using Tab, Home, End, and the /jump command. Your windows will be listed in the window
+list window in the upper-right corner of your screen, which is usually hidden when you're
+talking to someone. However, if you are in buddyA's window, and buddyC sends you a
+message, the window list window will unhide itself, buddyC's name will appear in yellow,
+and the []'s around his name will turn into ()'s. This means buddyC's window has changed
+since the last time you have seen it. In order to make chatting with multiple buddies
+easier, the /jump command will take you to the next "yellow" buddy if no name is provided.
+Therefore, if you send a message to buddyA and are waiting for a response, and buddyC
+sends you an IM in the meantime, you can just type /jump to take you directly to buddyC's
+window. If buddyA sends you a message while you are then talking to buddyC, typing /jump
+again will take you back to buddyA's window.
+
+The keys F8 and Ctrl-N do the same thing as typing /jump with no arguments, to make
+chatting even easier.
+
+==How can I jump to the beginning of the line when running naim in screen?==
+Under normal convention, Ctrl-A jumps to the beginning of the input line and Ctrl-E jumps
+to the end. GNU Screen uses the Ctrl-A key for detaching, switching windows, etc. To jump
+to the beginning of the line when running naim under screen, simply press Ctrl-A a (that
+is, hold Ctrl, press 'a', let go of Ctrl, and press 'a' a second time).
+
+==When using /bind, what keys are A1, A3, B2, C1, and C3?==
+According to the ncurses header file, these keys correspond to the Home, End, PgUp, and
+PgDn keys on the numeric keypad, as such:
+{{{
+/* The keypad is arranged like this: */
+/* a1    up    a3   */
+/* left   b2  right  */
+/* c1   down   c3   */
+}}}
+
+I have never used a computer keyboard which used these bindings instead of KEY_PGUP, etc.,
+but I included them in naim's /bind "just in case."
