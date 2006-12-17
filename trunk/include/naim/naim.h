@@ -188,7 +188,7 @@ typedef struct {
 	struct {
 		int	startx, starty,
 			widthx, widthy, pady;
-	} wstatus, winput, winfo, waway;
+	} wstatus, winput, winfo, waway, wtextedit;
 } faimconf_t;
 #define nw_COLORS	8
 #define C(back, fore)	(nw_COLORS*faimconf.b[c ## back] +            faimconf.f[c ## fore])

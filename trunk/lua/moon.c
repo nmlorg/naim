@@ -54,6 +54,11 @@ static int l_echo(lua_State *L) {
 	return(0);
 }
 
+static int naimcats(lua_State *L) {
+	lua_pushstring(L, "hello kitties");
+	return(1);
+}
+
 static const struct luaL_Reg naimlib [] = {
 	{"debug", l_debug},
 	{"curconn", l_curconn},
@@ -146,6 +151,7 @@ static void _loadfunctions()
 	luaL_register(lua, "naim.internal", naiminternallib);
 	luaL_register(lua, "naim.prototypes.connection", naimprototypeconnlib);
 	luaL_register(lua, "naim.hooks.recvfrom", naimhooksrecvfromlib);
+	lua_register(lua, "cats", naimcats);
 }
 
 void nlua_init()
