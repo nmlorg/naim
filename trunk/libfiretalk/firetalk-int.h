@@ -55,8 +55,8 @@ typedef struct {
 	int	count;
 } firetalk_queue_t;
 
-struct s_firetalk_buddy {
-	struct s_firetalk_buddy *next;
+typedef struct firetalk_buddy_t {
+	struct firetalk_buddy_t *next;
 	char	*nickname,
 		*group,
 		*friendly;
@@ -67,27 +67,27 @@ struct s_firetalk_buddy {
 	uint8_t	online:1,
 		away:1,
 		uploaded:1;
-};
+} firetalk_buddy_t;
 
-struct s_firetalk_deny {
-	struct s_firetalk_deny *next;
+typedef struct firetalk_deny_t {
+	struct firetalk_deny_t *next;
 	char	*nickname;
 	uint8_t	uploaded:1;
-};
+} firetalk_deny_t;
 
-struct s_firetalk_member {
-	struct s_firetalk_member *next;
+typedef struct firetalk_member_t {
+	struct firetalk_member_t *next;
 	char *nickname;
 	uint8_t	admin:1;
-};
+} firetalk_member_t;
 
-struct s_firetalk_room {
-	struct s_firetalk_room *next;
-	struct s_firetalk_member *member_head;
+typedef struct firetalk_room_t {
+	struct firetalk_room_t *next;
+	firetalk_member_t *member_head;
 	char	*name;
 	uint8_t	admin:1,
 		sentjoin:1;
-};
+} firetalk_room_t;
 
 typedef enum {
 	FCS_NOTCONNECTED,
@@ -147,11 +147,11 @@ typedef struct firetalk_transfer_t {
 	struct firetalk_useragent_transfer_t *clientfilestruct;
 } firetalk_transfer_t;
 
-struct s_firetalk_subcode_callback {
-	struct s_firetalk_subcode_callback *next;
+typedef struct firetalk_subcode_callback_t {
+	struct firetalk_subcode_callback_t *next;
 	char	*command, *staticresp;
 	ptrtofnct callback;
-};
+} firetalk_subcode_callback_t;
 
 typedef struct firetalk_connection_t {
 	void	*canary;
@@ -164,11 +164,11 @@ typedef struct firetalk_connection_t {
 	char	*username;
 	ptrtofnct callbacks[FC_MAX];
 	struct firetalk_connection_t *next, *prev;
-	struct s_firetalk_buddy *buddy_head;
-	struct s_firetalk_deny *deny_head;
-	struct s_firetalk_room *room_head;
+	firetalk_buddy_t *buddy_head;
+	firetalk_deny_t *deny_head;
+	firetalk_room_t *room_head;
 	firetalk_transfer_t *file_head;
-	struct s_firetalk_subcode_callback *subcode_request_head,
+	firetalk_subcode_callback_t *subcode_request_head,
 		*subcode_reply_head,
 		*subcode_request_default,
 		*subcode_reply_default;
@@ -192,6 +192,7 @@ typedef struct {
 	fte_t	(*comparenicks)(const char *const, const char *const);
 	fte_t	(*isprintable)(const int);
 	fte_t	(*disconnect)(struct firetalk_driver_connection_t *c);
+	fte_t	(*disconnected)(struct firetalk_driver_connection_t *c, const fte_t reason);
 	fte_t	(*signon)(struct firetalk_driver_connection_t *c, const char *const);
 	fte_t	(*get_info)(struct firetalk_driver_connection_t *c, const char *const);
 	fte_t	(*set_info)(struct firetalk_driver_connection_t *c, const char *const);
@@ -234,10 +235,10 @@ void	firetalk_callback_denyremoved(struct firetalk_driver_connection_t *c, const
 void	firetalk_callback_typing(struct firetalk_driver_connection_t *c, const char *const name, const int typing);
 void	firetalk_callback_capabilities(struct firetalk_driver_connection_t *c, char const *const nickname, const char *const caps);
 void	firetalk_callback_warninfo(struct firetalk_driver_connection_t *c, char const *const nickname, const long warnval);
-void	firetalk_callback_error(struct firetalk_driver_connection_t *c, const int error, const char *const roomoruser, const char *const description);
-void	firetalk_callback_connectfailed(struct firetalk_driver_connection_t *c, const int error, const char *const description);
+void	firetalk_callback_error(struct firetalk_driver_connection_t *c, const fte_t error, const char *const roomoruser, const char *const description);
+void	firetalk_callback_connectfailed(struct firetalk_driver_connection_t *c, const fte_t error, const char *const description);
 void	firetalk_callback_connected(struct firetalk_driver_connection_t *c);
-void	firetalk_callback_disconnect(struct firetalk_driver_connection_t *c, const int error);
+void	firetalk_callback_disconnect(struct firetalk_driver_connection_t *c, const fte_t error);
 void	firetalk_callback_gotinfo(struct firetalk_driver_connection_t *c, const char *const nickname, const char *const info, const int warning, const long online, const long idle, const int flags);
 void	firetalk_callback_idleinfo(struct firetalk_driver_connection_t *c, char const *const nickname, const long idletime);
 void	firetalk_callback_doinit(struct firetalk_driver_connection_t *c, char const *const nickname);
@@ -283,7 +284,7 @@ fte_t	firetalk_chat_internal_add_member(firetalk_connection_t *conn, const char 
 fte_t	firetalk_chat_internal_remove_room(firetalk_connection_t *conn, const char *const name);
 fte_t	firetalk_chat_internal_remove_member(firetalk_connection_t *conn, const char *const room, const char *const nickname);
 
-struct s_firetalk_room *firetalk_find_room(firetalk_connection_t *c, const char *const room);
+firetalk_room_t *firetalk_find_room(firetalk_connection_t *c, const char *const room);
 fte_t	firetalk_user_visible(firetalk_connection_t *conn, const char *const nickname);
 fte_t	firetalk_user_visible_but(firetalk_connection_t *conn, const char *const room, const char *const nickname);
 

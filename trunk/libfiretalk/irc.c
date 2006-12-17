@@ -44,6 +44,9 @@ static char irc_tolower(const char c) {
 static int irc_compare_nicks_int(const char *const nick1, const char *const nick2) {
 	int	i = 0;
 
+        assert(nick1 != NULL);
+        assert(nick2 != NULL);
+
 	while (nick1[i] != '\0') {
 		if (irc_tolower(nick1[i]) != irc_tolower(nick2[i]))
 			return(1);
@@ -111,8 +114,8 @@ static void irc_disc_user_rem(irc_conn_t *c, const char *disc, const char *name)
 
 static void irc_disc_rem(irc_conn_t *c, const char *disc) {
 	firetalk_connection_t *fchandle = firetalk_find_handle(c);
-	struct s_firetalk_room *iter;
-	struct s_firetalk_member *mem;
+	firetalk_room_t *iter;
+	firetalk_member_t *mem;
 
 	iter = firetalk_find_room(fchandle, disc);
 	assert(iter != NULL);
@@ -521,8 +524,12 @@ static char *irc_irc_to_html(const char *const string) {
 	return(output);
 }
 
-static int irc_internal_disconnect(irc_conn_t *c, const int error) {
+static int irc_internal_disconnect(irc_conn_t *c, const fte_t error) {
 	irc_whois_t *whois_iter, *whois_iter2;
+
+#ifdef DEBUG_ECHO
+	irc_echof(c, "irc_internal_disconnect", "c=%#p, error=%i\n", c, error);
+#endif
 
 	if (c->nickname != NULL) {
 		free(c->nickname);
@@ -693,9 +700,20 @@ static void irc_destroy_handle(irc_conn_t *c) {
 }
 
 static fte_t irc_disconnect(irc_conn_t *c) {
+#ifdef DEBUG_ECHO
+	irc_echof(c, "irc_disconnect", "c=%#p; state=%i\n", c, firetalk_internal_get_connectstate(c));
+#endif
 	if (firetalk_internal_get_connectstate(c) != FCS_NOTCONNECTED)
 		irc_send_printf(c, "QUIT :User disconnected");
 	return(irc_internal_disconnect(c, FE_USERDISCONNECT));
+}
+
+static fte_t irc_disconnected(irc_conn_t *c, const fte_t reason) {
+#ifdef DEBUG_ECHO
+	irc_echof(c, "irc_disconnected", "c=%#p, reason=%i; state=%i\n", c, reason, firetalk_internal_get_connectstate(c));
+#endif
+	assert(firetalk_internal_get_connectstate(c) == FCS_NOTCONNECTED);
+	return(irc_internal_disconnect(c, reason));
 }
 
 static irc_conn_t *irc_create_handle(void) {
@@ -1564,6 +1582,7 @@ const firetalk_driver_t firetalk_protocol_irc = {
 	comparenicks:		irc_compare_nicks,
 	isprintable:		irc_isprint,
 	disconnect:		irc_disconnect,
+	disconnected:		irc_disconnected,
 	signon:			irc_signon,
 	get_info:		irc_get_info,
 	set_info:		irc_set_info,
