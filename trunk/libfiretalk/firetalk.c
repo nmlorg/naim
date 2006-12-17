@@ -96,34 +96,19 @@ int	firetalk_find_protocol(const char *strprotocol) {
 	return(-1);
 }
 
-/* Internal function definitions */
 
-/* firetalk_find_by_toc searches the firetalk handle list for the toc handle passed, and returns the firetalk handle */
-firetalk_connection_t *firetalk_find_handle(struct firetalk_driver_connection_t *c) {
-	firetalk_connection_t *iter;
-
-	for (iter = handle_head; iter != NULL; iter = iter->next)
-		if (iter->handle == c)
-			return(iter);
-	abort();
-}
-
-firetalk_connection_t *firetalk_find_clientstruct(struct firetalk_useragent_connection_t *clientstruct) {
-	firetalk_connection_t *iter;
-
-	for (iter = handle_head; iter != NULL; iter = iter->next)
-		if (iter->clientstruct == clientstruct)
-			return(iter);
-	return(NULL);
-}
+static int _connection_canary = 0;
+#define CONNECTION_CANARY	(&_connection_canary)
 
 #define DEBUG
 
 #ifdef DEBUG
 # define VERIFYCONN \
 	do { \
+		assert(handle_head != NULL); \
 		if (firetalk_check_handle(conn) != FE_SUCCESS) \
 			abort(); \
+		assert(conn->canary == CONNECTION_CANARY); \
 	} while(0)
 
 static fte_t firetalk_check_handle(firetalk_connection_t *c) {
@@ -139,6 +124,29 @@ static fte_t firetalk_check_handle(firetalk_connection_t *c) {
 	do { \
 	} while(0)
 #endif
+
+/* firetalk_find_by_toc searches the firetalk handle list for the toc handle passed, and returns the firetalk handle */
+firetalk_connection_t *firetalk_find_handle(struct firetalk_driver_connection_t *c) {
+	firetalk_connection_t *conn;
+
+	for (conn = handle_head; conn != NULL; conn = conn->next)
+		if (conn->handle == c) {
+			VERIFYCONN;
+			return(conn);
+		}
+	abort();
+}
+
+firetalk_connection_t *firetalk_find_clientstruct(struct firetalk_useragent_connection_t *clientstruct) {
+	firetalk_connection_t *conn;
+
+	for (conn = handle_head; conn != NULL; conn = conn->next)
+		if (conn->clientstruct == clientstruct) {
+			VERIFYCONN;
+			return(conn);
+		}
+	return(NULL);
+}
 
 static char **firetalk_parse_subcode_args(char *string) {
 	static char *args[256];
@@ -747,15 +755,12 @@ void	firetalk_callback_typing(struct firetalk_driver_connection_t *c, const char
 	assert(name != NULL);
 	assert(typing >= 0);
 
-	if (!conn->callbacks[FC_IM_TYPINGINFO])
+	if (((buddyiter = firetalk_im_find_buddy(conn, name)) == NULL) || (buddyiter->online == 0))
 		return;
-
-	if ((buddyiter = firetalk_im_find_buddy(conn, name)) != NULL) {
-		assert(buddyiter->online != 0);
-		if (buddyiter->typing != typing) {
-			buddyiter->typing = typing;
+	if (buddyiter->typing != typing) {
+		buddyiter->typing = typing;
+		if (conn->callbacks[FC_IM_TYPINGINFO] != NULL)
 			conn->callbacks[FC_IM_TYPINGINFO](conn, conn->clientstruct, buddyiter->nickname, typing);
-		}
 	}
 }
 
@@ -763,29 +768,27 @@ void	firetalk_callback_capabilities(struct firetalk_driver_connection_t *c, char
 	firetalk_connection_t *conn = firetalk_find_handle(c);
 	struct s_firetalk_buddy *buddyiter;
 
-	if (!conn->callbacks[FC_IM_CAPABILITIES])
+	if (((buddyiter = firetalk_im_find_buddy(conn, nickname)) == NULL) || (buddyiter->online == 0))
 		return;
-
-	if ((buddyiter = firetalk_im_find_buddy(conn, nickname)) != NULL)
-		if ((buddyiter->capabilities == NULL) || (strcmp(buddyiter->capabilities, caps) != 0)) {
-			free(buddyiter->capabilities);
-			buddyiter->capabilities = strdup(caps);
+	if ((buddyiter->capabilities == NULL) || (strcmp(buddyiter->capabilities, caps) != 0)) {
+		free(buddyiter->capabilities);
+		buddyiter->capabilities = strdup(caps);
+		if (conn->callbacks[FC_IM_CAPABILITIES] != NULL)
 			conn->callbacks[FC_IM_CAPABILITIES](conn, conn->clientstruct, nickname, caps);
-		}
+	}
 }
 
 void	firetalk_callback_warninfo(struct firetalk_driver_connection_t *c, char const *const nickname, const long warnval) {
 	firetalk_connection_t *conn = firetalk_find_handle(c);
 	struct s_firetalk_buddy *buddyiter;
 
-	if (!conn->callbacks[FC_IM_EVILINFO])
+	if (((buddyiter = firetalk_im_find_buddy(conn, nickname)) == NULL) || (buddyiter->online == 0))
 		return;
-
-	if ((buddyiter = firetalk_im_find_buddy(conn, nickname)) != NULL)
-		if ((buddyiter->warnval != warnval) && (buddyiter->online == 1)) {
-			buddyiter->warnval = warnval;
+	if (buddyiter->warnval != warnval) {
+		buddyiter->warnval = warnval;
+		if (conn->callbacks[FC_IM_EVILINFO] != NULL)
 			conn->callbacks[FC_IM_EVILINFO](conn, conn->clientstruct, nickname, warnval);
-		}
+	}
 }
 
 void	firetalk_callback_error(struct firetalk_driver_connection_t *c, const int error, const char *const roomoruser, const char *const description) {
@@ -1483,6 +1486,7 @@ firetalk_connection_t *firetalk_create_handle(const int protocol, struct firetal
 	c = calloc(1, sizeof(*c));
 	if (c == NULL)
 		abort();
+	c->canary = CONNECTION_CANARY;
 	c->next = handle_head;
 	handle_head = c;
 	c->clientstruct = clientstruct;
@@ -2364,7 +2368,7 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 		fchandleprev = NULL;
 		for (fchandle = handle_head; fchandle != NULL; fchandle = fchandlenext) {
 			fchandlenext = fchandle->next;
-			if (fchandle->deleted == 1) {
+			if (fchandle->deleted) {
 				assert(fchandle->handle == NULL);
 				if (fchandle->buddy_head != NULL) {
 					struct s_firetalk_buddy *iter, *iternext;
@@ -2497,7 +2501,9 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 					fchandleprev->next = fchandlenext;
 				}
 
+				fchandle->canary = NULL;
 				free(fchandle);
+				fchandle = NULL;
 			} else
 				fchandleprev = fchandle;
 		}
