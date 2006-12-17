@@ -47,7 +47,7 @@ int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
 	const int top = lua_gettop(lua);
 	char	*lcmd;
 
-	_get_global_ent(lua, "naim.call", NULL);
+	_get_global_ent(lua, "naim", "call", NULL);
 	if (!lua_isfunction(lua, -1)) {
 		static int complained = 0;
 
