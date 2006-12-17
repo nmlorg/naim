@@ -63,42 +63,90 @@ static const struct luaL_Reg naimlib [] = {
 };
 
 static const struct luaL_reg naiminternallib[] = {
+	/* reserved for further use */
 	{NULL, NULL} /* sentinel */
 };
 
 extern const struct luaL_reg naimprototypeconnlib[];
+
+static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+	int ref = (int)userdata;
+	int ret;
+	
+	if (luaL_findtable(lua, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
+		abort();
+	lua_rawgeti(lua, -1, ref);
+	lua_remove(lua, -2);
+	
+	_push_conn_t(lua, conn);
+	lua_pushstring(lua, *name);
+	lua_pushstring(lua, *dest);
+	lua_pushlstring(lua, *message, *len);
+	lua_pushnumber(lua, *flags);
+	if (lua_pcall(lua, 5 /* args */, 1 /* results */, 0) != 0)
+	{
+		status_echof(curconn, "recvfrom chain %d run error: %s\n", ref, lua_tostring(lua, -1));
+		lua_pop(lua, 1);
+		return HOOK_CONTINUE;
+	}
+	if (!lua_isnumber(lua, -1))
+		return HOOK_CONTINUE;
+	ret = lua_tonumber(lua, -1);
+	lua_pop(lua, 1);
+
+	return ret;
+}
+
+static int l_hooks_recvfrom_add(lua_State *L) {
+	void	*mod = NULL;
+	int		weight;
+	int		ref;
+	
+	luaL_checktype(L, 1, LUA_TFUNCTION);
+	weight = luaL_checkint(L, 2);
+	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
+		return luaL_error(L, "recvfrom hooks table damaged");
+	lua_pushvalue(L, 1);
+	ref = luaL_ref(L, -2); //You can retrieve an object referred by reference r by calling lua_rawgeti(L, t, r). 
+	lua_pop(L, 2);
+	
+	HOOK_ADD(recvfrom, mod, _nlua_recvfrom, weight, (void*)ref);
+	
+	lua_pushlightuserdata(L, (void*)ref);	/* opaque reference */
+	return 1;
+}
+
+static int l_hooks_recvfrom_del(lua_State *L) {
+	int		ref;
+	void	*mod = NULL;
+	
+	if (!lua_islightuserdata(L, 1))
+		return luaL_typerror(L, 1, "light userdata");
+	ref = (int)lua_touserdata(L, 1);
+	
+	HOOK_DEL(recvfrom, mod, _nlua_recvfrom, (void*)ref);
+	
+	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
+		return luaL_error(L, "recvfrom hooks table damaged");
+	luaL_unref(L, -1, ref);
+	lua_pop(L, 1);
+	
+	return 0;
+}
+
+static const struct luaL_reg naimhooksrecvfromlib[] = {
+	{"add", l_hooks_recvfrom_add},
+	{"del", l_hooks_recvfrom_del},
+	{NULL, NULL} /* sentinel */
+};
 
 static void _loadfunctions()
 {
 	luaL_register(lua, "naim", naimlib);
 	luaL_register(lua, "naim.internal", naiminternallib);
 	luaL_register(lua, "naim.prototypes.connection", naimprototypeconnlib);
+	luaL_register(lua, "naim.hooks.recvfrom", naimhooksrecvfromlib);
 }
-
-/*
-typedef struct {
-	char	*script;
-} _client_hook_t;
-
-static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
-	const char *script = ((_client_hook_t *)userdata)->script;
-
-	nlua_script_parse(script);
-
-	return(HOOK_CONTINUE);
-}
-
-static void _client_hook_recvfrom(const char *script, const int weight) {
-	void	*mod = NULL;
-	_client_hook_t *hook;
-
-	if ((hook = calloc(1, sizeof(*hook))) == NULL)
-		abort();
-	if ((hook->script = strdup(script)) == NULL)
-		abort();
-	HOOK_ADD(recvfrom, mod, _nlua_recvfrom, weight, hook);
-}
-*/
 
 void nlua_init()
 {

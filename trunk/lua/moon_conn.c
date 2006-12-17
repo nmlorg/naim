@@ -109,7 +109,7 @@ void nlua_hook_delconn(conn_t *conn)
 #define CONN_STRING_GET(accessor, varname) \
 	static int l_conn_get_##accessor (lua_State *L)\
 	{\
-		int id = lua_tonumber(L, 1);\
+		int id = lua_tonumber(L, 1); \
 		conn_t *conn = _lookup_conn_id(id);\
 		if (!conn)\
 		{\

@@ -38,13 +38,13 @@ function naim.internal.newConn(id)
 				return naim.prototypes.connection[key]
 			end
 			if naim.prototypes.connection["get_"..key] ~= nil then
-				return naim.prototypes.connection["get_"..key](table)
+				return naim.prototypes.connection["get_"..key](table.id)	-- XXX: is this really how I want to do this?
 			end
 			return nil
 		end,
 		__newindex = function(table, key, value)
 			if naim.prototypes.connection["set_"..key] ~= nil then
-				naim.prototypes.connection["set_"..key](table, key, value)
+				naim.prototypes.connection["set_"..key](table.id, key, value)
 				return
 			end
 			table[key] = value

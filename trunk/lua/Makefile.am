@@ -3,7 +3,9 @@ DISTCLEANFILES = \
 
 EXTRA_DIST = \
 	cmpllua.sh \
-	default.lua
+	default.lua \
+	examples/eliza.lua \
+	examples/testnaim.lua
 
 noinst_LTLIBRARIES = liblua.la
 liblua_la_SOURCES = \
