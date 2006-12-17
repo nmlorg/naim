@@ -14,7 +14,7 @@ function naim.prototypes.windows.event(window, e, s)
 	end
 end
 
-function naim.prototypes.windows.event2(window, e, who, s)
+function naim.prototypes.windows.event2(window, e, who, verb, object)
 	if not window.events then
 		window.events = {}
 	end
@@ -23,7 +23,22 @@ function naim.prototypes.windows.event2(window, e, who, s)
 		window.events[who] = { type = e }
 	end
 
-	table.insert(window.events[who], s)
+	local verblist
+
+	for i,cverb in ipairs(window.events[who]) do
+		if cverb.verb == verb then
+			verblist = cverb
+			break
+		end
+	end
+	if not verblist then
+		verblist = { verb = verb, objects = {} }
+		table.insert(window.events[who], verblist)
+	end
+
+	if object and object ~= "" then
+		table.insert(verblist.objects, object)
+	end
 end
 
 function naim.internal.eventeval(code)
@@ -594,7 +609,7 @@ naim.hooks.add('proto_chat_modeset', function(conn, chat, by, mode, arg)
 	local window = conn.windows[string.lower(chat)]
 
 	if window and group.synched then
-		window:event2("event", by, "set mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
+		window:event2("event", by, "set", "mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
 	end
 end, 100)
 
@@ -603,7 +618,7 @@ naim.hooks.add('proto_chat_modeunset', function(conn, chat, by, mode, arg)
 	local window = conn.windows[string.lower(chat)]
 
 	if window and group.synched then
-		window:event2("event", by, "unset mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
+		window:event2("event", by, "unset", "mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
 	end
 end, 100)
 
@@ -664,7 +679,7 @@ naim.hooks.add('proto_chat_user_oped', function(conn, chat, who, by)
 		local window = conn.windows[string.lower(chat)]
 
 		if window then
-			window:event2("attacks", by, "oped <font color=\"#00FFFF\">" .. who .. "</font>")
+			window:event2("attacks", by, "oped", "<font color=\"#00FFFF\">" .. who .. "</font>")
 		end
 	end
 end, 100)
@@ -678,7 +693,7 @@ naim.hooks.add('proto_chat_user_deoped', function(conn, chat, who, by)
 	local window = conn.windows[string.lower(chat)]
 
 	if window then
-		window:event2("attacks", by, "deoped <font color=\"#00FFFF\">" .. who .. "</font>")
+		window:event2("attacks", by, "deoped", "<font color=\"#00FFFF\">" .. who .. "</font>")
 	end
 end, 100)
 
@@ -703,9 +718,9 @@ naim.hooks.add('proto_chat_topicchanged', function(conn, chat, topic, by)
 
 	if window then
 		if by and by ~= "" then
-			window:event2("misc", by, "changed the topic to </B><body>" .. topic .. "</body><B>")
+			window:event2("misc", by, "changed the topic to", "</B><body>" .. topic .. "</body><B>")
 		else
-			window:event("misc", "Topic for group " .. chat .. ": </B><body>" .. topic .. "</body><B>.")
+			window:echo("Topic for group " .. chat .. ": </B><body>" .. topic .. "</body><B>.")
 		end
 	end
 end, 100)
@@ -715,24 +730,44 @@ naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
 		for winname,window in pairs(conn.windows) do
 			if window.events then
 				for who,events in pairs(window.events) do
-					if #events > 0 then
-						local t = {}
+					local t = { "<font color=\"#00FFFF\">" .. who .. "</font> " }
 
-						table.insert(t, "<font color=\"#00FFFF\">" .. who .. "</font> ")
+					local objfunc = function(verb, objects)
+						table.insert(t, verb)
 
-						if #events == 1 then
-							table.insert(t, events[1])
-						elseif #events == 2 then
-							table.insert(t, events[1] .. " and " .. events[2])
-						else
-							local last = table.remove(events, #events)
+						if #objects == 1 then
+							table.insert(t, " ")
+							table.insert(t, objects[1])
+						elseif #objects == 2 then
+							table.insert(t, " ")
+							table.insert(t, objects[1])
+							table.insert(t, " and ")
+							table.insert(t, objects[2])
+						elseif #objects > 2 then
+							table.insert(t, " ")
+							local last = table.remove(objects, #objects)
 
-							table.insert(t, table.concat(events, ", "))
+							table.insert(t, table.concat(objects, ", "))
 							table.insert(t, ", and " .. last)
 						end
-
-						window:event(events.type, table.concat(t) .. ".")
 					end
+
+					if #events == 1 then
+						objfunc(events[1].verb, events[1].objects)
+					elseif #events == 2 then
+						objfunc(events[1].verb, events[1].objects)
+						table.insert(t, " and ")
+						objfunc(events[2].verb, events[2].objects)
+					else
+						for i = 1,#events-1 do
+							objfunc(events[i].verb, events[i].objects)
+							table.insert(t, ", ")
+						end
+						table.insert(t, " and ")
+						objfunc(events[#events].verb, events[#events].objects)
+ 					end
+
+					window:event(events.type, table.concat(t) .. ".")
 				end
 
 				window.events = nil
