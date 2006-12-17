@@ -79,18 +79,17 @@ NLUA_STRING_GET(conn_t, winname);
 NLUA_STRING_GET(conn_t, server);
 NLUA_STRING_GET(conn_t, profile);
 
-#if 0
 static int _nlua_conn_t_curwin(lua_State *L) {
 	conn_t	*conn = _get_conn_t(L, 1);
 
 	if (conn == NULL)
 		return(luaL_error(L, "conn was nil"));
 	if (conn->curbwin != NULL)
-		_get_global_ent(L, "naim.connections", conn->winname, "windows", conn->curbwin->winname);
+		_get_global_ent(L, "naim.connections", conn->winname, "windows", conn->curbwin->winname, NULL);
 	else
-		lua_push
+		_push_conn_t(L, conn);
+	return(1);
 }
-#endif
 
 static int _nlua_conn_t_status_echo(lua_State *L) {
 	/* lua_pushlightuserdata(L, void *p) */
@@ -163,7 +162,7 @@ const struct luaL_reg naim_prototypes_connectionslib[] = {
 	{ "get_winname",	_nlua_conn_t_get_winname },
 	{ "get_server",		_nlua_conn_t_get_server },
 	{ "get_profile",	_nlua_conn_t_get_profile },
-//	{ "curwin",		_nlua_conn_t_curwin },
+	{ "curwin",		_nlua_conn_t_curwin },
 	{ "status_echo",	_nlua_conn_t_status_echo },
 	{ "x_hprint",		_nlua_conn_t_x_hprint },
 #define NN(x) { #x, _nlua_conn_t_ ## x },
@@ -218,7 +217,7 @@ static int _nlua_buddywin_t_echo(lua_State *L) {
 	const char *str;
 
 	if ((bwin = _get_buddywin_t(L, 1)) == NULL)
-		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:echo instead of naim.connections[CONN].buddies[BUDDY].echo."));
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].windows[BUDDY]:echo instead of naim.connections[CONN].windows[BUDDY].echo."));
 	str = luaL_checkstring(L, 2);
 	window_echof(bwin, "%s\n", str);
 	return(0);
@@ -229,11 +228,20 @@ static int _nlua_buddywin_t_x_hprint(lua_State *L) {
 	const char *text;
 
 	if ((bwin = _get_buddywin_t(L, 1)) == NULL)
-		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:x_hprint instead of naim.connections[CONN].buddies[BUDDY].x_hprint."));
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].windows[BUDDY]:x_hprint instead of naim.connections[CONN].windows[BUDDY].x_hprint."));
 	text = luaL_checkstring(L, 2);
 	hwprintf(&(bwin->nwin), C(IMWIN,TEXT), "%s", text);
 	return(0);
-  }
+}
+
+static int _nlua_buddywin_t_notify(lua_State *L) {
+	buddywin_t *bwin;
+
+	if ((bwin = _get_buddywin_t(L, 1)) == NULL)
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].windows[BUDDY]:notify instead of naim.connections[CONN].windows[BUDDY].notify."));
+	bwin->waiting = 1;
+	return(0);
+}
 
 #define NLUA_BUDDYWIN_T_COMMAND(name) \
 static int _nlua_buddywin_t_ ## name(lua_State *L) { \
@@ -244,7 +252,7 @@ static int _nlua_buddywin_t_ ## name(lua_State *L) { \
 	const char *error; \
 	\
 	if ((bwin = _get_buddywin_t(L, 1)) == NULL) \
-		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:" #name " instead of naim.connections[CONN].buddies[BUDDY]." #name ".")); \
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].windows[BUDDY]:" #name " instead of naim.connections[CONN].windows[BUDDY]." #name ".")); \
 	args[0] = bwin->winname; \
 	argc = _lua2conio(L, 2, args+1, UA_MAXPARMS-1)+1; \
 	if ((error = ua_valid(#name, bwin->conn, argc)) == NULL) \
@@ -266,6 +274,7 @@ const struct luaL_reg naim_prototypes_windowslib[] = {
 	{ "get_winname",	_nlua_buddywin_t_get_winname },
 	{ "echo",		_nlua_buddywin_t_echo },
 	{ "x_hprint",		_nlua_buddywin_t_x_hprint },
+	{ "notify",		_nlua_buddywin_t_notify },
 #define NN(x) { #x, _nlua_buddywin_t_ ## x },
 BUDDYWIN_COMMANDS
 #undef NN

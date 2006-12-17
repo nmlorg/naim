@@ -38,7 +38,7 @@ nFIRE_HANDLER(newnick) {
 	HOOK_CALL(proto_newnick, HOOK_T_CONN HOOK_T_STRING, conn, newnick);
 }
 
-HOOK_DECLARE(proto_nickchanged);
+HOOK_DECLARE(proto_user_nickchanged);
 nFIRE_HANDLER(nickchanged) {
 	va_list	msg;
 	const char *oldnick, *newnick;
@@ -48,7 +48,7 @@ nFIRE_HANDLER(nickchanged) {
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_nickchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, oldnick, newnick);
+	HOOK_CALL(proto_user_nickchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, oldnick, newnick);
 }
 
 HOOK_DECLARE(proto_doinit);
