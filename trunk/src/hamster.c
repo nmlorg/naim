@@ -194,21 +194,27 @@ void	naim_send_im(conn_t *conn, const char *SN, const char *msg, const int _auto
 	buddywin_t *bwin = bgetwin(conn, SN, BUDDY);
 	int	ischat = (bgetwin(conn, SN, CHAT) == NULL)?0:1;
 	unsigned char buf[2048];
-	const char *pre = getvar(conn, "im_prefix"),
-		*post = getvar(conn, "im_suffix");
 
 	assert((bwin == NULL) || (bwin->et == BUDDY));
 	if ((bwin == NULL)					// if the target is not queueable (let the protocol layer handle errors)
 		|| (	   (conn->online > 0)			// or if you are online
 			&& (bwin->e.buddy->offline == 0))) {	//  and the target is also tracked online
+		const char *pre, *post;
+
+		if ((pre = getvar(conn, "im_prefix")) != NULL)
+			pre = strdup(pre);
+		if ((post = getvar(conn, "im_suffix")) != NULL)
+			post = strdup(post);
+
 		if (_auto == 0)
 			updateidletime();
 		if ((pre != NULL) || (post != NULL)) {
 			snprintf(buf, sizeof(buf), "%s%s%s", pre?pre:"", msg, post?post:"");
 			msg = buf;
 		}
-		naim_send_message(conn, SN, msg, ischat, 0, 0);
-								// send the message through the protocol layer
+		naim_send_message(conn, SN, msg, ischat, 0, 0);	// send the message through the protocol layer
+		FREESTR(pre);
+		FREESTR(post);
 	} else {
 		struct tm *tmptr = NULL;
 
@@ -245,14 +251,18 @@ void	naim_send_im_away(conn_t *conn, const char *SN, const char *msg, int force)
 		return;
 	}
 
-	pre = getvar(conn, "im_prefix"),
-	post = getvar(conn, "im_suffix");
+	if ((pre = getvar(conn, "im_prefix")) != NULL)
+		pre = strdup(pre);
+	if ((post = getvar(conn, "im_suffix")) != NULL)
+		post = strdup(post);
 	if ((pre != NULL) || (post != NULL)) {
 		static unsigned char buf[2048];
 
 		snprintf(buf, sizeof(buf), "%s%s%s", pre?pre:"", msg, post?post:"");
 		msg = buf;
 	}
+	FREESTR(pre);
+	FREESTR(post);
 
 	tmptr = localtime(&now);
 	assert(tmptr != NULL);
@@ -282,8 +292,9 @@ void	sendaway(conn_t *conn, const char *SN) {
 
 void	setaway(const int auto_flag) {
 	conn_t	*conn = curconn;
-	char	*awaymsg = script_getvar("awaymsg");
+	char	*awaymsg;
 
+	script_getvar_copy("awaymsg", &awaymsg);
 	awaytime = now - 60*script_getvar_int("idletime");
 	do {
 		status_echof(conn, "You are now away--hurry back!\n");
@@ -291,6 +302,7 @@ void	setaway(const int auto_flag) {
 		if (conn->online > 0)
 			naim_set_info(conn, conn->profile);
 	} while ((conn = conn->next) != curconn);
+	FREESTR(awaymsg);
 }
 
 void	unsetaway(void) {

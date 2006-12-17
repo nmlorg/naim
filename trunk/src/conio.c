@@ -337,15 +337,8 @@ CONIOALIA(im)
 CONIODESC(Send a message; as in /msg naimhelp naim is cool!)
 CONIOAREQ(window,name)
 CONIOAREQ(string,message)
-	buddywin_t	*bwin;
-	struct tm	*tmptr = NULL;
-	const char	*pre = getvar(conn, "im_prefix"),
-			*post = getvar(conn, "im_suffix");
-
-	if (pre == NULL)
-		pre = "";
-	if (post == NULL)
-		post = "";
+	buddywin_t *bwin;
+	struct tm *tmptr;
 
 	if (args[0] == NULL) {
 		bwin = conn->curbwin;
@@ -357,7 +350,7 @@ CONIOAREQ(string,message)
 	assert(tmptr != NULL);
 
 	if (bwin != NULL) {
-		const char	*format = NULL;
+		const char *format = NULL, *pre, *post;
 
 		switch (bwin->et) {
 		  case CHAT:
@@ -375,18 +368,36 @@ CONIOAREQ(string,message)
 			return;
 		}
 
+		if ((pre = getvar(conn, "im_prefix")) != NULL)
+			pre = strdup(pre);
+		if ((post = getvar(conn, "im_suffix")) != NULL)
+			post = strdup(post);
+
 		WINTIME(&(bwin->nwin), IMWIN);
 		hwprintf(&(bwin->nwin), C(IMWIN,SELF),
 			format, (conn->sn != NULL)?conn->sn:"(me)");
 		hwprintf(&(bwin->nwin), C(IMWIN,TEXT),
-			" %s%s%s<br>", pre, args[1], post);
+			" %s%s%s<br>", pre?pre:"", args[1], post?post:"");
+
+		FREESTR(pre);
+		FREESTR(post);
 	}
 	if ((conn != curconn) || (conn->curbwin == NULL)
 		|| (firetalk_compare_nicks(conn->conn, conn->curbwin->winname, args[0]) != FE_SUCCESS)) {
+		const char *pre, *post;
+
+		if ((pre = getvar(conn, "im_prefix")) != NULL)
+			pre = strdup(pre);
+		if ((post = getvar(conn, "im_suffix")) != NULL)
+			post = strdup(post);
+
 		WINTIME(&(conn->nwin), CONN);
 		hwprintf(&(conn->nwin), C(CONN,SELF), "-&gt; *<B>%s</B>*", args[0]);
-		hwprintf(&(conn->nwin), C(CONN,TEXT), " %s%s%s<br>", pre, args[1], post);
+		hwprintf(&(conn->nwin), C(CONN,TEXT), " %s%s%s<br>", pre?pre:"", args[1], post?post:"");
 		naim_lastupdate(conn);
+
+		FREESTR(pre);
+		FREESTR(post);
 	}
 
 	logim(conn, conn->sn, args[0], args[1]);
