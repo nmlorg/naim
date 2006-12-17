@@ -1,7 +1,6 @@
 /*  _ __   __ _ ___ __  __
 ** | '_ \ / _` |_ _|  \/  | naim
 ** | | | | | | || || |\/| | Copyright 1998-2006 Daniel Reed <n@ml.org>
-** | | | | |_| || || |  | | moon_conn.c Copyright 2006 Joshua Wise <joshua@joshuawise.com>
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 

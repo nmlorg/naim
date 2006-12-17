@@ -1,81 +1,35 @@
 #!/bin/sh
 
-echo '
-#define C_STATUS	0x00
-#define C_INCHAT	0x01
-#define C_INUSER	0x02
-#define C_NOTSTATUS	(C_INCHAT|C_INUSER)
-#define C_ANYWHERE	0xFF
-
-#define UAARGS	(conn_t *conn, int argc, const char **args)
-#define UAFUNC2(x)	void x UAARGS
-
-#ifndef UACPP
-# define UAFUNC(x)	void ua_ ## x UAARGS
-# define UAALIA(x)
-# define UAWHER(x)
-# define UADESC(x)
-# define UAAREQ(x,y)
-# define UAAOPT(x,y)
-#endif
-
-#ifndef UA_NOPROTOS
-'
-
-echo '#include "commands.c"' \
-        | ${CPP} -DUACPP -dD - \
-	| grep '^UAFUNC(.*).*$' \
-	| sed 's/^\(UAFUNC(.*)\).*$/\1;/g'
-
-echo '
-#endif
-
-#ifndef COMMANDS_C
-extern cmdar_t cmdar[];
-extern const int cmdc;
-#else
-cmdar_t	cmdar[] = {
-'
-
 echo '#include "commands.c"' \
         | ${CPP} -DUACPP -dD - \
 	| sed 's/^UA\(....\)(\(.*\)).*$/\1,\2/g' \
 	| ${AWK} -F ',' '{
 		if ((inalia == 1) && ($1 != "ALIA")) {
 			inalia = 0;
-			printf(" NULL },");
 			indesc = 1;
 			descs = 0;
 		}
 		if ((indesc == 1) && ($1 != "DESC")) {
 			indesc = 0;
-			if (descs == 0)
-				printf("	NULL,");
 			inargs = 1;
-			printf("	{");
 		}
 		if ((inargs == 1) && ($1 != "AREQ") && ($1 != "AOPT") && ($1 != "WHER")) {
 			inargs = 0;
-			printf(" { -1, -1, NULL } },");
-			printf("	%d,	%d,	C_%s },\n", minarg, minarg+maxarg, funcwhere);
+			printf("UAFUNC(%s, %s, %s)\n", funcn, arg1, funcwhere);
 		}
 
 		if ($1 == "FUNC") {
 			funcn = $2;
 			minarg = 0;
 			maxarg = 0;
+			arg1 = "0";
 			funcwhere = "ANYWHERE";
-			printf("	{ \"%s\",	ua_%s,	{", $2, $2);
 			inalia = 1;
 		} else if ($1 == "WHER")
 			funcwhere = $2;
-		else if ($1 == "ALIA")
-			printf(" \"%s\",", $2);
-		else if ($1 == "DESC") {
-			if (descs == 0)
-				printf("	\"%s\",", $2);
+		else if ($1 == "DESC")
 			descs++;
-		} else if ($1 == "AREQ") {
+		else if ($1 == "AREQ") {
 			if ($2 == "string")
 				atype = "s";
 			else if ($2 == "int")
@@ -102,7 +56,8 @@ echo '#include "commands.c"' \
 				atype = "E";
 			else
 				atype = "?";
-			printf(" { 1, '"'"'%c'"'"', \"%s\" },", atype, $3);
+			if (arg1 == "0")
+				arg1 = atype;
 			minarg++;
 		} else if ($1 == "AOPT") {
 			if ($2 == "string")
@@ -131,14 +86,8 @@ echo '#include "commands.c"' \
 				atype = "E";
 			else
 				atype = "?";
-			printf(" { 0, '"'"'%c'"'"', \"%s\" },", atype, $3);
+			if (arg1 == "0")
+				arg1 = atype;
 			maxarg++;
 		}
 	}'
-
-echo '
-};
-const int
-	cmdc = sizeof(cmdar)/sizeof(*cmdar);
-#endif
-'
