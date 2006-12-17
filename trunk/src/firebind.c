@@ -447,8 +447,8 @@ nFIRE_HANDLER(error_msg) {
 	HOOK_CALL(proto_error_msg, HOOK_T_CONN HOOK_T_UINT32 HOOK_T_STRING HOOK_T_STRING, conn, error, target, desc);
 }
 
-HOOK_DECLARE(proto_error_disconnect);
-nFIRE_HANDLER(error_disconnect) {
+HOOK_DECLARE(proto_disconnected);
+nFIRE_HANDLER(disconnected) {
 	va_list	msg;
 	uint32_t error;
 
@@ -456,7 +456,7 @@ nFIRE_HANDLER(error_disconnect) {
 	error = va_arg(msg, int);
 	va_end(msg);
 
-	HOOK_CALL(proto_error_disconnect, HOOK_T_CONN HOOK_T_UINT32, conn, error);
+	HOOK_CALL(proto_disconnected, HOOK_T_CONN HOOK_T_UINT32, conn, error);
 }
 
 nFIRE_HANDLER(needpass) {
@@ -1221,7 +1221,7 @@ conn_t	*naim_newconn(int proto) {
 		firetalk_register_callback(conn->conn, FC_CONNECTED,			_firebind_connected);
 		firetalk_register_callback(conn->conn, FC_CONNECTFAILED,		_firebind_connectfailed);
 		firetalk_register_callback(conn->conn, FC_ERROR,			_firebind_error_msg);
-		firetalk_register_callback(conn->conn, FC_DISCONNECT,			_firebind_error_disconnect);
+		firetalk_register_callback(conn->conn, FC_DISCONNECT,			_firebind_disconnected);
 		firetalk_register_callback(conn->conn, FC_SETIDLE,			_firebind_setidle);
 
 		firetalk_register_callback(conn->conn, FC_EVILED,			_firebind_warned);
