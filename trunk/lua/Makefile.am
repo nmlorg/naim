@@ -34,3 +34,7 @@ default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
 
 libnlua_la-moon.${LOBJEXT}: default_lua.h
+libnlua_la-naim_commands.${LOBJEXT}: ../src/cmdar.h
+
+../src/cmdar.h:
+	(cd ../src && make cmdar.h)
