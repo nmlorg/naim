@@ -109,11 +109,17 @@ static int _nlua_pullword(lua_State *L) {
 		lua_pushstring(L, "_nlua_firstwhite: string was nil");
 		return(lua_error(L));
 	}
-	copy = strdup(string);
+	copy = malloc(strlen(string)+2);
+	strncpy(copy, string, strlen(string)+2);
 	car = grabword(copy);
-	cdr = car + strlen(car)+1;
 	lua_pushstring(L, car);
-	lua_pushstring(L, cdr);
+	cdr = car + strlen(car)+1;
+	while (isspace(*cdr))
+		cdr++;
+	if (*cdr != 0)
+		lua_pushstring(L, cdr);
+	else
+		lua_pushnil(L);
 	free(copy);
 	return(2);
 }

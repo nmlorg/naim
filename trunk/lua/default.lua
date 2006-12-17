@@ -166,7 +166,10 @@ naim.call = function(table, ...)
 			newarg[i],arg = naim.internal.pullword(arg)
 			i = i+1
 		end
-		newarg[i] = arg
+		assert(#newarg == i-1)
+		if (arg ~= nil) then
+			newarg[i] = arg
+		end
 		arg = newarg
 	end
 
