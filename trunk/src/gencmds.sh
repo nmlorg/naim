@@ -11,7 +11,7 @@ echo '
 #define CONIOFUNC2(x)	void x CONIOARGS
 
 #ifndef CONIOCPP
-# define CONIOFUNC(x)	void conio_ ## x CONIOARGS
+# define CONIOFUNC(x)	void ua_ ## x CONIOARGS
 # define CONIOALIA(x)
 # define CONIOWHER(x)
 # define CONIODESC(x)
@@ -30,7 +30,7 @@ echo '#include "commands.c"' \
 echo '
 #endif
 
-#ifndef CONIO_C
+#ifndef COMMANDS_C
 extern cmdar_t cmdar[];
 extern const int cmdc;
 #else
@@ -65,7 +65,7 @@ echo '#include "commands.c"' \
 			minarg = 0;
 			maxarg = 0;
 			funcwhere = "ANYWHERE";
-			printf("	{ \"%s\",	conio_%s,	{", $2, $2);
+			printf("	{ \"%s\",	ua_%s,	{", $2, $2);
 			inalia = 1;
 		} else if ($1 == "WHER")
 			funcwhere = $2;

@@ -96,14 +96,14 @@ static int l_conn_echo(lua_State *L) {
 }
 
 static int l_conn_msg(lua_State *L) {
-	extern void conio_msg(conn_t *conn, int argc, const char **args);
+	extern void ua_msg(conn_t *conn, int argc, const char **args);
 	conn_t *conn = _get_conn_t(L, 1);
-	const char *args[CONIO_MAXPARMS];
-	int	argc = _lua2conio(L, 2, args, CONIO_MAXPARMS);
+	const char *args[UA_MAXPARMS];
+	int	argc = _lua2conio(L, 2, args, UA_MAXPARMS);
 	const char *error;
 
-	if ((error = conio_valid("msg", conn, argc)) == NULL)
-		conio_msg(conn, argc, args);
+	if ((error = ua_valid("msg", conn, argc)) == NULL)
+		ua_msg(conn, argc, args);
 	else {
 		lua_pushstring(L, error);
 		return(lua_error(L));
@@ -158,14 +158,14 @@ static buddywin_t *_get_buddywin_t(lua_State *L, int index) {
 NLUA_STRING_GET(buddywin_t, winname);
 
 static int _nlua_buddywin_t_msg(lua_State *L) {
-	extern void conio_msg(conn_t *conn, int argc, const char **args);
+	extern void ua_msg(conn_t *conn, int argc, const char **args);
 	buddywin_t *bwin = _get_buddywin_t(L, 1);
-	const char *args[CONIO_MAXPARMS] = { bwin->winname };
-	int	argc = _lua2conio(L, 2, args+1, CONIO_MAXPARMS-1)+1;
+	const char *args[UA_MAXPARMS] = { bwin->winname };
+	int	argc = _lua2conio(L, 2, args+1, UA_MAXPARMS-1)+1;
 	const char *error;
 
-	if ((error = conio_valid("msg", bwin->conn, argc)) == NULL)
-		conio_msg(bwin->conn, argc, args);
+	if ((error = ua_valid("msg", bwin->conn, argc)) == NULL)
+		ua_msg(bwin->conn, argc, args);
 	else {
 		lua_pushstring(L, error);
 		return(lua_error(L));

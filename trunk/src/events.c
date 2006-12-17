@@ -65,7 +65,7 @@ static int events_autoreconnect(void *userdata, time_t now, double nowf) {
 	do {
 		if ((conn->online == -1) && (getvar_int(conn, "autoreconnect") != 0)) {
 			echof(conn, NULL, "Attempting to reconnect...\n");
-			conio_connect(conn, 0, NULL);
+			ua_connect(conn, 0, NULL);
 		}
 	} while ((conn = conn->next) != curconn);
 

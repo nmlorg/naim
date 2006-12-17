@@ -19,7 +19,7 @@
 #endif
 
 #ifndef CONIOCPP
-# define CONIO_C
+# define COMMANDS_C
 # include "conio_cmds.h"
 #endif
 
@@ -272,7 +272,7 @@ CONIODESC(Disconnect and exit naim)
 	conn_t	*c;
 
 	if (script_getvar_int("autosave"))
-		conio_save(conn, 0, NULL);
+		ua_save(conn, 0, NULL);
 
 	c = conn;
 	do {
@@ -829,7 +829,7 @@ void	naim_eval(const char *_str) {
 	while ((p = strrchr(str, ';')) != NULL)
 		*p = 0;
 	for (p = str; *p != 0; p += strlen(p)+1)
-		conio_handlecmd(script_expand(p));
+		ua_handlecmd(script_expand(p));
 	free(str);
 }
 
@@ -848,7 +848,7 @@ CONIOAREQ(string,message)
 CONIOWHER(NOTSTATUS)
 	const char *newargs[2] = { conn->curbwin->winname, args[0] };
 
-	conio_msg(conn, 2, newargs);
+	ua_msg(conn, 2, newargs);
 }
 
 CONIOFUNC(me) {
@@ -887,7 +887,7 @@ CONIOAREQ(account,name)
 	int	added;
 
 	if (bgetanywin(conn, args[0]) != NULL) {
-		conio_jump(conn, argc, args);
+		ua_jump(conn, argc, args);
 		return;
 	}
 
@@ -907,7 +907,7 @@ CONIOAREQ(buddy,name)
 	buddylist_t *blist;
 
 	if (bgetanywin(conn, args[0]) != NULL) {
-		conio_jump(conn, argc, args);
+		ua_jump(conn, argc, args);
 		return;
 	}
 
@@ -962,9 +962,9 @@ CONIODESC(Close stale windows for offline buddies)
 
 		_args[0] = bwin->winname;
 		if ((bwin->et == BUDDY) && (bwin->e.buddy->offline > 0) && (bwin->pouncec == 0))
-			conio_close(conn, 1, _args);
+			ua_close(conn, 1, _args);
 		else if ((bwin->et == CHAT) && (bwin->e.chat->offline > 0))
-			conio_close(conn, 1, _args);
+			ua_close(conn, 1, _args);
 		bwin = bnext;
 	}
 }
@@ -1227,12 +1227,12 @@ CONIODESC(Change the real name for a buddy)
 CONIOAREQ(account,name)
 CONIOAOPT(string,realname)
 	if (argc == 1)
-		conio_addbuddy(conn, 1, args);
+		ua_addbuddy(conn, 1, args);
 	else {
 		buddylist_t *blist = rgetlist(conn, args[0]);
 		const char *_args[] = { args[0], (blist == NULL)?"Buddy":USER_GROUP(blist), args[1] };
 
-		conio_addbuddy(conn, 3, _args);
+		ua_addbuddy(conn, 3, _args);
 	}
 }
 
@@ -1241,12 +1241,12 @@ CONIODESC(Change the group membership for a buddy)
 CONIOAREQ(account,account)
 CONIOAOPT(string,group)
 	if (argc == 1)
-		conio_addbuddy(conn, 1, args);
+		ua_addbuddy(conn, 1, args);
 	else {
 		buddylist_t *blist = rgetlist(conn, args[0]);
 		const char *_args[] = { args[0], args[1], (blist == NULL)?NULL:USER_NAME(blist) };
 
-		conio_addbuddy(conn, 3, _args);
+		ua_addbuddy(conn, 3, _args);
 	}
 }
 
@@ -1435,20 +1435,20 @@ CONIOAOPT(string,reason)
 			const char
 				*newargs[] = { args[0]+1 };
 
-			conio_unblock(conn, 1, newargs);
+			ua_unblock(conn, 1, newargs);
 		} else {
 			echof(conn, NULL, "Now ignoring <font color=\"#00FFFF\">%s</font>.\n", args[0]);
 			raddidiot(conn, args[0], NULL);
 		}
 	} else if (strcasecmp(args[1], "block") == 0)
-		conio_block(conn, 1, args);
+		ua_block(conn, 1, args);
 	else {
 		echof(conn, NULL, "Now ignoring <font color=\"#00FFFF\">%s</font> (%s).\n", args[0], args[1]);
 		raddidiot(conn, args[0], args[1]);
 	}
 }
 
-//extern void	(*conio_chains)();
+//extern void	(*ua_chains)();
 CONIOFUNC(chains) {
 CONIOALIA(tables)
 CONIODESC(Manipulate data control tables)
@@ -1464,7 +1464,7 @@ CONIOAOPT(string,chain)
 		for (i = 0; i < sizeof(chains)/sizeof(*chains); i++) {
 			if (i > 0)
 				echof(conn, NULL, "-\n");
-			conio_chains(conn, 1, chains+i);
+			ua_chains(conn, 1, chains+i);
 		}
 		echof(conn, NULL, "See <font color=\"#00FF00\">/help chains</font> for more information.\n");
 		return;
@@ -1612,7 +1612,7 @@ CONIOAOPT(string,action)
 }
 
 static html_clean_t
-	conio_filter_defaultar[] = {
+	ua_filter_defaultar[] = {
 	{ "u",		"you"		},
 	{ "ur",		"your"		},
 	{ "lol",	"<grin>"	},
@@ -1628,15 +1628,15 @@ static html_clean_t
 	{ "b4",		"before"	},
 };
 
-static void conio_filter_defaults(void) {
+static void ua_filter_defaults(void) {
 	int	i;
 
-	for (i = 0; i < sizeof(conio_filter_defaultar)/sizeof(*conio_filter_defaultar); i++) {
+	for (i = 0; i < sizeof(ua_filter_defaultar)/sizeof(*ua_filter_defaultar); i++) {
 		char	buf[1024];
 
-		snprintf(buf, sizeof(buf), "filter replace %s %s", conio_filter_defaultar[i].from,
-			conio_filter_defaultar[i].replace);
-		conio_handlecmd(buf);
+		snprintf(buf, sizeof(buf), "filter replace %s %s", ua_filter_defaultar[i].from,
+			ua_filter_defaultar[i].replace);
+		ua_handlecmd(buf);
 	}
 }
 
@@ -1897,7 +1897,7 @@ CONIOAOPT(string,dummy)
 			args[0], args[1], args[2]);
 }
 
-static void conio_listprotocols(conn_t *conn, const char *prefix) {
+static void ua_listprotocols(conn_t *conn, const char *prefix) {
 	int	i;
 	const char *str;
 
@@ -1915,7 +1915,7 @@ CONIOAOPT(string,protocol)
 	const char *protostr;
 
 	if (argc == 0) {
-		conio_listprotocols(conn, NULL);
+		ua_listprotocols(conn, NULL);
 		echof(conn, NULL, "See <font color=\"#00FF00\">/help newconn</font> for more help.\n");
 		return;
 	} else if (argc == 1) {
@@ -1929,7 +1929,7 @@ CONIOAOPT(string,protocol)
 			protostr = "SLCP";
 		else {
 			echof(conn, "NEWCONN", "Please supply a protocol name:");
-			conio_listprotocols(conn, "NEWCONN");
+			ua_listprotocols(conn, "NEWCONN");
 			echof(conn, "NEWCONN", "See <font color=\"#00FF00\">/help newconn</font> for more help.\n");
 			return;
 		}
@@ -1950,7 +1950,7 @@ CONIOAOPT(string,protocol)
 
 	if ((proto = firetalk_find_protocol(protostr)) == -1) {
 		echof(conn, "NEWCONN", "Invalid protocol %s.", protostr);
-		conio_listprotocols(conn, "NEWCONN");
+		ua_listprotocols(conn, "NEWCONN");
 		echof(conn, "NEWCONN", "See <font color=\"#00FF00\">/help newconn</font> for more help.\n");
 		return;
 	}
@@ -2044,7 +2044,7 @@ CONIOAOPT(int,port)
 	na[1] = args[0];
 	if (argc == 2);
 		na[2] = args[1];
-	conio_connect(conn, argc+1, na);
+	ua_connect(conn, argc+1, na);
 }
 
 CONIOFUNC(disconnect) {
@@ -2125,7 +2125,7 @@ static int exec_read(int fd, int sayit, conn_t *conn) {
 
 			snprintf(buf2, sizeof(buf2), "/m \"%s\" %s",
 				conn->curbwin->winname, ptr);
-			conio_handleline(buf2);
+			ua_handleline(buf2);
 		}
 		ptr = n+1;
 	}
@@ -2137,7 +2137,7 @@ static int exec_read(int fd, int sayit, conn_t *conn) {
 
 			snprintf(buf2, sizeof(buf2), "/m \"%s\" %s",
 				conn->curbwin->winname, ptr);
-			conio_handleline(buf2);
+			ua_handleline(buf2);
 		}
 	}
 	return(0);
@@ -2394,7 +2394,7 @@ CONIOAOPT(int,height)
 	echof(conn, NULL, "Windows resized.");
 }
 
-//extern void	(*conio_status)();
+//extern void	(*ua_status)();
 CONIOFUNC(status) {
 CONIODESC(Connection status report)
 CONIOAOPT(string,connection)
@@ -2416,11 +2416,11 @@ CONIOAOPT(string,connection)
 	if (argc == 0) {
 		const char *args[] = { conn->winname };
 
-		conio_status(conn, -1, args);
+		ua_status(conn, -1, args);
 		for (c = conn->next; c != conn; c = c->next) {
 			args[0] = c->winname;
 			echof(conn, NULL, "-");
-			conio_status(conn, -1, args);
+			ua_status(conn, -1, args);
 		}
 		echof(conn, NULL, "See <font color=\"#00FF00\">/help status</font> for more information.\n");
 		return;
@@ -2494,7 +2494,7 @@ CONIOAOPT(string,connection)
 }
 
 
-static const char *conio_valid_where(const cmdar_t *cmd, conn_t *conn) {
+static const char *ua_valid_where(const cmdar_t *cmd, conn_t *conn) {
 	if ((cmd->where != C_STATUS) && (cmd->where != C_ANYWHERE) && !inconn) {
 		if (cmd->where == C_INCHAT)
 			return("You must be in a chat.");
@@ -2512,7 +2512,7 @@ static const char *conio_valid_where(const cmdar_t *cmd, conn_t *conn) {
 	return(NULL);
 }
 
-static const char *conio_valid_args(const cmdar_t *cmd, const int argc) {
+static const char *ua_valid_args(const cmdar_t *cmd, const int argc) {
 	static char buf[1024];
 
 	if (argc < cmd->minarg) {
@@ -2526,7 +2526,7 @@ static const char *conio_valid_args(const cmdar_t *cmd, const int argc) {
 	return(NULL);
 }
 
-const cmdar_t *conio_find_cmd(const char *cmd) {
+const cmdar_t *ua_find_cmd(const char *cmd) {
 	int	i;
 
 	for (i = 0; i < cmdc; i++)
@@ -2546,7 +2546,7 @@ const cmdar_t *conio_find_cmd(const char *cmd) {
 	return(NULL);
 }
 
-const cmdar_t *conio_findn_cmd(const char *cmd, const int len) {
+const cmdar_t *ua_findn_cmd(const char *cmd, const int len) {
 	int	i;
 
 	for (i = 0; i < cmdc; i++)
@@ -2566,23 +2566,23 @@ const cmdar_t *conio_findn_cmd(const char *cmd, const int len) {
 	return(NULL);
 }
 
-const char *conio_valid(const char *cmd, conn_t *conn, const int argc) {
+const char *ua_valid(const char *cmd, conn_t *conn, const int argc) {
 	const char *error;
 	const cmdar_t *com;
 
-	if ((com = conio_find_cmd(cmd)) == NULL)
+	if ((com = ua_find_cmd(cmd)) == NULL)
 		return("Unknown command.");
-	if ((error = conio_valid_where(com, conn)) != NULL)
+	if ((error = ua_valid_where(com, conn)) != NULL)
 		return(error);
-	if ((error = conio_valid_args(com, argc)) != NULL)
+	if ((error = ua_valid_args(com, argc)) != NULL)
 		return(error);
 	return(NULL);
 }
 
-void	conio_handlecmd(const char *buf) {
+void	ua_handlecmd(const char *buf) {
 	conn_t	*c = NULL;
 	char	line[1024], *cmd, *arg, *tmp;
-	const char *args[CONIO_MAXPARMS], *error;
+	const char *args[UA_MAXPARMS], *error;
 	const cmdar_t *com;
 	int	a = 0, builtinonly = 0;
 
@@ -2639,13 +2639,13 @@ void	conio_handlecmd(const char *buf) {
 			return;
 	}
 
-	if ((com = conio_find_cmd(cmd)) == NULL) {
+	if ((com = ua_find_cmd(cmd)) == NULL) {
 		echof(c, cmd, "Unknown command.\n");
 		return;
 	}
-	assert(com->maxarg <= CONIO_MAXPARMS);
+	assert(com->maxarg <= UA_MAXPARMS);
 
-	if ((error = conio_valid_where(com, c)) != NULL) {
+	if ((error = ua_valid_where(com, c)) != NULL) {
 		echof(c, com->c, "%s\n", error);
 		return;
 	}
@@ -2656,7 +2656,7 @@ void	conio_handlecmd(const char *buf) {
 			arg = firstwhite(arg);
 	}
 
-	if ((error = conio_valid_args(com, a)) != NULL) {
+	if ((error = ua_valid_args(com, a)) != NULL) {
 		echof(c, com->c, "%s\n", error);
 		return;
 	}
@@ -2664,18 +2664,18 @@ void	conio_handlecmd(const char *buf) {
 	com->func(c, a, args);
 }
 
-void	(*script_client_cmdhandler)(const char *) = conio_handlecmd;
+void	(*script_client_cmdhandler)(const char *) = ua_handlecmd;
 
-void	conio_handleline(const char *line) {
+void	ua_handleline(const char *line) {
 	if (*line == '/')
-		conio_handlecmd(line);
+		ua_handlecmd(line);
 	else if (!inconn)
-		conio_handlecmd(line);
+		ua_handlecmd(line);
 	else {
 		const char *args[] = { NULL, line };
 
 		curconn->curbwin->keepafterso = 1;
-		conio_msg(curconn, 2, args);
+		ua_msg(curconn, 2, args);
 	}
 }
 
@@ -3001,5 +3001,5 @@ const char *conio_tabcomplete(const char *buf, const int bufloc, int *const matc
 }
 
 void	commands_hook_init(void) {
-	conio_filter_defaults();
+	ua_filter_defaults();
 }

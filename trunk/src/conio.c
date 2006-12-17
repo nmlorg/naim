@@ -115,7 +115,7 @@ static void conio_bind_defaults(void) {
 
 		snprintf(buf, sizeof(buf), "bind %s %s", conio_bind_defaultar[i].key,
 			conio_bind_defaultar[i].cmd);
-		conio_handlecmd(buf);
+		ua_handlecmd(buf);
 	}
 }
 
@@ -176,7 +176,7 @@ const char *conio_bind_get_informative(int key) {
 
 		if (end == NULL)
 			end = binding+strlen(binding);
-		if ((cmd = conio_findn_cmd(binding+1, end-(binding+1))) != NULL) {
+		if ((cmd = ua_findn_cmd(binding+1, end-(binding+1))) != NULL) {
 			if (cmd->desc == NULL)
 				return(binding);
 			else {
@@ -664,7 +664,7 @@ static void gotkey_real(int c) {
 				histpos = histc++;
 				histar = realloc(histar, histc*sizeof(*histar));
 				histar[histpos] = NULL;
-				conio_handleline(buf);
+				ua_handleline(buf);
 			  case CONIO_KEY_INPUT_KILL: /* Delete the entire input line */
 				memset(buf, 0, sizeof(buf));
 				inwhite = inpaste =
