@@ -15,7 +15,6 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -67,6 +66,26 @@ typedef struct irc_whois_t {
 		idle;
 } irc_whois_t;
 
+static inline void irc_whois_t_dtor(irc_whois_t *this) {
+	free(this->nickname);
+	free(this->info);
+	memset(this, 0, sizeof(*this));
+}
+
+static inline void irc_whois_t_delete(irc_whois_t *this) {
+	irc_whois_t_dtor(this);
+	free(this);
+}
+
+static inline void irc_whois_t_list_delete(irc_whois_t *head) {
+	if (head != NULL) {
+		irc_whois_t *next = head->next;
+
+		irc_whois_t_delete(head);
+		irc_whois_t_list_delete(next);
+	}
+}
+
 typedef struct firetalk_driver_connection_t {
 	char	*nickname,
 		*password,
@@ -77,6 +96,18 @@ typedef struct firetalk_driver_connection_t {
 		 usesilence:1,	/* are we on a network that understands SILENCE */
 		 identified:1;	/* are we we identified */
 } irc_conn_t;
+
+static inline void irc_conn_t_dtor(irc_conn_t *this) {
+	free(this->nickname);
+	free(this->password);
+	irc_whois_t_list_delete(this->whois_head);
+	memset(this, 0, sizeof(*this));
+}
+
+static inline void irc_conn_t_delete(irc_conn_t *this) {
+	irc_conn_t_dtor(this);
+	free(this);
+}
 
 #if 0
 static const char *const irc_normalize_user_nick(const char *const name) {
@@ -525,39 +556,12 @@ static char *irc_irc_to_html(const char *const string) {
 }
 
 static int irc_internal_disconnect(irc_conn_t *c, const fte_t error) {
-	irc_whois_t *whois_iter, *whois_iter2;
-
 #ifdef DEBUG_ECHO
 	irc_echof(c, "irc_internal_disconnect", "c=%#p, error=%i\n", c, error);
 #endif
 
-	if (c->nickname != NULL) {
-		free(c->nickname);
-		c->nickname = NULL;
-	}
-	if (c->password != NULL) {
-		free(c->password);
-		c->password = NULL;
-	}
-	for (whois_iter = c->whois_head; whois_iter != NULL; whois_iter = whois_iter2) {
-		whois_iter2 = whois_iter->next;
-		whois_iter->next = NULL;
-		if (whois_iter->nickname != NULL) {
-			free(whois_iter->nickname);
-			whois_iter->nickname = NULL;
-		}
-		if (whois_iter->info != NULL) {
-			free(whois_iter->info);
-			whois_iter->info = NULL;
-		}
-		free(whois_iter);
-		whois_iter = NULL;
-	}
-	c->whois_head = NULL;
-
-	c->passchange = 0;
+	irc_conn_t_dtor(c);
 	c->usesilence = 1;
-	c->identified = 0;
 
 	firetalk_callback_disconnect(c, error);
 
@@ -695,8 +699,7 @@ static void irc_destroy_handle(irc_conn_t *c) {
 	if (firetalk_internal_get_connectstate(c) != FCS_NOTCONNECTED)
 		irc_send_printf(c, "QUIT :Handle destroyed");
 	irc_internal_disconnect(c, FE_USERDISCONNECT);
-	free(c);
-	c = NULL;
+	irc_conn_t_delete(c);
 }
 
 static fte_t irc_disconnect(irc_conn_t *c) {
@@ -755,10 +758,7 @@ static fte_t irc_signon(irc_conn_t *c, const char *const nickname) {
 	if (irc_send_printf(c, "NICK %s", nickname) != FE_SUCCESS)
 		return(FE_PACKET);
 
-	free(c->nickname);
-	c->nickname = strdup(nickname);
-	if (c->nickname == NULL)
-		abort();
+	STRREPLACE(c->nickname, nickname);
 
 	return(FE_SUCCESS);
 }
@@ -866,10 +866,7 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 			const char *name = irc_get_nickname(args[0]);
 
 			if (irc_compare_nicks(c->nickname, name) == 0) {
-				free(c->nickname);
-				c->nickname = strdup(args[2]);
-				if (c->nickname == NULL)
-					abort();
+				STRREPLACE(c->nickname, args[2]);
 				firetalk_callback_newnick(c, c->nickname);
 			}
 			firetalk_callback_user_nickchanged(c, name, args[2]);
@@ -994,7 +991,7 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 		} else if (strcmp(args[1], "TOPIC") == 0) {
 			firetalk_callback_chat_gottopic(c, args[2], irc_irc_to_html(args[3]), irc_get_nickname(args[0]));
 		} else if (strcmp(args[1], "KICK") == 0) {
-			const char	*name = irc_get_nickname(args[3]);
+			const char *name = irc_get_nickname(args[3]);
 
 			if (irc_compare_nicks(c->nickname, name) == 0) {
 				irc_disc_rem(c, args[2]);
@@ -1049,17 +1046,11 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 					if (irc_compare_nicks(args[3], whoisiter->nickname) == 0) {
 						/* manual whois */
 						firetalk_callback_gotinfo(c, whoisiter->nickname, whoisiter->info, 0, whoisiter->online, whoisiter->idle, whoisiter->flags);
-						free(whoisiter->nickname);
-						whoisiter->nickname = NULL;
-						if (whoisiter->info != NULL) {
-							free(whoisiter->info);
-							whoisiter->info = NULL;
-						}
 						if (whoisiter2)
 							whoisiter2->next = whoisiter->next;
 						else
 							c->whois_head = whoisiter->next;
-						free(whoisiter);
+						irc_whois_t_delete(whoisiter);
 						whoisiter = NULL;
 						break;
 					}
@@ -1075,17 +1066,11 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 				whoisiter2 = NULL;
 				for (whoisiter = c->whois_head; whoisiter != NULL; whoisiter = whoisiter->next) {
 					if (irc_compare_nicks(args[3], whoisiter->nickname) == 0) {
-						free(whoisiter->nickname);
-						whoisiter->nickname = NULL;
-						if (whoisiter->info != NULL) {
-							free(whoisiter->info);
-							whoisiter->info = NULL;
-						}
 						if (whoisiter2)
 							whoisiter2->next = whoisiter->next;
 						else
 							c->whois_head = whoisiter->next;
-						free(whoisiter);
+						irc_whois_t_delete(whoisiter);
 						whoisiter = NULL;
 						firetalk_callback_error(c, FE_BADUSER, args[3], args[4]);
 						break;
@@ -1339,10 +1324,7 @@ static fte_t irc_got_data_connecting(irc_conn_t *c, unsigned char *buffer, uint1
 			  case   1: /* :PREFIX 001 sn :Welcome message */
 				if (strcmp(c->nickname, args[2]) != 0) {
 					firetalk_callback_user_nickchanged(c, c->nickname, args[2]);
-					free(c->nickname);
-					c->nickname = strdup(args[2]);
-					if (c->nickname == NULL)
-						abort();
+					STRREPLACE(c->nickname, args[2]);
 					firetalk_callback_newnick(c, args[2]);
 				}
 				break;
