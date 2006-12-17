@@ -2418,19 +2418,30 @@ CONIOAOPT(string,visibility)
 	}
 }
 
-#undef HAVE_WORKING_FORK
 #ifdef HAVE_WORKING_FORK
-static void exec_read(int _i, int fd, void *_buf, int _buflen) {
-	conn_t	*conn = (conn_t *)_buf;
+typedef struct {
+	int	fd, sayit;
+	conn_t	*conn;
+} execstub_t;
+
+static int exec_preselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
+	execstub_t *execstub = (execstub_t *)userdata;
+
+	if (*maxfd <= execstub->fd)
+		*maxfd = execstub->fd+1;
+	FD_SET(execstub->fd, rfd);
+	FD_SET(execstub->fd, efd);
+	return(HOOK_CONTINUE);
+}
+
+static int exec_read(int fd, int sayit, conn_t *conn) {
 	char	buf[1024], *ptr, *n;
-	int	i, buflen = sizeof(buf),
-		sayit = _buflen;
+	int	i, buflen = sizeof(buf);
 
 	i = read(fd, buf, buflen-1);
 	if (i == 0) {
 		close(fd);
-		mod_fd_unregister(_i);
-		return;
+		return(-1);
 	}
 	buf[i] = 0;
 	ptr = buf;
@@ -2438,7 +2449,7 @@ static void exec_read(int _i, int fd, void *_buf, int _buflen) {
 		*n = 0;
 		if (*(n-1) == '\r')
 			*(n-1) = 0;
-		if ((sayit == 0) || (conn->curbwin == NULL))
+		if (!sayit || (conn->curbwin == NULL))
 			echof(conn, "_", "%s\n", ptr);
 		else {
 			char	buf2[1024];
@@ -2450,7 +2461,7 @@ static void exec_read(int _i, int fd, void *_buf, int _buflen) {
 		ptr = n+1;
 	}
 	if (*ptr != 0) {
-		if ((sayit == 0) || (conn->curbwin == NULL))
+		if (!sayit || (conn->curbwin == NULL))
 			echof(conn, "_", "%s\n", ptr);
 		else {
 			char	buf2[1024];
@@ -2460,6 +2471,21 @@ static void exec_read(int _i, int fd, void *_buf, int _buflen) {
 			conio_handleline(buf2);
 		}
 	}
+	return(0);
+}
+
+static int exec_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd) {
+	execstub_t *execstub = (execstub_t *)userdata;
+
+	if (FD_ISSET(execstub->fd, rfd))
+		if (exec_read(execstub->fd, execstub->sayit, execstub->conn) != 0) {
+			void	*mod = NULL;
+
+			HOOK_DEL(preselect, mod, exec_preselect, execstub);
+			HOOK_DEL(postselect, mod, exec_postselect, execstub);
+			free(execstub);
+		}
+	return(HOOK_CONTINUE);
 }
 
 CONIOFUNC(exec) {
@@ -2470,19 +2496,25 @@ CONIOAREQ(string,command)
 	pid_t	pid;
 
 	if (pipe(pi) != 0) {
-		echof(conn, "EXEC", "Error creating pipe: %s.\n",
-			strerror(errno));
+		echof(conn, "EXEC", "Error creating pipe: %s.\n", strerror(errno));
 		return;
 	}
 	if ((pid = fork()) == -1) {
-		echof(conn, "EXEC", "Error in fork: %s, closing pipe.\n",
-			strerror(errno));
+		echof(conn, "EXEC", "Error in fork: %s, closing pipe.\n", strerror(errno));
 		close(pi[0]);
 		close(pi[1]);
 	} else if (pid > 0) {
+		void	*mod = NULL;
+		execstub_t *execstub;
+
 		close(pi[1]);
-		mod_fd_register(pi[0], (O_RDONLY+1), (char *)conn, sayit,
-			exec_read);
+		if ((execstub = calloc(1, sizeof(*execstub))) == NULL)
+			abort();
+		execstub->fd = pi[0];
+		execstub->sayit = sayit;
+		execstub->conn = conn;
+		HOOK_ADD(preselect, mod, exec_preselect, 100, execstub);
+		HOOK_ADD(postselect, mod, exec_postselect, 100, execstub);
 	} else {
 		char	*exec_args[] = { "/bin/sh", "-c", NULL, NULL };
 
