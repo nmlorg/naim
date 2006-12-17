@@ -1,5 +1,5 @@
 function naim.printtree(n)
-	visited = {}
+	local visited = {}
 
 	function doprint(t, n, depth)
 		function printkey(k)

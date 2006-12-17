@@ -296,34 +296,34 @@ naim.commands.help = {
 }
 
 naim.hooks.add('proto_chat_joined', function(conn, chat)
-	conn.groups[chat] = {
+	conn.groups[string.lower(chat)] = {
 		members = {},
 	}
 end, 100)
 
 naim.hooks.add('proto_chat_left', function(conn, chat)
-	conn.groups[chat] = nil
+	conn.groups[string.lower(chat)] = nil
 end, 100)
 
 naim.hooks.add('proto_chat_kicked', function(conn, chat)
-	conn.groups[chat] = nil
+	conn.groups[string.lower(chat)] = nil
 end, 100)
 
 naim.hooks.add('proto_chat_user_joined', function(conn, chat, who, extra)
-	conn.groups[chat].members[who] = {}
+	conn.groups[string.lower(chat)].members[who] = {}
 end, 100)
 
 naim.hooks.add('proto_chat_user_left', function(conn, chat, who, reason)
-	conn.groups[chat].members[who] = nil
+	conn.groups[string.lower(chat)].members[who] = nil
 end, 100)
 
 naim.hooks.add('proto_chat_user_kicked', function(conn, chat, who, reason)
-	conn.groups[chat].members[who] = nil
+	conn.groups[string.lower(chat)].members[who] = nil
 end, 100)
 
 naim.hooks.add('proto_chat_user_nickchanged', function(conn, chat, who, newnick)
-	conn.groups[chat].members[newnick] = conn.groups[chat].members[who]
-	conn.groups[chat].members[who] = nil
+	conn.groups[string.lower(chat)].members[newnick] = conn.groups[string.lower(chat)].members[who]
+	conn.groups[string.lower(chat)].members[who] = nil
 end, 100)
 
 naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
