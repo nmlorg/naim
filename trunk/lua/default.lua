@@ -1,14 +1,16 @@
-function insensitive_index(t, s)
-	s = s:lower()
+naim.internal.insensitive_index = {
+	__index = function(t, s)
+		s = s:lower()
 
-	for k,v in pairs(t) do
-		if k:lower() == s then
-			return v
+		for k,v in pairs(t) do
+			if k:lower() == s then
+				return v
+			end
 		end
-	end
-end
+	end,
+}
 
-setmetatable(naim.commands, { __index = insensitive_index })
+setmetatable(naim.commands, naim.internal.insensitive_index)
 
 function naim.prototypes.windows.event(window, e, s)
 	if window.eventtab and window.eventtab[e] then
@@ -219,9 +221,9 @@ function naim.internal.newconn(name, handle)
 		buddies = {},
 		groups = {},
 	}
-	setmetatable(naim.connections[name].windows, { __index = insensitive_index })
-	setmetatable(naim.connections[name].buddies, { __index = insensitive_index })
-	setmetatable(naim.connections[name].groups, { __index = insensitive_index })
+	setmetatable(naim.connections[name].windows, naim.internal.insensitive_index)
+	setmetatable(naim.connections[name].buddies, naim.internal.insensitive_index)
+	setmetatable(naim.connections[name].groups, naim.internal.insensitive_index)
 	setmetatable(naim.connections[name], naim.internal.rwmetatable(naim.prototypes.connections))
 	setmetatable(naim.connections, naim.internal.rometatable("connections"))
 end
@@ -632,7 +634,9 @@ end, 100)
 
 naim.hooks.add('proto_disconnected', function(conn, errorcode)
 	conn.online = nil
+
 	conn.groups = {}
+	setmetatable(naim.connections[name].groups, naim.internal.insensitive_index)
 
 	for k,buddy in pairs(conn.buddies) do
 		buddy.session = nil
