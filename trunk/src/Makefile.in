@@ -63,17 +63,18 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @CYGWIN_TRUE@libnaim_core_la_DEPENDENCIES = ../lua/libnlua.la
 am__libnaim_core_la_SOURCES_DIST = alias.c atomizer.c buddy.c cmdar.c \
 	commands.c conio.c echof.c events.c firebind.c fireio.c \
-	hamster.c hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c \
-	rodents.c set.c win.c
+	hamster.c hwprintf.c linux_vsprintf.c logging.c main.c \
+	naim-int.h rc.c rodents.c set.c win.c
 am__objects_1 = libnaim_core_la-alias.lo libnaim_core_la-atomizer.lo \
 	libnaim_core_la-buddy.lo libnaim_core_la-cmdar.lo \
 	libnaim_core_la-commands.lo libnaim_core_la-conio.lo \
 	libnaim_core_la-echof.lo libnaim_core_la-events.lo \
 	libnaim_core_la-firebind.lo libnaim_core_la-fireio.lo \
 	libnaim_core_la-hamster.lo libnaim_core_la-hwprintf.lo \
-	libnaim_core_la-linux_vsprintf.lo libnaim_core_la-main.lo \
-	libnaim_core_la-rc.lo libnaim_core_la-rodents.lo \
-	libnaim_core_la-set.lo libnaim_core_la-win.lo
+	libnaim_core_la-linux_vsprintf.lo libnaim_core_la-logging.lo \
+	libnaim_core_la-main.lo libnaim_core_la-rc.lo \
+	libnaim_core_la-rodents.lo libnaim_core_la-set.lo \
+	libnaim_core_la-win.lo
 @CYGWIN_TRUE@am_libnaim_core_la_OBJECTS = $(am__objects_1)
 libnaim_core_la_OBJECTS = $(am_libnaim_core_la_OBJECTS)
 @CYGWIN_TRUE@am_libnaim_core_la_rpath = -rpath $(libdir)
@@ -81,17 +82,17 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__naim_SOURCES_DIST = alias.c atomizer.c buddy.c cmdar.c commands.c \
 	conio.c echof.c events.c firebind.c fireio.c hamster.c \
-	hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c rodents.c \
-	set.c win.c main_stub.c
+	hwprintf.c linux_vsprintf.c logging.c main.c naim-int.h rc.c \
+	rodents.c set.c win.c main_stub.c
 am__objects_2 = naim-alias.$(OBJEXT) naim-atomizer.$(OBJEXT) \
 	naim-buddy.$(OBJEXT) naim-cmdar.$(OBJEXT) \
 	naim-commands.$(OBJEXT) naim-conio.$(OBJEXT) \
 	naim-echof.$(OBJEXT) naim-events.$(OBJEXT) \
 	naim-firebind.$(OBJEXT) naim-fireio.$(OBJEXT) \
 	naim-hamster.$(OBJEXT) naim-hwprintf.$(OBJEXT) \
-	naim-linux_vsprintf.$(OBJEXT) naim-main.$(OBJEXT) \
-	naim-rc.$(OBJEXT) naim-rodents.$(OBJEXT) naim-set.$(OBJEXT) \
-	naim-win.$(OBJEXT)
+	naim-linux_vsprintf.$(OBJEXT) naim-logging.$(OBJEXT) \
+	naim-main.$(OBJEXT) naim-rc.$(OBJEXT) naim-rodents.$(OBJEXT) \
+	naim-set.$(OBJEXT) naim-win.$(OBJEXT)
 @CYGWIN_FALSE@am__objects_3 = $(am__objects_2)
 @CYGWIN_TRUE@am__objects_3 = naim-main_stub.$(OBJEXT)
 am_naim_OBJECTS = $(am__objects_3)
@@ -266,6 +267,7 @@ NAIM_CORE = \
 	hamster.c \
 	hwprintf.c \
 	linux_vsprintf.c \
+	logging.c \
 	main.c \
 	naim-int.h \
 	rc.c \
@@ -480,6 +482,9 @@ libnaim_core_la-hwprintf.lo: hwprintf.c
 libnaim_core_la-linux_vsprintf.lo: linux_vsprintf.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-linux_vsprintf.lo `test -f 'linux_vsprintf.c' || echo '$(srcdir)/'`linux_vsprintf.c
 
+libnaim_core_la-logging.lo: logging.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-logging.lo `test -f 'logging.c' || echo '$(srcdir)/'`logging.c
+
 libnaim_core_la-main.lo: main.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-main.lo `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
@@ -572,6 +577,12 @@ naim-linux_vsprintf.o: linux_vsprintf.c
 
 naim-linux_vsprintf.obj: linux_vsprintf.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-linux_vsprintf.obj `if test -f 'linux_vsprintf.c'; then $(CYGPATH_W) 'linux_vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/linux_vsprintf.c'; fi`
+
+naim-logging.o: logging.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-logging.o `test -f 'logging.c' || echo '$(srcdir)/'`logging.c
+
+naim-logging.obj: logging.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-logging.obj `if test -f 'logging.c'; then $(CYGPATH_W) 'logging.c'; else $(CYGPATH_W) '$(srcdir)/logging.c'; fi`
 
 naim-main.o: main.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c

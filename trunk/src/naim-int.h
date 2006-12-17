@@ -273,7 +273,6 @@ char	*firstwhite(char *string) G_GNUC_INTERNAL;
 char	*atom(char *string) G_GNUC_INTERNAL;
 
 /* buddy.c */
-const unsigned char *naim_normalize(const unsigned char *const name) G_GNUC_INTERNAL;
 void	playback(conn_t *const conn, buddywin_t *const, const int) G_GNUC_INTERNAL;
 void	bcoming(conn_t *conn, const char *) G_GNUC_INTERNAL;
 void	bgoing(conn_t *conn, const char *) G_GNUC_INTERNAL;
