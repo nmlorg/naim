@@ -1,3 +1,4 @@
+=Naim FAQ=
 == General ==
 === How do I send an IM? &amp;bull; How do I add someone to my buddy list? ===
 
