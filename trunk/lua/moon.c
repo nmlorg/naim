@@ -38,7 +38,7 @@ static int _nlua_curwin(lua_State *L) {
 	if (!inconn)
 		_push_conn_t(L, curconn);
 	else if (curconn->curbwin != NULL)
-		_get_global_ent(L, "naim.connections", curconn->winname, "windows", curconn->curbwin->winname, NULL);
+		_get_global_ent(L, "naim", "connections", curconn->winname, "windows", curconn->curbwin->winname, NULL);
 	else
 		lua_pushnil(L);
 	return(1);

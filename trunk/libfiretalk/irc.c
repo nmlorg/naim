@@ -91,7 +91,7 @@ typedef struct firetalk_driver_connection_t {
 
 static inline void irc_conn_t_ctor(irc_conn_t *this) {
 	memset(this, 0, sizeof(*this));
-	this->chanmodes = strdup("b,k,l,imnpst");
+	this->chanmodes = strdup("beI,k,l,imnpsta");
 	this->chanprefix = strdup("(ov)@+");
 	this->maxmodes = 3;
 }
@@ -789,6 +789,25 @@ static void irc_addwhois(irc_conn_t *c, const char *const name, const char *cons
 		}
 }
 
+static int mode_has_arg(const char *chanmodes, const char mode, const int dir) {
+	char	*m = strchr(chanmodes, mode), *c1, *c2 = NULL, *c3 = NULL;
+
+	if (m == NULL)
+		return(-1);
+
+	if ((c1 = strchr(chanmodes, ',')) != NULL)
+		if ((c2 = strchr(c1+1, ',')) != NULL)
+			c3 = strchr(c2+1, ',');
+
+	if (m < c1)
+		return(2);
+	if (m < c2)
+		return(1);
+	if ((m < c3) && (dir == 1))
+		return(1);
+	return(0);
+}
+
 static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 	irc_whois_t *whoisiter, *whoisiter2;
 	char	*tempchr;
@@ -1069,7 +1088,6 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 			int	loc, arg = 4, dir = 1;
 
 			for (loc = 0; args[3][loc] != 0; loc++) {
-				char	*tmp;
 				int	arged;
 
 				if (args[3][loc] == '+') {
@@ -1080,13 +1098,13 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 					continue;
 				}
 
-				if (((tmp = strchr(c->chanmodes, args[3][loc])) == NULL) && (strchr(c->chanprefix, args[3][loc]) == NULL))
-					break;
+				arged = mode_has_arg(c->chanmodes, args[3][loc], dir);
 
-				if ((tmp == NULL) || (tmp[1] == ','))
+				if (arged == -1) {
+					if (strchr(c->chanprefix, args[3][loc]) == NULL)
+						break;
 					arged = 1;
-				else
-					arged = 0;
+				}
 
 				switch (args[3][loc]) {
 				  case 'o':
