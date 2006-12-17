@@ -455,6 +455,34 @@ nFIRE_HANDLER(naim_buddyremoved) {
 	}
 }
 
+nFIRE_HANDLER(naim_denyadded) {
+	conn_t		*conn = (conn_t *)client;
+	va_list		msg;
+	const char	*screenname;
+
+	va_start(msg, client);
+	screenname = va_arg(msg, const char *);
+	va_end(msg);
+
+	status_echof(conn, "Added <font color=\"#00FFFF\">%s</font> to your block list.\n", screenname);
+
+	raddidiot(conn, screenname, "block");
+}
+
+nFIRE_HANDLER(naim_denyremoved) {
+	conn_t		*conn = (conn_t *)client;
+	va_list		msg;
+	const char	*screenname;
+
+	va_start(msg, client);
+	screenname = va_arg(msg, const char *);
+	va_end(msg);
+
+	status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> from your block list.\n", screenname);
+
+	rdelidiot(conn, screenname);
+}
+
 HOOK_DECLARE(proto_user_onlineval);
 
 nFIRE_HANDLER(naim_buddy_coming) {
@@ -2122,6 +2150,10 @@ conn_t	*naim_newconn(int proto) {
 			naim_buddyadded);
 		firetalk_register_callback(conn->conn, FC_IM_BUDDYREMOVED,
 			naim_buddyremoved);
+		firetalk_register_callback(conn->conn, FC_IM_DENYADDED,
+			naim_denyadded);
+		firetalk_register_callback(conn->conn, FC_IM_DENYREMOVED,
+			naim_denyremoved);
 		firetalk_register_callback(conn->conn, FC_IM_BUDDYONLINE,
 			naim_buddy_coming);
 		firetalk_register_callback(conn->conn, FC_IM_BUDDYOFFLINE,

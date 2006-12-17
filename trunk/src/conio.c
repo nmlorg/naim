@@ -1119,8 +1119,8 @@ CONIOAREQ(buddy,name)
 
 		blist = rgetlist(conn, args[0]);
 		if (blist == NULL) {
-			blist = raddbuddy(conn, args[0], "dummy", NULL);
-			firetalk_im_add_buddy(conn->conn, args[0], DEFAULT_GROUP, NULL);
+			blist = raddbuddy(conn, args[0], DEFAULT_GROUP, NULL);
+			firetalk_im_add_buddy(conn->conn, args[0], USER_GROUP(blist), NULL);
 			added = 1;
 		} else
 			added = 0;
@@ -1619,16 +1619,10 @@ CONIOFUNC(block) {
 CONIODESC(Server-enforced /ignore)
 CONIOAREQ(buddy,name)
 CONIOAOPT(string,reason)
-	if (conn->online > 0) {
-		fte_t	ret;
+	fte_t	ret;
 
-		if ((ret = firetalk_im_add_deny(conn->conn, args[0])) != FE_SUCCESS)
-			echof(conn, "BLOCK", "Unable to block %s: %s.\n", args[0], firetalk_strerror(ret));
-		else
-			echof(conn, NULL, "Now blocking <font color=\"#00FFFF\">%s</font>.\n", args[0]);
-	} else
-		echof(conn, NULL, "Now blocking <font color=\"#00FFFF\">%s</font>.\n", args[0]);
-	raddidiot(conn, args[0], "block");
+	if ((ret = firetalk_im_add_deny(conn->conn, args[0])) != FE_SUCCESS)
+		echof(conn, "BLOCK", "Unable to block %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
 CONIOFUNC(ignore) {

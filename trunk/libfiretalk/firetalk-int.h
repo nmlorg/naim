@@ -222,6 +222,8 @@ void firetalk_callback_im_buddyonline(client_t c, const char *const nickname, co
 void firetalk_callback_im_buddyaway(client_t c, const char *const nickname, const int away);
 void firetalk_callback_buddyadded(client_t c, const char *const name, const char *const group, const char *const friendly);
 void firetalk_callback_buddyremoved(client_t c, const char *const name, const char *const group);
+void firetalk_callback_denyadded(client_t c, const char *const name);
+void firetalk_callback_denyremoved(client_t c, const char *const name);
 void firetalk_callback_typing(client_t c, const char *const name, const int typing);
 void firetalk_callback_capabilities(client_t c, char const *const nickname, const char *const caps);
 void firetalk_callback_warninfo(client_t c, char const *const nickname, const long warnval);
