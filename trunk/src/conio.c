@@ -2812,13 +2812,78 @@ CONIOAOPT(string,connection)
 }
 
 
+static const char *conio_valid_where(const cmdar_t *cmd, conn_t *conn) {
+	if ((cmd->where != C_STATUS) && (cmd->where != C_ANYWHERE) && !inconn) {
+		if (cmd->where == C_INCHAT)
+			return("You must be in a chat.");
+		else if (cmd->where == C_INUSER)
+			return("You must be in a query.");
+		else
+			return("You can not be in status.");
+	} else if ((cmd->where == C_STATUS) && inconn) {
+		assert(curconn->curbwin != NULL);
+		return("You must be in status.");
+	} else if ((cmd->where == C_INUSER) && (conn->curbwin->et == CHAT))
+		return("You must be in a query.");
+	else if ((cmd->where == C_INCHAT) && (conn->curbwin->et != CHAT))
+		return("You must be in a chat.");
+	return(NULL);
+}
+
+static const char *conio_valid_args(const cmdar_t *cmd, const int argc) {
+	static char buf[1024];
+
+	if (argc < cmd->minarg) {
+		snprintf(buf, sizeof(buf), "Command requires at least %i arguments.", cmd->minarg);
+		return(buf);
+	}
+	if (argc > cmd->maxarg) {
+		snprintf(buf, sizeof(buf), "Command requires at most %i arguments.", cmd->maxarg);
+		return(buf);
+	}
+	return(NULL);
+}
+
+static const cmdar_t *conio_find_cmd(const char *cmd) {
+	int	i;
+
+	for (i = 0; i < cmdc; i++)
+		if (strcasecmp(cmdar[i].c, cmd) == 0)
+			break;
+		else {
+			int	j;
+
+			for (j = 0; cmdar[i].aliases[j] != NULL; j++)
+				if (strcasecmp(cmdar[i].aliases[j], cmd) == 0)
+					break;
+			if (cmdar[i].aliases[j] != NULL)
+				break;
+		}
+	if (i < cmdc)
+		return(&(cmdar[i]));
+	return(NULL);
+}
+
+const char *conio_valid(const char *cmd, conn_t *conn, const int argc) {
+	const char *error;
+	const cmdar_t *com;
+
+	if ((com = conio_find_cmd(cmd)) == NULL)
+		return("Unknown command.");
+	if ((error = conio_valid_where(com, conn)) != NULL)
+		return(error);
+	if ((error = conio_valid_args(com, argc)) != NULL)
+		return(error);
+	return(NULL);
+}
 
 HOOK_DECLARE(getcmd);
 void	conio_handlecmd(const char *buf) {
 	conn_t	*c = NULL;
 	char	line[1024], *cmd, *arg, *tmp;
-	const char	*args[CONIO_MAXPARMS];
-	int	i, a = 0;
+	const char *args[CONIO_MAXPARMS], *error;
+	const cmdar_t *com;
+	int	a = 0;
 
 	assert(buf != NULL);
 
@@ -2865,57 +2930,29 @@ void	conio_handlecmd(const char *buf) {
 	if (alias_doalias(cmd, arg) == 1)
 		return;
 
-	for (i = 0; i < cmdc; i++)
-		if (strcasecmp(cmdar[i].c, cmd) == 0)
-			break;
-		else {
-			int	j;
-
-			for (j = 0; cmdar[i].aliases[j] != NULL; j++)
-				if (strcasecmp(cmdar[i].aliases[j], cmd) == 0)
-					break;
-			if (cmdar[i].aliases[j] != NULL)
-				break;
-		}
-	if (i == cmdc) {
+	if ((com = conio_find_cmd(cmd)) == NULL) {
 		HOOK_CALL(getcmd, c, cmd, a, args);
 		return;
 	}
-	assert(cmdar[i].maxarg <= CONIO_MAXPARMS);
+	assert(com->maxarg <= CONIO_MAXPARMS);
 
-	if ((cmdar[i].where != C_STATUS) && (cmdar[i].where != C_ANYWHERE) && !inconn) {
-		if (cmdar[i].where == C_INCHAT)
-			echof(c, cmdar[i].c, "You must be in a chat.\n");
-		else if (cmdar[i].where == C_INUSER)
-			echof(c, cmdar[i].c, "You must be in a query.\n");
-		else
-			echof(c, cmdar[i].c, "You can not be in status.\n");
-		return;
-	} else if ((cmdar[i].where == C_STATUS) && inconn) {
-		assert(curconn->curbwin != NULL);
-		echof(c, cmdar[i].c, "You must be in status.\n");
-		return;
-	} else if ((cmdar[i].where == C_INUSER) && (c->curbwin->et == CHAT)) {
-		echof(c, cmdar[i].c, "You must be in a query.\n");
-		return;
-	} else if ((cmdar[i].where == C_INCHAT) && (c->curbwin->et != CHAT)) {
-		echof(c, cmdar[i].c, "You must be in a chat.\n");
+	if ((error = conio_valid_where(com, c)) != NULL) {
+		echof(c, com->c, "%s\n", error);
 		return;
 	}
 
-	for (a = 0; (a < cmdar[i].maxarg) && (arg != NULL); a++) {
+	for (a = 0; (a < com->maxarg) && (arg != NULL); a++) {
 		args[a] = atom(arg);
-		if (a < cmdar[i].maxarg-1)
+		if (a < com->maxarg-1)
 			arg = firstwhite(arg);
 	}
 
-	if (a < cmdar[i].minarg) {
-		echof(c, cmdar[i].c, "Command requires at least %i arguments.\n",
-			cmdar[i].minarg);
+	if ((error = conio_valid_args(com, a)) != NULL) {
+		echof(c, com->c, "%s\n", error);
 		return;
 	}
 
-	cmdar[i].func(c, a, args);
+	com->func(c, a, args);
 }
 
 void	(*script_client_cmdhandler)(const char *) = conio_handlecmd;
