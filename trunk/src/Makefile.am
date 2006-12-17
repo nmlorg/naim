@@ -33,7 +33,6 @@ NAIM_CORE = \
 	hwprintf.c \
 	linux_vsprintf.c \
 	main.c \
-	modutil.c \
 	naim-int.h \
 	rc.c \
 	rodents.c \

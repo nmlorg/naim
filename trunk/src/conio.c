@@ -1702,7 +1702,7 @@ CONIOAOPT(string,chain)
 	int	i;
 
 	if (argc == 0) {
-		const char *chains[] = { "getcmd", "notify", "periodic", "recvfrom", "sendto", "proto_user_onlineval" };
+		const char *chains[] = { "preselect", "postselect", "getcmd", "notify", "periodic", "recvfrom", "sendto", "proto_user_onlineval" };
 
 		for (i = 0; i < sizeof(chains)/sizeof(*chains); i++) {
 			if (i > 0)
@@ -2421,9 +2421,9 @@ CONIOAOPT(string,visibility)
 	}
 }
 
+#undef HAVE_WORKING_FORK
 #ifdef HAVE_WORKING_FORK
-static void
-	exec_read(int _i, int fd, void *_buf, int _buflen) {
+static void exec_read(int _i, int fd, void *_buf, int _buflen) {
 	conn_t	*conn = (conn_t *)_buf;
 	char	buf[1024], *ptr, *n;
 	int	i, buflen = sizeof(buf),
@@ -2797,18 +2797,6 @@ CONIOAOPT(string,connection)
 }
 
 
-
-static int
-	cmd_unknown(conn_t *c, const char *cmd, int argc, const char **args) {
-	echof(c, cmd, "Unknown command.\n");
-	return(HOOK_STOP);
-}
-
-void	conio_hook_init(void) {
-	void	*mod = NULL;
-
-	HOOK_ADD(getcmd, mod, cmd_unknown, 1000);
-}
 
 HOOK_DECLARE(getcmd);
 void	conio_handlecmd(const char *buf) {
@@ -3798,4 +3786,34 @@ void	gotkey(int c) {
 	FD_SET(STDIN_FILENO, &rfd);
 	while (select(STDIN_FILENO+1, &rfd, NULL, NULL, &timeout) > 0)
 		gotkey_real(nw_getch());
+}
+
+static int cmd_unknown(conn_t *c, const char *cmd, int argc, const char **args) {
+	echof(c, cmd, "Unknown command.\n");
+	return(HOOK_STOP);
+}
+
+static int conio_preselect(fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
+	if (*maxfd <= STDIN_FILENO)
+		*maxfd = STDIN_FILENO+1;
+	FD_SET(STDIN_FILENO, rfd);
+	return(HOOK_CONTINUE);
+}
+
+static int conio_postselect(fd_set *rfd, fd_set *wfd, fd_set *efd) {
+	if (FD_ISSET(STDIN_FILENO, rfd)) {
+		int	k = nw_getch();
+
+		if (k != 0)
+			gotkey(k);
+	}
+	return(HOOK_CONTINUE);
+}
+
+void	conio_hook_init(void) {
+	void	*mod = NULL;
+
+	HOOK_ADD(getcmd, mod, cmd_unknown, 1000);
+	HOOK_ADD(preselect, mod, conio_preselect, 100);
+	HOOK_ADD(postselect, mod, conio_postselect, 100);
 }
