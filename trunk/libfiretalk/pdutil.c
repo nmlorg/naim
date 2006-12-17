@@ -24,7 +24,10 @@
 #include "firetalk-int.h"
 #include "firetalk.h"
 
-#define SOCK_CANARY	1234567890
+static int _sock_canary = 0;
+#define SOCK_CANARY	(&_sock_canary)
+static int _buffer_canary = 0;
+#define BUFFER_CANARY	(&_buffer_canary)
 
 fte_t	firetalk_sock_resolve4(const char *const host, struct in_addr *inet4_ip) {
 	struct hostent *he;
@@ -151,6 +154,15 @@ fte_t	firetalk_sock_connect_host(firetalk_sock_t *sock, const char *const host, 
 	return(firetalk_sock_connect(sock));
 }
 
+uint32_t firetalk_sock_localip4(firetalk_sock_t *sock) {
+	unsigned int l;
+	struct sockaddr_in addr;
+
+	l = (unsigned int)sizeof(struct sockaddr_in);
+	getsockname(sock->fd, (struct sockaddr *)&addr, &l);
+	return(htonl((uint32_t)addr.sin_addr.s_addr));
+}
+
 fte_t	firetalk_sock_send(firetalk_sock_t *sock, const void *const buffer, const int bufferlen) {
 	assert(sock->canary == SOCK_CANARY);
 	assert(sock->state != FCS_NOTCONNECTED);
@@ -201,24 +213,13 @@ static fte_t firetalk_sock_synack(firetalk_sock_t *sock) {
 
 	assert(sock->canary == SOCK_CANARY);
 
-	if (getsockopt(sock->fd, SOL_SOCKET, SO_ERROR, &i, &o)) {
-		firetalk_sock_close(sock);
-//		if (conn->UA[FC_CONNECTFAILED])
-//			conn->UA[FC_CONNECTFAILED](conn, conn->clientstruct, FE_SOCKET, strerror(errno));
+	if (getsockopt(sock->fd, SOL_SOCKET, SO_ERROR, &i, &o))
 		return(FE_SOCKET);
-	}
 
-	if (i != 0) {
-		firetalk_sock_close(sock);
-//		if (conn->UA[FC_CONNECTFAILED])
-//			conn->UA[FC_CONNECTFAILED](conn, conn->clientstruct, FE_CONNECT, strerror(i));
+	if (i != 0)
 		return(FE_CONNECT);
-	}
 
 	sock->state = FCS_SEND_SIGNON;
-//	i = conn->PD->signon(conn, conn->handle, conn->username);
-//	if (i != FE_SUCCESS)
-//		return(i);
 
 	return(FE_SUCCESS);
 }
@@ -229,11 +230,11 @@ static fte_t firetalk_sock_read(firetalk_sock_t *sock, firetalk_buffer_t *buffer
 	assert(sock->canary == SOCK_CANARY);
 
 	/* read data into handle buffer */
-	length = recv(sock->fd, &(buffer->buffer[buffer->bufferpos]), buffer->buffersize - buffer->bufferpos, MSG_DONTWAIT);
+	length = recv(sock->fd, &(buffer->buffer[buffer->pos]), buffer->size - buffer->pos, MSG_DONTWAIT);
 
 	if (length < 1)
 		return(FE_DISCONNECT);
-	buffer->bufferpos += length;
+	buffer->pos += length;
 	buffer->readdata = 1;
 
 	return(FE_SUCCESS);
@@ -243,7 +244,7 @@ fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *m
 	assert(sock->canary == SOCK_CANARY);
 	assert((sock->fd == -1) || (sock->state != FCS_NOTCONNECTED));
 
-//	sock->readdata = 0;
+	buffer->readdata = 0;
 
 	if (sock->fd == -1)
 		return(FE_SUCCESS);
@@ -257,6 +258,30 @@ fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *m
 	else if (FD_ISSET(sock->fd, my_write))
 		return(firetalk_sock_synack(sock));
 	return(FE_SUCCESS);
+}
+
+void	firetalk_buffer_init(firetalk_buffer_t *buffer) {
+	memset(buffer, 0, sizeof(*buffer));
+	buffer->canary = BUFFER_CANARY;
+}
+
+fte_t	firetalk_buffer_alloc(firetalk_buffer_t *buffer, uint16_t size) {
+	void	*ptr;
+
+	assert(buffer->canary == BUFFER_CANARY);
+	assert((buffer->buffer != NULL) || (buffer->size == 0));
+
+	if ((ptr = realloc(buffer->buffer, size)) == NULL)
+		abort();
+	buffer->buffer = ptr;
+	buffer->size = size;
+	return(FE_SUCCESS);
+}
+
+void	firetalk_buffer_free(firetalk_buffer_t *buffer) {
+	free(buffer->buffer);
+	buffer->buffer = NULL;
+	buffer->pos = buffer->size = 0;
 }
 
 void	firetalk_enqueue(firetalk_queue_t *queue, const char *const key, void *data) {

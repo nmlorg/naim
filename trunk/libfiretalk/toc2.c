@@ -2136,9 +2136,9 @@ static fte_t toc_got_data(handle_t *c, unsigned char *buffer, uint16_t *bufferpo
 		c->infoget_head->buflen = strlen(c->infoget_head->buffer);
 		c->infoget_head->next = i;
 		c->infoget_head->state = TOC_STATE_CONNECTING;
-		c->infoget_head->sockfd = firetalk_internal_connect(firetalk_internal_remotehost4(c)
+		c->infoget_head->sockfd = firetalk_internal_connect(firetalk_callback_remotehost4(c)
 #ifdef _FC_USE_IPV6
-				, firetalk_internal_remotehost6(c)
+				, firetalk_callback_remotehost6(c)
 #endif
 				);
 		if (c->infoget_head->sockfd == -1) {

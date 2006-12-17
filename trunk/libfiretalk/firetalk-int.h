@@ -134,7 +134,7 @@ typedef enum {
 } firetalk_sock_state_t;
 
 typedef struct {
-	unsigned long canary;
+	void	*canary;
 	int	fd;
 	firetalk_sock_state_t state;
 	struct sockaddr_in remote_addr;
@@ -146,7 +146,8 @@ typedef struct {
 } firetalk_sock_t;
 
 typedef struct {
-	uint16_t buffersize, bufferpos;
+	void	*canary;
+	uint16_t size, pos;
 	uint8_t	*buffer,
 		readdata:1;
 } firetalk_buffer_t;
@@ -154,20 +155,12 @@ typedef struct {
 typedef struct firetalk_connection_t {
 	struct firetalk_driver_connection_t *handle;
 	struct firetalk_useragent_connection_t *clientstruct;
-	int	connected;
-	struct sockaddr_in remote_addr;
-	struct in_addr local_addr;
-#ifdef _FC_USE_IPV6
-	struct sockaddr_in6 remote_addr6;
-	struct in6_addr local_addr6;
-#endif
+	firetalk_sock_t sock;
+	firetalk_buffer_t buffer;
 	uint32_t localip;
 	int	protocol;
 	char	*username;
-	int	fd;
 	ptrtofnct callbacks[FC_MAX];
-	unsigned char *buffer;
-	uint16_t bufferpos;
 	struct firetalk_connection_t *next, *prev;
 	struct s_firetalk_buddy *buddy_head;
 	struct s_firetalk_deny *deny_head;
@@ -304,10 +297,10 @@ int	firetalk_internal_connect(struct sockaddr_in *inet4_ip
 #endif
 		);
 fte_t	firetalk_internal_resolve4(const char *const host, struct in_addr *inet4_ip);
-struct sockaddr_in *firetalk_internal_remotehost4(struct firetalk_driver_connection_t *c);
+struct sockaddr_in *firetalk_callback_remotehost4(struct firetalk_driver_connection_t *c);
 #ifdef _FC_USE_IPV6
 fte_t	firetalk_internal_resolve6(const char *const host, struct in6_addr *inet6_ip);
-struct sockaddr_in6 *firetalk_internal_remotehost6(struct firetalk_driver_connection_t *c);
+struct sockaddr_in6 *firetalk_callback_remotehost6(struct firetalk_driver_connection_t *c);
 #endif
 firetalk_sock_state_t firetalk_internal_get_connectstate(struct firetalk_driver_connection_t *c);
 void	firetalk_internal_set_connectstate(struct firetalk_driver_connection_t *c, firetalk_sock_state_t fcs);
@@ -320,12 +313,17 @@ struct sockaddr_in *firetalk_sock_remotehost4(firetalk_sock_t *sock);
 fte_t	firetalk_sock_resolve6(const char *const host, struct in6_addr *inet6_ip);
 struct sockaddr_in6 *firetalk_sock_remotehost6(firetalk_sock_t *sock);
 #endif
+uint32_t firetalk_sock_localip4(firetalk_sock_t *sock);
 
 void	firetalk_sock_init(firetalk_sock_t *sock);
 void	firetalk_sock_close(firetalk_sock_t *sock);
 fte_t	firetalk_sock_send(firetalk_sock_t *sock, const void *const buffer, const int bufferlen);
 void	firetalk_sock_preselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, int *n);
 fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, firetalk_buffer_t *buffer);
+
+void	firetalk_buffer_init(firetalk_buffer_t *buffer);
+fte_t	firetalk_buffer_alloc(firetalk_buffer_t *buffer, uint16_t size);
+void	firetalk_buffer_free(firetalk_buffer_t *buffer);
 
 char	*firetalk_htmlclean(const char *str);
 const char *firetalk_nhtmlentities(const char *str, int len);
