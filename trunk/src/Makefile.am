@@ -22,6 +22,7 @@ NAIM_CORE = \
 	alias.c \
 	atomizer.c \
 	buddy.c \
+	commands.c \
 	conio.c \
 	echof.c \
 	events.c \
@@ -70,11 +71,18 @@ INCLUDES = -I${top_srcdir}/include -I${top_srcdir}/libfiretalk ${INCLTDL}
 conio_keys.h: ${srcdir}/conio.c
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" SRCDIR=${srcdir} ${srcdir}/genkeys.sh > conio_keys.h
 
-conio_cmds.h: ${srcdir}/conio.c config.h
+conio_cmds.h: ${srcdir}/commands.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmds.sh > conio_cmds.h
 
-commands.txt: ${srcdir}/conio.c config.h
+commands.txt: ${srcdir}/commands.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmd2.sh > commands.txt
+
+commands.o: ${srcdir}/commands.c conio_cmds.h commands.txt
+	@echo $(COMPILE) -c `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
+	@$(COMPILE) -c `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
+libnaim_core_la-commands.lo: ${srcdir}/commands.c conio_cmds.h commands.txt
+	@echo $(LTCOMPILE) -c -o $@ `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
+	@$(LTCOMPILE) -c -o $@ `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
 
 conio.o: ${srcdir}/conio.c conio_keys.h conio_cmds.h commands.txt
 	@echo $(COMPILE) -c `test -f 'conio.c' || echo '$(srcdir)/'`conio.c

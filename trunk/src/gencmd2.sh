@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo 'Automatically generated list of commands for naim.'
-echo '#include "conio.c"' \
+echo '#include "commands.c"' \
 	| ${CPP} -DCONIOCPP -dD - \
 	| sed 's/^CONIO\(....\)(\(.*\)).*$/\1,\2/g' \
 	| ${AWK} -F ',' '{

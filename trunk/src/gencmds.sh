@@ -22,7 +22,7 @@ echo '
 #ifndef CONIO_NOPROTOS
 '
 
-echo '#include "conio.c"' \
+echo '#include "commands.c"' \
         | ${CPP} -DCONIOCPP -dD - \
 	| grep '^CONIOFUNC(.*).*$' \
 	| sed 's/^\(CONIOFUNC(.*)\).*$/\1;/g'
@@ -30,34 +30,14 @@ echo '#include "conio.c"' \
 echo '
 #endif
 
-typedef struct {
-	const char
-		*c;
-	CONIOFUNC2((*func));
-	const char
-		*aliases[CONIO_MAXPARMS],
-		*desc;
-	const struct {
-		const char
-			required,
-			type,
-			*name;
-	}	args[CONIO_MAXPARMS];
-	int	minarg,
-		maxarg,
-		where;
-} cmdar_t;
-
 #ifndef CONIO_C
-extern cmdar_t
-	cmdar[];
-extern const int
-	cmdc;
+extern cmdar_t cmdar[];
+extern const int cmdc;
 #else
 cmdar_t	cmdar[] = {
 '
 
-echo '#include "conio.c"' \
+echo '#include "commands.c"' \
         | ${CPP} -DCONIOCPP -dD - \
 	| sed 's/^CONIO\(....\)(\(.*\)).*$/\1,\2/g' \
 	| ${AWK} -F ',' '{
