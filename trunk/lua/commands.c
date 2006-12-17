@@ -31,19 +31,6 @@ static int _table2conio(lua_State *L, int t, const char **args, const int argmax
 	return(argc);
 }
 
-static conn_t *_get_conn_t(lua_State *L, int index) {
-	const int top = lua_gettop(L);
-	conn_t	*obj;
-
-	lua_pushstring(L, "handle");
-	lua_gettable(L, index);
-	obj = (conn_t *)lua_touserdata(L, -1);
-	lua_pop(L, 1);
-
-	assert(lua_gettop(L) == top);
-	return(obj);
-}
-
 #define NLUA_COMMAND(name) \
 static int _nlua_command_ ## name(lua_State *L) { \
 	extern void ua_ ## name(conn_t *conn, int argc, const char **args); \
