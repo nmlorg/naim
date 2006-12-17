@@ -61,8 +61,8 @@ void	_push_conn_t(lua_State *L, conn_t *conn) {
 	assert(lua_gettop(lua) == top+1);
 }
 
-static conn_t *_get_conn_t(lua_State *L, int index) {
-	const int top = lua_gettop(lua);
+conn_t	*_get_conn_t(lua_State *L, int index) {
+	const int top = lua_gettop(L);
 	conn_t	*obj;
 
 	lua_pushstring(L, "handle");
@@ -70,7 +70,7 @@ static conn_t *_get_conn_t(lua_State *L, int index) {
 	obj = (conn_t *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
-	assert(lua_gettop(lua) == top);
+	assert(lua_gettop(L) == top);
 	return(obj);
 }
 

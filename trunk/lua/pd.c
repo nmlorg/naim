@@ -14,7 +14,17 @@ struct firetalk_driver_connection_t {
 	firetalk_driver_t pd;
 };
 
-static fte_t _nlua_pdcall(struct firetalk_driver_connection_t *c, const char *call, const char *signature, ...) {
+typedef struct {
+	int	t;
+	union {
+		conn_t	*conn;
+		char	*string;
+		uint32_t u32;
+		double	f;
+	} u;
+} multival_t;
+
+static int _nlua_pdcall(multival_t *ret, struct firetalk_driver_connection_t *c, const char *call, const char *signature, ...) {
 	va_list	msg;
 	int	i, args = 0, top = lua_gettop(lua);
 
@@ -75,16 +85,48 @@ static fte_t _nlua_pdcall(struct firetalk_driver_connection_t *c, const char *ca
 	}
 	va_end(msg);
 
-	if (lua_pcall(lua, args, 0, 0) != 0) {
+	if (lua_pcall(lua, args, LUA_MULTRET, 0) != 0) {
 		extern conn_t *curconn;
 
 		status_echof(curconn, "PD %s call %s run error: %s\n", c->pd.strprotocol, call, lua_tostring(lua, -1));
 		lua_pop(lua, 1);
-		return(HOOK_CONTINUE);
+		return(-1);
 	}
+
+	assert((lua_gettop(lua) == top) || (lua_gettop(lua) == top+1));
+
+	if (lua_gettop(lua) == top)
+		ret->t = -1;
+	else {
+		int	t = lua_type(lua, top+1);
+
+		switch (t) {
+		  case LUA_TTABLE:
+			ret->t = HOOK_T_CONNc;
+			ret->u.conn = _get_conn_t(lua, top+1);
+			break;
+		  case LUA_TSTRING:
+			ret->t = HOOK_T_STRINGc;
+			ret->u.string = strdup(lua_tostring(lua, top+1));
+			_garbage_add(ret->u.string);
+			break;
+		  case LUA_TBOOLEAN:
+			ret->t = HOOK_T_UINT32c;
+			ret->u.u32 = lua_tointeger(lua, top+1);
+			break;
+		  case LUA_TNUMBER:
+			ret->t = HOOK_T_FLOATc;
+			ret->u.f = lua_tonumber(lua, top+1);
+			break;
+		  default:
+			ret->t = -1;
+		}
+		lua_pop(lua, 1);
+	}
+
 	assert(lua_gettop(lua) == top);
 
-	return(FE_SUCCESS);
+	return(0);
 }
 
 static fte_t _nlua_pd_periodic(firetalk_connection_t *const conn) {
@@ -92,144 +134,353 @@ static fte_t _nlua_pd_periodic(firetalk_connection_t *const conn) {
 }
 
 static fte_t _nlua_pd_preselect(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except, int *n) {
-	return(_nlua_pdcall(c, "preselect", HOOK_T_FDSET HOOK_T_FDSET HOOK_T_FDSET HOOK_T_WRUINT32, read, write, except, n));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "preselect", HOOK_T_FDSET HOOK_T_FDSET HOOK_T_FDSET HOOK_T_WRUINT32, read, write, except, n);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_postselect(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except) {
-	return(_nlua_pdcall(c, "postselect", HOOK_T_FDSET HOOK_T_FDSET HOOK_T_FDSET, read, write, except));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "postselect", HOOK_T_FDSET HOOK_T_FDSET HOOK_T_FDSET, read, write, except);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_got_data(struct firetalk_driver_connection_t *c, firetalk_buffer_t *buffer) {
-//	return(_nlua_pdcall(c, "got_data", HOOK_T
+//	multival_t val;
+//	int	ret;
+//
+//	ret = _nlua_pdcall(&val, c, "got_data", HOOK_T
+//	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_got_data_connecting(struct firetalk_driver_connection_t *c, firetalk_buffer_t *buffer) {
-//	return(_nlua_pdcall(c, "got_data_connecting", HOOK_T
+//	multival_t val;
+//	int	ret;
+//
+//	ret = _nlua_pdcall(&val, c, "got_data_connecting", HOOK_T
+//	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_comparenicks(const char *const s1, const char *const s2) {
-//	return(_nlua_pdcall(c, "comparenicks", HOOK_T_STRING HOOK_T_STRING, s1, s2));
+//	multival_t val;
+//	int	ret;
+//
+//	ret = _nlua_pdcall(&val, c, "comparenicks", HOOK_T_STRING HOOK_T_STRING, s1, s2);
+//	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_isprintable(const int key) {
-//	return(_nlua_pdcall(c, "isprintable", HOOK_T_UINT32, key));
+//	multival_t val;
+//	int	ret;
+//
+//	ret = _nlua_pdcall(&val, c, "isprintable", HOOK_T_UINT32, key);
+//	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_disconnect(struct firetalk_driver_connection_t *c) {
-	return(_nlua_pdcall(c, "disconnect", ""));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "disconnect", "");
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_disconnected(struct firetalk_driver_connection_t *c, const fte_t reason) {
-	return(_nlua_pdcall(c, "disconnected", HOOK_T_STRING, firetalk_strerror(reason)));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "disconnected", HOOK_T_STRING, firetalk_strerror(reason));
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_signon(struct firetalk_driver_connection_t *c, const char *const account) {
-	return(_nlua_pdcall(c, "signon", HOOK_T_STRING, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "signon", HOOK_T_STRING, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_get_info(struct firetalk_driver_connection_t *c, const char *const account) {
-	return(_nlua_pdcall(c, "get_info", HOOK_T_STRING, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "get_info", HOOK_T_STRING, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_set_info(struct firetalk_driver_connection_t *c, const char *const text) {
-	return(_nlua_pdcall(c, "set_info", HOOK_T_STRING, text));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "set_info", HOOK_T_STRING, text);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_set_away(struct firetalk_driver_connection_t *c, const char *const text, const int isauto) {
-	return(_nlua_pdcall(c, "set_away", HOOK_T_STRING HOOK_T_UINT32, text, isauto));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "set_away", HOOK_T_STRING HOOK_T_UINT32, text, isauto);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_set_nickname(struct firetalk_driver_connection_t *c, const char *const account) {
-	return(_nlua_pdcall(c, "set_nickname", HOOK_T_STRING, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "set_nickname", HOOK_T_STRING, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_set_password(struct firetalk_driver_connection_t *c, const char *const password, const char *const password2) {
-	return(_nlua_pdcall(c, "set_password", HOOK_T_STRING, password));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "set_password", HOOK_T_STRING, password);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_set_privacy(struct firetalk_driver_connection_t *c, const char *const flag) {
-	return(_nlua_pdcall(c, "set_privacy", HOOK_T_STRING, flag));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "set_privacy", HOOK_T_STRING, flag);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_add_buddy(struct firetalk_driver_connection_t *c, const char *const account, const char *const group, const char *const friendly) {
-	return(_nlua_pdcall(c, "im_add_buddy", HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, account, group, friendly));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_add_buddy", HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, account, group, friendly);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_remove_buddy(struct firetalk_driver_connection_t *c, const char *const account, const char *const group) {
-	return(_nlua_pdcall(c, "im_remove_buddy", HOOK_T_STRING HOOK_T_STRING, account, group));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_remove_buddy", HOOK_T_STRING HOOK_T_STRING, account, group);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_add_deny(struct firetalk_driver_connection_t *c, const char *const account) {
-	return(_nlua_pdcall(c, "im_add_deny", HOOK_T_STRING, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_add_deny", HOOK_T_STRING, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_remove_deny(struct firetalk_driver_connection_t *c, const char *const account) {
-	return(_nlua_pdcall(c, "im_remove_deny", HOOK_T_STRING, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_remove_deny", HOOK_T_STRING, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_send_message(struct firetalk_driver_connection_t *c, const char *const account, const char *const text, const int isauto) {
-	return(_nlua_pdcall(c, "im_send_message", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, account, text, isauto));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_send_message", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, account, text, isauto);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_send_action(struct firetalk_driver_connection_t *c, const char *const account, const char *const text, const int isauto) {
-	return(_nlua_pdcall(c, "im_send_action", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, account, text, isauto));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_send_action", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, account, text, isauto);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_im_evil(struct firetalk_driver_connection_t *c, const char *const account) {
-	return(_nlua_pdcall(c, "im_evil", HOOK_T_STRING, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "im_evil", HOOK_T_STRING, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_join(struct firetalk_driver_connection_t *c, const char *const group) {
-	return(_nlua_pdcall(c, "chat_join", HOOK_T_STRING, group));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_join", HOOK_T_STRING, group);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_part(struct firetalk_driver_connection_t *c, const char *const group) {
-	return(_nlua_pdcall(c, "chat_part", HOOK_T_STRING, group));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_part", HOOK_T_STRING, group);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_invite(struct firetalk_driver_connection_t *c, const char *const group, const char *const account, const char *const text) {
-	return(_nlua_pdcall(c, "chat_invite", HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, group, account, text));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_invite", HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, group, account, text);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_set_topic(struct firetalk_driver_connection_t *c, const char *const group, const char *const text) {
-	return(_nlua_pdcall(c, "chat_set_topic", HOOK_T_STRING HOOK_T_STRING, group, text));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_set_topic", HOOK_T_STRING HOOK_T_STRING, group, text);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_op(struct firetalk_driver_connection_t *c, const char *const group, const char *const account) {
-	return(_nlua_pdcall(c, "chat_op", HOOK_T_STRING HOOK_T_STRING, group, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_op", HOOK_T_STRING HOOK_T_STRING, group, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_deop(struct firetalk_driver_connection_t *c, const char *const group, const char *const account) {
-	return(_nlua_pdcall(c, "chat_deop", HOOK_T_STRING HOOK_T_STRING, group, account));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_deop", HOOK_T_STRING HOOK_T_STRING, group, account);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_kick(struct firetalk_driver_connection_t *c, const char *const group, const char *const account, const char *const text) {
-	return(_nlua_pdcall(c, "chat_kick", HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, group, account, text));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_kick", HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, group, account, text);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_send_message(struct firetalk_driver_connection_t *c, const char *const group, const char *const text, const int isauto) {
-	return(_nlua_pdcall(c, "chat_send_message", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, group, text, isauto));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_send_message", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, group, text, isauto);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static fte_t _nlua_pd_chat_send_action(struct firetalk_driver_connection_t *c, const char *const group, const char *const text, const int isauto) {
-	return(_nlua_pdcall(c, "chat_send_action", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, group, text, isauto));
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "chat_send_action", HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, group, text, isauto);
+	if ((ret == 0) && ((val.t == HOOK_T_UINT32c) || (val.t == HOOK_T_FLOATc)))
+		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+	return(FE_UNKNOWN);
 }
 
 static char *_nlua_pd_subcode_encode(struct firetalk_driver_connection_t *c, const char *const command, const char *const text) {
-	return("mrow");
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "subcode_encode", HOOK_T_STRING HOOK_T_STRING, command, text);
+	if ((ret == 0) && (val.t == HOOK_T_STRINGc))
+		return(val.u.string);
+	return(NULL);
 }
 
 static const char *_nlua_pd_room_normalize(const char *const group) {
+//	multival_t val;
+//	int	ret;
+//
+//	ret = _nlua_pdcall(&val, c, "room_normalize", HOOK_T_STRING, group);
+//	if ((ret == 0) && (val.t == HOOK_T_STRING))
+//		return(val.u.string);
+//	return(FE_UNKNOWN);
 	return(group);
 }
 
 static struct firetalk_driver_connection_t *_nlua_pd_create_conn(struct firetalk_driver_cookie_t *cookie) {
-//	_nlua_pdcall(&(cookie->pd), "create", HOOK
-	return(NULL);
+	struct firetalk_driver_connection_t *driver = (struct firetalk_driver_connection_t *)cookie;
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, driver, "create", HOOK_T_STRING, driver->pd.strprotocol);
+//	if ((ret == 0) && (val.t == -1))
+//		return((val.t == HOOK_T_UINT32c)?val.u.u32:val.u.f);
+//	return(FE_UNKNOWN);
+	return("");
 }
 
 static void  _nlua_pd_destroy_conn(struct firetalk_driver_connection_t *c) {
-	_nlua_pdcall(c, "destroy", "");
+	multival_t val;
+	int	ret;
+
+	ret = _nlua_pdcall(&val, c, "destroy", "");
 }
 
 static const firetalk_driver_t firetalk_protocol_template = {
