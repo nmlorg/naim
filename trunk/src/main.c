@@ -145,7 +145,7 @@ int	main_stub(int argc, char **args) {
 
 #ifdef HAVE_GETOPT_LONG
 	while (1) {
-		int	i, c,
+		int	/*i,*/ c,
 			option_index = 0;
 		static struct option long_options[] = {
 # ifdef ALLOW_DETACH
@@ -389,7 +389,8 @@ int	main_stub(int argc, char **args) {
 		fd_set	rfd, wfd, efd;
 		struct timeval	timeout;
 		time_t	now60;
-		int	autohide, maxfd = 0;
+		int	autohide;
+		uint32_t maxfd = 0;
 
 		now = time(NULL);
 		autohide = script_getvar_int("autohide");
@@ -416,7 +417,7 @@ int	main_stub(int argc, char **args) {
 		FD_ZERO(&wfd);
 		FD_ZERO(&efd);
 
-		HOOK_CALL(preselect, &rfd, &wfd, &efd, &maxfd);
+		HOOK_CALL(preselect, HOOK_T_FDSET HOOK_T_FDSET HOOK_T_FDSET HOOK_T_WRUINT32, &rfd, &wfd, &efd, &maxfd);
 
 		if (firetalk_select_custom(maxfd, &rfd, &wfd, &efd, &timeout) != FE_SUCCESS) {
 			if (errno == EINTR) { // SIGWINCH
@@ -438,11 +439,11 @@ int	main_stub(int argc, char **args) {
 		now60 = now-(now%60);
 		if ((now60 - lastcycle) >= 60) {
 			lastcycle = now60;
-			HOOK_CALL(periodic, now, nowf);
+			HOOK_CALL(periodic, HOOK_T_TIME HOOK_T_FLOAT, now, nowf);
 		} else if (lastcycle > now60)
 			lastcycle = now60;
 
-		HOOK_CALL(postselect, &rfd, &wfd, &efd);
+		HOOK_CALL(postselect, HOOK_T_FDSET HOOK_T_FDSET HOOK_T_FDSET, &rfd, &wfd, &efd);
 
 		statrefresh();
 		script_clean_garbage();

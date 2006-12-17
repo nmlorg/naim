@@ -61,14 +61,7 @@ static void h_zero(h_t *h, win_t *win) {
 	h->white = h->inbold = h->initalic = h->inunderline = 0;
 }
 
-HOOK_DECLARE(notify);
 static void nw_wrap_addch(h_t *h, unsigned char c) {
-	if (h->win->logfile != NULL) {
-		char	buf[2] = { c, 0 };
-
-		HOOK_CALL(notify, NULL, h->win, buf);
-	}
-
 	if (h->addch.len >= (faimconf.wstatus.widthx-1)) {
 		int	i;
 
