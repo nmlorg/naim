@@ -89,42 +89,6 @@ struct s_firetalk_room {
 		sentjoin:1;
 };
 
-typedef struct firetalk_transfer_t {
-	struct firetalk_transfer_t *next;
-	char	*who,
-		*filename;
-	struct in_addr inet_ip;
-#ifdef _FC_USE_IPV6
-	struct in6_addr inet6_ip;
-	int	tryinet6;
-#endif
-	uint16_t port;
-	long	size,
-		bytes;
-	uint32_t acked;
-#define FF_STATE_WAITLOCAL	0
-#define FF_STATE_WAITREMOTE	1
-#define FF_STATE_WAITSYNACK	2
-#define FF_STATE_TRANSFERRING	3
-	int	state;
-#define FF_DIRECTION_SENDING	0
-#define FF_DIRECTION_RECEIVING	1
-	int	direction;
-#define FF_TYPE_DCC		0
-#define FF_TYPE_RAW		1
-	int	type,
-		sockfd,
-		filefd;
-//	firetalk_sock_t sock;
-	struct firetalk_useragent_transfer_t *clientfilestruct;
-} firetalk_transfer_t;
-
-struct s_firetalk_subcode_callback {
-	struct s_firetalk_subcode_callback *next;
-	char	*command, *staticresp;
-	ptrtofnct callback;
-};
-
 typedef enum {
 	FCS_NOTCONNECTED,
 	FCS_WAITING_SYNACK,
@@ -152,6 +116,42 @@ typedef struct {
 	uint8_t	*buffer,
 		readdata:1;
 } firetalk_buffer_t;
+
+typedef struct firetalk_transfer_t {
+	struct firetalk_transfer_t *next;
+	char	*who,
+		*filename;
+	struct in_addr inet_ip;
+#ifdef _FC_USE_IPV6
+	struct in6_addr inet6_ip;
+	int	tryinet6;
+#endif
+	uint16_t port;
+	long	size,
+		bytes;
+	uint32_t acked;
+#define FF_STATE_WAITLOCAL	0
+#define FF_STATE_WAITREMOTE	1
+#define FF_STATE_WAITSYNACK	2
+#define FF_STATE_TRANSFERRING	3
+	int	state;
+#define FF_DIRECTION_SENDING	0
+#define FF_DIRECTION_RECEIVING	1
+	int	direction;
+#define FF_TYPE_DCC		0
+#define FF_TYPE_RAW		1
+	int	type,
+//		sockfd,
+		filefd;
+	firetalk_sock_t sock;
+	struct firetalk_useragent_transfer_t *clientfilestruct;
+} firetalk_transfer_t;
+
+struct s_firetalk_subcode_callback {
+	struct s_firetalk_subcode_callback *next;
+	char	*command, *staticresp;
+	ptrtofnct callback;
+};
 
 typedef struct firetalk_connection_t {
 	void	*canary;

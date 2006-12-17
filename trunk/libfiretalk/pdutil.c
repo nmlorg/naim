@@ -222,11 +222,15 @@ static fte_t firetalk_sock_synack(firetalk_sock_t *sock) {
 
 	assert(sock->canary == SOCK_CANARY);
 
-	if (getsockopt(sock->fd, SOL_SOCKET, SO_ERROR, &i, &o))
+	if (getsockopt(sock->fd, SOL_SOCKET, SO_ERROR, &i, &o)) {
+		firetalk_sock_close(sock);
 		return(FE_SOCKET);
+	}
 
-	if (i != 0)
+	if (i != 0) {
+		firetalk_sock_close(sock);
 		return(FE_CONNECT);
+	}
 
 	sock->state = FCS_SEND_SIGNON;
 
@@ -241,8 +245,11 @@ static fte_t firetalk_sock_read(firetalk_sock_t *sock, firetalk_buffer_t *buffer
 	/* read data into handle buffer */
 	length = recv(sock->fd, &(buffer->buffer[buffer->pos]), buffer->size - buffer->pos, MSG_DONTWAIT);
 
-	if (length < 1)
+	if (length < 1) {
+		firetalk_sock_close(sock);
 		return(FE_DISCONNECT);
+	}
+
 	buffer->pos += length;
 	buffer->readdata = 1;
 
@@ -261,7 +268,6 @@ fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *m
 	if (FD_ISSET(sock->fd, my_except)) {
 		firetalk_sock_close(sock);
 		return(FE_SOCKET);
-//		conn->PD->disconnect(conn, conn->handle);
 	} else if (FD_ISSET(sock->fd, my_read))
 		return(firetalk_sock_read(sock, buffer));
 	else if (FD_ISSET(sock->fd, my_write))

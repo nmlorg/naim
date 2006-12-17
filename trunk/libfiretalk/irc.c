@@ -534,6 +534,7 @@ static int irc_internal_disconnect(irc_conn_t *c, const int error) {
 	}
 	for (whois_iter = c->whois_head; whois_iter != NULL; whois_iter = whois_iter2) {
 		whois_iter2 = whois_iter->next;
+		whois_iter->next = NULL;
 		if (whois_iter->nickname != NULL) {
 			free(whois_iter->nickname);
 			whois_iter->nickname = NULL;
