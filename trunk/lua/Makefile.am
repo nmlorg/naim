@@ -21,7 +21,7 @@ liblua_la_SOURCES = \
 liblua_la_LIBADD = -lm
 
 libnlua_la_SOURCES = \
-	conn.c moon.c moon-int.h naim_commands.c strings.c
+	commands.c conn.c moon.c moon-int.h strings.c
 libnlua_la_LIBADD = liblua.la
 libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
 
@@ -34,7 +34,7 @@ default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
 
 libnlua_la-moon.${LOBJEXT}: default_lua.h
-libnlua_la-naim_commands.${LOBJEXT}: ../src/cmdar.h
+libnlua_la-commands.${LOBJEXT}: ../src/cmdar.h
 
 ../src/cmdar.h:
 	(cd ../src && make cmdar.h)
