@@ -1279,12 +1279,14 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 	return(FE_SUCCESS);
 }
 
-static fte_t irc_got_data(irc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos) {
+static fte_t irc_got_data(irc_conn_t *c, firetalk_buffer_t *buffer) {
 	char	**args;
 
-	while (((args = irc_recv_parse(c, buffer, bufferpos)) != NULL) && (args[1] != NULL)) {
+	assert(firetalk_buffer_valid(buffer));
+	while (((args = irc_recv_parse(c, buffer->buffer, &(buffer->pos))) != NULL) && (args[1] != NULL)) {
 		fte_t	fte;
 
+		assert(firetalk_buffer_valid(buffer));
 		if ((fte = irc_got_data_parse(c, args)) != FE_SUCCESS)
 			return(fte);
 	}
@@ -1292,12 +1294,14 @@ static fte_t irc_got_data(irc_conn_t *c, unsigned char *buffer, uint16_t *buffer
 	return(FE_SUCCESS);
 }
 
-static fte_t irc_got_data_connecting(irc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos) {
+static fte_t irc_got_data_connecting(irc_conn_t *c, firetalk_buffer_t *buffer) {
 	char	**args;
 
-	while (((args = irc_recv_parse(c, buffer, bufferpos)) != NULL) && (args[1] != NULL)) {
+	assert(firetalk_buffer_valid(buffer));
+	while (((args = irc_recv_parse(c, buffer->buffer, &(buffer->pos))) != NULL) && (args[1] != NULL)) {
+		assert(firetalk_buffer_valid(buffer));
 		if (strcmp(args[1], "ERROR") == 0) {
-			irc_send_printf(c,"QUIT :error");
+			irc_send_printf(c, "QUIT :error");
 			if (args[2] == NULL)
 				firetalk_callback_connectfailed(c, FE_PACKET, "Server returned ERROR");
 			else
@@ -1314,23 +1318,23 @@ static fte_t irc_got_data_connecting(irc_conn_t *c, unsigned char *buffer, uint1
 				break;
 			  case 376: /* End of MOTD */
 			  case 422: /* MOTD is missing */
-				firetalk_callback_doinit(c,c->nickname);
+				firetalk_callback_doinit(c, c->nickname);
 				firetalk_callback_connected(c);
 				break;
 			  case 431:
 			  case 432:
 			  case 436:
 			  case 461:
-				irc_send_printf(c,"QUIT :Invalid nickname");
-				firetalk_callback_connectfailed(c,FE_BADUSER,"Invalid nickname");
+				irc_send_printf(c, "QUIT :Invalid nickname");
+				firetalk_callback_connectfailed(c, FE_BADUSER, "Invalid nickname");
 				return(FE_BADUSER);
 			  case 433:
-				irc_send_printf(c,"QUIT :Invalid nickname");
-				firetalk_callback_connectfailed(c,FE_BADUSER,"Nickname in use");
+				irc_send_printf(c, "QUIT :Invalid nickname");
+				firetalk_callback_connectfailed(c, FE_BADUSER, "Nickname in use");
 				return(FE_BADUSER);
 			  case 465:
-				irc_send_printf(c,"QUIT :banned");
-				firetalk_callback_connectfailed(c,FE_BLOCKED,"You are banned");
+				irc_send_printf(c, "QUIT :banned");
+				firetalk_callback_connectfailed(c, FE_BLOCKED, "You are banned");
 				return(FE_BLOCKED);
 			  default: {
 					fte_t	fte;
@@ -1536,7 +1540,7 @@ const firetalk_driver_t firetalk_protocol_irc = {
 	strprotocol:		"IRC",
 	default_server:		"irc.n.ml.org",
 	default_port:		6667,
-	default_buffersize:	1024/2,
+	default_buffersize:	512,
 	periodic:		irc_periodic,
 	preselect:		irc_preselect,
 	postselect:		irc_postselect,

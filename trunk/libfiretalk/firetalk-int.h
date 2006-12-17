@@ -200,19 +200,19 @@ typedef struct {
 } firetalk_sock_t;
 
 static inline void firetalk_sock_t_ctor(firetalk_sock_t *this) {
-	extern int firetalk_sock_canary;
+	extern int firetalk_sock_t_canary;
 
 	memset(this, 0, sizeof(*this));
-	this->canary = &firetalk_sock_canary;
+	this->canary = &firetalk_sock_t_canary;
 	this->fd = -1;
 	this->state = FCS_NOTCONNECTED;
 }
 TYPE_NEW(firetalk_sock_t);
 static inline void firetalk_sock_t_dtor(firetalk_sock_t *this) {
-	extern int firetalk_sock_canary;
+	extern int firetalk_sock_t_canary;
 
 	assert(this != NULL);
-	assert(this->canary == &firetalk_sock_canary);
+	assert(this->canary == &firetalk_sock_t_canary);
 	if (this->fd != -1)
 		close(this->fd);
 	memset(this, 0, sizeof(*this));
@@ -227,17 +227,17 @@ typedef struct {
 } firetalk_buffer_t;
 
 static inline void firetalk_buffer_t_ctor(firetalk_buffer_t *this) {
-	extern int firetalk_buffer_canary;
+	extern int firetalk_buffer_t_canary;
 
 	memset(this, 0, sizeof(*this));
-	this->canary = &firetalk_buffer_canary;
+	this->canary = &firetalk_buffer_t_canary;
 }
 TYPE_NEW(firetalk_buffer_t);
 static inline void firetalk_buffer_t_dtor(firetalk_buffer_t *this) {
-	extern int firetalk_buffer_canary;
+	extern int firetalk_buffer_t_canary;
 
 	assert(this != NULL);
-	assert(this->canary == &firetalk_buffer_canary);
+	assert(this->canary == &firetalk_buffer_t_canary);
 	free(this->buffer);
 	memset(this, 0, sizeof(*this));
 }
@@ -377,8 +377,8 @@ typedef struct {
 	fte_t	(*periodic)(firetalk_connection_t *const conn);
 	fte_t	(*preselect)(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except, int *n);
 	fte_t	(*postselect)(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except);
-	fte_t	(*got_data)(struct firetalk_driver_connection_t *c, unsigned char *buffer, uint16_t *bufferpos);
-	fte_t	(*got_data_connecting)(struct firetalk_driver_connection_t *c, unsigned char *buffer, uint16_t *bufferpos);
+	fte_t	(*got_data)(struct firetalk_driver_connection_t *c, firetalk_buffer_t *buffer);
+	fte_t	(*got_data_connecting)(struct firetalk_driver_connection_t *c, firetalk_buffer_t *buffer);
 	fte_t	(*comparenicks)(const char *const, const char *const);
 	fte_t	(*isprintable)(const int);
 	fte_t	(*disconnect)(struct firetalk_driver_connection_t *c);
@@ -537,10 +537,10 @@ void	firetalk_sock_close(firetalk_sock_t *sock);
 fte_t	firetalk_sock_send(firetalk_sock_t *sock, const void *const buffer, const int bufferlen);
 void	firetalk_sock_preselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, int *n);
 fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, firetalk_buffer_t *buffer);
+int	firetalk_sock_valid(const firetalk_sock_t *sock);
 
-void	firetalk_buffer_init(firetalk_buffer_t *buffer);
 fte_t	firetalk_buffer_alloc(firetalk_buffer_t *buffer, uint16_t size);
-void	firetalk_buffer_free(firetalk_buffer_t *buffer);
+int	firetalk_buffer_valid(const firetalk_buffer_t *buffer);
 
 char	*firetalk_htmlclean(const char *str);
 const char *firetalk_nhtmlentities(const char *str, int len);
