@@ -51,6 +51,8 @@ struct s_toc_connection {
 	char	buddybuf[1024];
 	int	buddybuflen;
 	char	*buddybuflastgroup;
+	char	denybuf[1024];
+	int	denybuflen;
 };
 
 typedef struct s_toc_connection *client_t;
@@ -578,6 +580,14 @@ static fte_t toc_im_add_buddy_flush(client_t c) {
 	return(FE_SUCCESS);
 }
 
+static fte_t toc_im_add_deny_flush(client_t c) {
+	if (c->denybuflen > 0) {
+		c->denybuflen = 0;
+		return(toc_send_printf(c, "toc2_add_deny%S", c->denybuf));
+	}
+	return(FE_SUCCESS);
+}
+
 static fte_t toc_postselect(client_t c, fd_set *read, fd_set *write, fd_set *except) {
 	struct s_toc_infoget *i, *i2;
 
@@ -661,17 +671,14 @@ static char *toc_quote(const char *string, const int outside_flag) {
 	static char output[TOC_CLIENTSEND_MAXLEN];
 	size_t	length,
 		counter;
-	int	newcounter;
+	int	newcounter = 0;
 
 	while (*string == ' ')
 		string++;
 
 	length = strlen(string);
-	if (outside_flag == 1) {
- 		newcounter = 1;
-		output[0] = '"';
-	} else
-		newcounter = 0;
+	if (outside_flag)
+		output[newcounter++] = '"';
 
 	while ((length > 0) && (string[length-1] == ' '))
 		length--;
@@ -688,7 +695,7 @@ static char *toc_quote(const char *string, const int outside_flag) {
 			output[newcounter++] = string[counter];
 		}
 
-	if (outside_flag == 1)
+	if (outside_flag)
 		output[newcounter++] = '"';
 	output[newcounter] = 0;
 
@@ -780,6 +787,7 @@ static int toc_internal_disconnect(client_t c, const int error) {
 		c->buddybuflastgroup = strdup("");
 		c->buddybuflen = 0;
 	}
+	c->denybuflen = 0;
 	toc_send_printf(c, "toc_set_dir %s", "");
 	toc_send_printf(c, "toc_noop");
 
@@ -1155,46 +1163,27 @@ static fte_t toc_im_add_buddy(client_t c, const char *const name, const char *co
 }
 
 static fte_t toc_im_add_deny(client_t c, const char *const name) {
-	return(toc_send_printf(c, "toc2_add_deny %s", name));
+	char	*str = toc_quote(name, 1);
+	int	slen = strlen(str);
+
+	if (c->gotconfig == 0)
+		return(FE_SUCCESS);
+
+	if ((c->denybuflen+1+slen+1) >= sizeof(c->denybuf))
+		toc_im_add_deny_flush(c);
+	if ((c->denybuflen+1+slen+1) >= sizeof(c->denybuf))
+		return(FE_PACKET);
+
+	strcpy(c->denybuf+c->denybuflen, " ");
+	c->denybuflen++;
+	strcpy(c->denybuf+c->denybuflen, str);
+	c->denybuflen += slen;
+
+	return(FE_SUCCESS);
 }
 
 static fte_t toc_im_remove_deny(client_t c, const char *const name) {
 	return(toc_send_printf(c, "toc2_remove_deny %s", name));
-}
-
-static fte_t toc_im_upload_denies(client_t c) {
-	char	data[TOC_CLIENTSEND_MAXLEN];
-	struct s_firetalk_deny *denyiter;
-	unsigned short length; 
-	struct s_firetalk_handle *fchandle;
-
-	fchandle = firetalk_find_handle(c);
-
-	if (fchandle->deny_head == NULL)
-		return(FE_SUCCESS);
-
-	data[sizeof(data)-1] = 0;
-	strncpy(data+TOC_HEADER_LENGTH, "toc_add_deny", (size_t)(sizeof(data)-TOC_HEADER_LENGTH-1));
-	for (denyiter = fchandle->deny_head; denyiter != NULL; denyiter = denyiter->next) {
-		strncat(data+TOC_HEADER_LENGTH, " ", (size_t)(sizeof(data)-TOC_HEADER_LENGTH-1));
-		strncat(data+TOC_HEADER_LENGTH, toc_quote(denyiter->nickname, 0), (size_t)(sizeof(data)-TOC_HEADER_LENGTH-1));
-		if (strlen(data+TOC_HEADER_LENGTH) > 2000) {
-			length = toc_fill_header((unsigned char *)data, SFLAP_FRAME_DATA, ++c->local_sequence, strlen(&data[TOC_HEADER_LENGTH])+1);
-
-#ifdef DEBUG_ECHO
-			toc_echo_send(c, "im_upload_denies", data, length);
-#endif
-			firetalk_internal_send_data(fchandle, data, length);
-			strncpy(data+TOC_HEADER_LENGTH, "toc_add_deny", (size_t)(sizeof(data)-TOC_HEADER_LENGTH-1));
-		}
-	}
-	length = toc_fill_header((unsigned char *)data, SFLAP_FRAME_DATA, ++c->local_sequence, strlen(&data[TOC_HEADER_LENGTH])+1);
-
-#ifdef DEBUG_ECHO
-	toc_echo_send(c, "im_upload_denies", data, length);
-#endif
-	firetalk_internal_send_data(fchandle, data, length);
-	return(FE_SUCCESS);
 }
 
 static fte_t toc_internal_send_message(client_t c, const char *const dest, const unsigned char *const message, const int isauto, firetalk_queue_t *queue) {
@@ -1293,6 +1282,7 @@ static fte_t toc_preselect(client_t c, fd_set *read, fd_set *write, fd_set *exce
 	}
 
 	toc_im_add_buddy_flush(c);
+	toc_im_add_deny_flush(c);
 
 	return(FE_SUCCESS);
 }
@@ -1657,7 +1647,7 @@ static struct {
 			/* TOC2 Warning Level too High
 				Your warning level is current too high to sign on. You will need to wait between a few minutes and several hours before you can log back in.
 			*/
-	/* 983 */ {	FE_BLOCKED,		0, "You have been connected and disconnecting too frequently. Wait 10 minutes and try again. If you continue to try, you will need to wait even longer." },
+	/* 983 */ {	FE_BLOCKED,		0, "You have been connecting and disconnecting too frequently. Wait 10 minutes and try again. If you continue to try, you will need to wait even longer." },
 			/* TOC1 You have been connecting and disconnecting too frequently.  Wait 10 minutes and try again. If you continue to try, you will need to wait even longer. */
 			/* TOC2 Connecting too Frequently
 				You have been connecting and disconnecting too frequently. You will need to wait around 10 minutes before you will be allowed to sign on again.
@@ -2209,6 +2199,7 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 	} else if (strcmp(arg0, "INSERTED2") == 0) {
 		/* INSERTED2:25:76: */
 		/* INSERTED2:b::yankeegurl680997:Recent Buddies */
+		/* INSERTED2:d:bb8 */
 		args = toc_parse_args(data, 255, ':');
 		assert(strcmp(arg0, args[0]) == 0);
 
@@ -2220,11 +2211,13 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 			if ((friendly != NULL) && (*friendly == 0))
 				friendly = NULL;
 			firetalk_callback_buddyadded(c, name, group, friendly);
-		}
+		} else if ((args[1] != NULL) && (args[2] != NULL) && (strcmp(args[1], "d") == 0))
+			firetalk_callback_denyadded(c, args[2]);
 	} else if (strcmp(arg0, "DELETED2") == 0) {
 		/* DELETED2:b:yankeegurl680997: */
 		/* DELETED2:b:yankeegurl680997:Recent Buddies */
 		/* DELETED2:M-^@T*80®ÿ¿M-^BGM-^Ayankeegurl680997: */
+		/* DELETED2:d:aa 2: */
 		args = toc_parse_args(data, 255, ':');
 		assert(strcmp(arg0, args[0]) == 0);
 
@@ -2235,7 +2228,8 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 			if ((group != NULL) && (*group == 0))
 				group = NULL;
 			firetalk_callback_buddyremoved(c, name, group);
-		}
+		} else if ((args[1] != NULL) && (args[2] != NULL) && (strcmp(args[1], "d") == 0))
+			firetalk_callback_denyremoved(c, args[2]);
 	} else if (strcmp(arg0, "DIR_STATUS") == 0) {
 		/* DIR_STATUS:<Return Code>:<Optional args>
 		**    <Return Code> is always 0 for success status.
@@ -2573,6 +2567,7 @@ got_data_connecting_start:
 			char	realname[128];
 #endif
 			struct s_firetalk_buddy *buddyiter;
+			struct s_firetalk_deny *denyiter;
 
 			/* ask the client to handle its init */
 			firetalk_callback_doinit(c, c->nickname);
@@ -2583,10 +2578,12 @@ got_data_connecting_start:
 					buddyiter->uploaded = 1;
 				}
 
-			if (toc_im_upload_denies(c) != FE_SUCCESS) {
-				firetalk_callback_connectfailed(c, FE_PACKET, "Error uploading denies");
-				return(FE_PACKET);
-			}
+			for (denyiter = fchandle->deny_head; denyiter != NULL; denyiter = denyiter->next)
+				if (!denyiter->uploaded) {
+					toc_im_add_deny(c, denyiter->nickname);
+					denyiter->uploaded = 1;
+				}
+
 			r = toc_send_printf(c, "toc_init_done");
 			if (r != FE_SUCCESS) {
 				firetalk_callback_connectfailed(c, r, "Finalizing initialization");

@@ -197,13 +197,13 @@ struct s_firetalk_deny *firetalk_im_internal_add_deny(firetalk_t conn, const cha
 			break; /* not an error, user is in buddy list */
 
 	if (iter == NULL) {
-		iter = conn->deny_head;
-		conn->deny_head = calloc(1, sizeof(struct s_firetalk_deny));
-		if (conn->deny_head == NULL)
+		iter = calloc(1, sizeof(*iter));
+		if (iter == NULL)
 			abort();
-		conn->deny_head->next = iter;
-		conn->deny_head->nickname = strdup(nickname);
-		if (conn->deny_head->nickname == NULL)
+		iter->next = conn->deny_head;
+		conn->deny_head = iter;
+		iter->nickname = strdup(nickname);
+		if (iter->nickname == NULL)
 			abort();
 	}
 
@@ -580,6 +580,9 @@ fte_t	firetalk_im_internal_remove_deny(firetalk_t conn, const char *const nickna
 	prev = NULL;
 	for (iter = conn->deny_head; iter != NULL; iter = iter->next) {
 		if (firetalk_protocols[conn->protocol]->comparenicks(nickname, iter->nickname) == FE_SUCCESS) {
+			if (conn->callbacks[FC_IM_DENYREMOVED] != NULL)
+				conn->callbacks[FC_IM_DENYREMOVED](conn, conn->clientstruct, iter->nickname);
+
 			if (prev)
 				prev->next = iter->next;
 			else
@@ -587,6 +590,7 @@ fte_t	firetalk_im_internal_remove_deny(firetalk_t conn, const char *const nickna
 			free(iter->nickname);
 			iter->nickname = NULL;
 			free(iter);
+
 			return(FE_SUCCESS);
 		}
 		prev = iter;
@@ -937,10 +941,9 @@ void firetalk_callback_connectfailed(client_t c, const int error, const char *co
 }
 
 void firetalk_callback_disconnect(client_t c, const int error) {
-	struct s_firetalk_handle
-		*conn = firetalk_find_handle(c);
+	struct s_firetalk_handle *conn = firetalk_find_handle(c);
 	struct s_firetalk_buddy *buddyiter;
-	struct s_firetalk_deny *denyiter, *denynext;
+	struct s_firetalk_deny *denyiter;
 	struct s_firetalk_room *roomiter, *roomnext;
 
 	if (conn->connected == FCS_NOTCONNECTED)
@@ -960,14 +963,8 @@ void firetalk_callback_disconnect(client_t c, const int error) {
 		buddyiter->idletime = buddyiter->warnval = buddyiter->typing = buddyiter->online = buddyiter->away = buddyiter->uploaded = 0;
 	}
 
-	for (denyiter = conn->deny_head; denyiter != NULL; denyiter = denynext) {
-		denynext = denyiter->next;
-		denyiter->next = NULL;
-		free(denyiter->nickname);
-		denyiter->nickname = NULL;
-		free(denyiter);
-	}
-	conn->deny_head = NULL;
+	for (denyiter = conn->deny_head; denyiter != NULL; denyiter = denyiter->next)
+		denyiter->uploaded = 0;
 
 	for (roomiter = conn->room_head; roomiter != NULL; roomiter = roomnext) {
 		struct s_firetalk_member *memberiter;
@@ -1822,13 +1819,12 @@ fte_t	firetalk_im_add_buddy(firetalk_t conn, const char *const name, const char 
 fte_t	firetalk_im_add_deny(firetalk_t conn, const char *const nickname) {
 	VERIFYCONN;
 
-	if (conn->connected != FCS_ACTIVE)
-		return(FE_NOTCONNECTED);
-
 	if (firetalk_im_internal_add_deny(conn, nickname) == NULL)
 		return(FE_UNKNOWN);
 
-	return(firetalk_protocols[conn->protocol]->im_add_deny(conn->handle,nickname));
+	if (conn->connected == FCS_ACTIVE)
+		return(firetalk_protocols[conn->protocol]->im_add_deny(conn->handle, nickname));
+	return(FE_SUCCESS);
 }
 
 fte_t	firetalk_im_remove_deny(firetalk_t conn, const char *const nickname) {
@@ -1836,14 +1832,13 @@ fte_t	firetalk_im_remove_deny(firetalk_t conn, const char *const nickname) {
 
 	VERIFYCONN;
 
-	if (conn->connected != FCS_ACTIVE)
-		return(FE_NOTCONNECTED);
-
 	ret = firetalk_im_internal_remove_deny(conn,nickname);
 	if (ret != FE_SUCCESS)
 		return(ret);
 
-	return(firetalk_protocols[conn->protocol]->im_remove_deny(conn->handle,nickname));
+	if (conn->connected == FCS_ACTIVE)
+		return(firetalk_protocols[conn->protocol]->im_remove_deny(conn->handle, nickname));
+	return(FE_SUCCESS);
 }
 
 fte_t	firetalk_im_send_message(firetalk_t conn, const char *const dest, const char *const message, const int auto_flag) {
