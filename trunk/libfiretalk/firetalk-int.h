@@ -153,6 +153,7 @@ typedef struct {
 } firetalk_buffer_t;
 
 typedef struct firetalk_connection_t {
+	void	*canary;
 	struct firetalk_driver_connection_t *handle;
 	struct firetalk_useragent_connection_t *clientstruct;
 	firetalk_sock_t sock;
