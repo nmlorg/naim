@@ -240,6 +240,7 @@ static int _nlua_buddywin_t_notify(lua_State *L) {
 	if ((bwin = _get_buddywin_t(L, 1)) == NULL)
 		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].windows[BUDDY]:notify instead of naim.connections[CONN].windows[BUDDY].notify."));
 	bwin->waiting = 1;
+	bupdate();
 	return(0);
 }
 

@@ -492,7 +492,7 @@ naim.hooks.add('proto_buddy_coming', function(conn, who)
 	
 end, 100)
 
-naim.hooks.add('proto_user_nickchanged', function(conn, who, newnick)
+naim.hooks.add('proto_buddy_nickchanged', function(conn, who, newnick)
 	naim.internal.changebuddy(conn, who, newnick)
 
 	local window = conn.windows[who]
@@ -577,6 +577,24 @@ naim.hooks.add('proto_chat_deoped', function(conn, chat, by)
 	end
 end, 100)
 
+naim.hooks.add('proto_chat_modeset', function(conn, chat, by, mode, arg)
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
+
+	if window and group.synched then
+		window:event("event", "<font color=\"#00FFFF\">" .. by .. "</font> has set mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>.")
+	end
+end, 100)
+
+naim.hooks.add('proto_chat_modeunset', function(conn, chat, by, mode, arg)
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
+
+	if window and group.synched then
+		window:event("event", "<font color=\"#00FFFF\">" .. by .. "</font> has unset mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>.")
+	end
+end, 100)
+
 naim.hooks.add('proto_chat_user_joined', function(conn, chat, who, extra)
 	local group = conn.groups[string.lower(chat)]
 	local window = conn.windows[string.lower(chat)]
@@ -634,7 +652,7 @@ naim.hooks.add('proto_chat_user_oped', function(conn, chat, who, by)
 		local window = conn.windows[string.lower(chat)]
 
 		if window then
-			window:event("attacks")
+			window:event("attacks", "<font color=\"#00FFFF\">" .. who .. "</font> has been oped by <font color=\"#00FFFF\">" .. by .. "</font>.")
 		end
 	end
 end, 100)
@@ -648,7 +666,7 @@ naim.hooks.add('proto_chat_user_deoped', function(conn, chat, who, by)
 	local window = conn.windows[string.lower(chat)]
 
 	if window then
-		window:event("attacks")
+		window:event("attacks", "<font color=\"#00FFFF\">" .. who .. "</font> has been deoped by <font color=\"#00FFFF\">" .. by .. "</font>.")
 	end
 end, 100)
 

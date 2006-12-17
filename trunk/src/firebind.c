@@ -26,8 +26,8 @@ static void _firebind_ctcp_ ## func(struct firetalk_connection_t *sess, conn_t *
 #define nFIRE_CTCPREPHAND(func) \
 static void _firebind_ctcprep_ ## func(struct firetalk_connection_t *sess, conn_t *conn, const char *from, const char *command, const char *args)
 
-HOOK_DECLARE(proto_newnick);
-nFIRE_HANDLER(newnick) {
+HOOK_DECLARE(proto_nickchanged);
+nFIRE_HANDLER(nickchanged) {
 	va_list	msg;
 	const char *newnick;
 
@@ -35,11 +35,11 @@ nFIRE_HANDLER(newnick) {
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_newnick, HOOK_T_CONN HOOK_T_STRING, conn, newnick);
+	HOOK_CALL(proto_nickchanged, HOOK_T_CONN HOOK_T_STRING, conn, newnick);
 }
 
-HOOK_DECLARE(proto_user_nickchanged);
-nFIRE_HANDLER(nickchanged) {
+HOOK_DECLARE(proto_buddy_nickchanged);
+nFIRE_HANDLER(buddy_nickchanged) {
 	va_list	msg;
 	const char *oldnick, *newnick;
 
@@ -48,7 +48,7 @@ nFIRE_HANDLER(nickchanged) {
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_user_nickchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, oldnick, newnick);
+	HOOK_CALL(proto_buddy_nickchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, oldnick, newnick);
 }
 
 HOOK_DECLARE(proto_doinit);
@@ -628,21 +628,37 @@ nFIRE_HANDLER(chat_KEYCHANGED) {
 	HOOK_CALL(proto_chat_keychanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, what, by);
 }
 
-#ifdef RAWIRCMODES
-HOOK_DECLARE(proto_chat_modechanged);
-nFIRE_HANDLER(chat_MODECHANGED) {
+HOOK_DECLARE(proto_chat_modeset);
+nFIRE_HANDLER(chat_modeset) {
 	va_list	msg;
-	const char *room, *mode, *by;
+	const char *room, *by, *arg;
+	int	mode;
 
 	va_start(msg, conn);
 	room = va_arg(msg, const char *);
-	mode = va_arg(msg, const char *);
 	by = va_arg(msg, const char *);
+	mode = va_arg(msg, int);
+	arg = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_modechanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, mode, by);
+	HOOK_CALL(proto_chat_modeset, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32 HOOK_T_STRING, conn, room, by, mode, arg);
 }
-#endif
+
+HOOK_DECLARE(proto_chat_modeunset);
+nFIRE_HANDLER(chat_modeunset) {
+	va_list	msg;
+	const char *room, *by, *arg;
+	int	mode;
+
+	va_start(msg, conn);
+	room = va_arg(msg, const char *);
+	by = va_arg(msg, const char *);
+	mode = va_arg(msg, int);
+	arg = va_arg(msg, const char *);
+	va_end(msg);
+
+	HOOK_CALL(proto_chat_modeunset, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32 HOOK_T_STRING, conn, room, by, mode, arg);
+}
 
 HOOK_DECLARE(proto_chat_oped);
 nFIRE_HANDLER(chat_oped) {
@@ -1209,11 +1225,11 @@ conn_t	*naim_newconn(int proto) {
 		firetalk_register_callback(conn->conn, FC_SETIDLE,			_firebind_setidle);
 
 		firetalk_register_callback(conn->conn, FC_EVILED,			_firebind_warned);
-		firetalk_register_callback(conn->conn, FC_NEWNICK,			_firebind_newnick);
+		firetalk_register_callback(conn->conn, FC_NEWNICK,			_firebind_nickchanged);
 		/* FC_PASSCHANGED */
 
 		firetalk_register_callback(conn->conn, FC_IM_GOTINFO,			_firebind_userinfo_handler);
-		firetalk_register_callback(conn->conn, FC_IM_USER_NICKCHANGED,		_firebind_nickchanged);
+		firetalk_register_callback(conn->conn, FC_IM_USER_NICKCHANGED,		_firebind_buddy_nickchanged);
 		firetalk_register_callback(conn->conn, FC_IM_GETMESSAGE,		_firebind_im_handle);
 		firetalk_register_callback(conn->conn, FC_IM_GETACTION,			_firebind_act_handle);
 		firetalk_register_callback(conn->conn, FC_IM_BUDDYADDED,		_firebind_buddyadded);
@@ -1237,9 +1253,8 @@ conn_t	*naim_newconn(int proto) {
 		firetalk_register_callback(conn->conn, FC_CHAT_GETMESSAGE,		_firebind_chat_getmessage);
 		firetalk_register_callback(conn->conn, FC_CHAT_GETACTION,		_firebind_chat_act_handle);
 		firetalk_register_callback(conn->conn, FC_CHAT_INVITED,			_firebind_chat_invited);
-#ifdef RAWIRCMODES
-		firetalk_register_callback(conn->conn, FC_CHAT_MODECHANGED,		_firebind_chat_MODECHANGED);
-#endif
+		firetalk_register_callback(conn->conn, FC_CHAT_MODESET,			_firebind_chat_modeset);
+		firetalk_register_callback(conn->conn, FC_CHAT_MODEUNSET,		_firebind_chat_modeunset);
 		firetalk_register_callback(conn->conn, FC_CHAT_OPPED,			_firebind_chat_oped);
 		firetalk_register_callback(conn->conn, FC_CHAT_DEOPPED,			_firebind_chat_deoped);
 		firetalk_register_callback(conn->conn, FC_CHAT_USER_JOINED,		_firebind_chat_JOIN);

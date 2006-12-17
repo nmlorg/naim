@@ -64,9 +64,8 @@ enum firetalk_callback {
 	FC_CHAT_GETMESSAGE,	/* ..., char *room, char *from, int automessage_flag, char *message */
 	FC_CHAT_GETACTION,	/* ..., char *room, char *from, int automessage_flag, char *message */
 	FC_CHAT_INVITED,	/* ..., char *room, char *from, char *message */
-//#ifdef RAWIRCMODES
-	FC_CHAT_MODECHANGED,	/* ..., char *room, char *mode, char *by */
-//#endif
+	FC_CHAT_MODESET,	/* ..., char *room, char *by, int mode, char *arg */
+	FC_CHAT_MODEUNSET,	/* ..., char *room, char *by, int mode, char *arg */
 	FC_CHAT_OPPED,		/* ..., char *room, char *by */
 	FC_CHAT_DEOPPED,	/* ..., char *room, char *by */
 	FC_CHAT_USER_JOINED,	/* ..., char *room, char *who */

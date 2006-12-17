@@ -108,7 +108,7 @@ static void nw_wrap_addch(h_t *h, unsigned char c) {
 				h->addch.firstwhite = h->addch.len;
 			else if (h->addch.secondwhite == -1)
 				h->addch.secondwhite = h->addch.len;
-			else
+			else if (c != '\1')
 				h->addch.lastwhite = h->addch.len;
 		}
 		h->addch.buf[h->addch.len++] = c;
@@ -148,9 +148,6 @@ static const struct {
 	{	COLOR_WHITE,	0x80, 0x80, 0x80	},
 	{	COLOR_WHITE,	0xFF, 0xFF, 0xFF	},
 };
-
-#define CHECKTAG(tag)	(strcasecmp(tagbase, (tag)) == 0)
-#define CHECKAMP(tag)	(strcasecmp(tagbuf, (tag)) == 0)
 
 static const char *const parsehtml_pair_RGB(int pair, char bold) {
 	static char buf[20];
@@ -219,6 +216,9 @@ static int parsehtml_pair(const unsigned char *buf, int _pair, char *inbold, cha
 		return(_pair);
 	return(parsehtml_pair_closest(_pair, R, G, B, inbold, foreorback));
 }
+
+#define CHECKTAG(tag)	(strcasecmp(tagbase, (tag)) == 0)
+#define CHECKAMP(tag)	(strcasecmp(tagbuf, (tag)) == 0)
 
 static unsigned long parsehtml_tag(h_t *h, unsigned char *text, int backup) {
 	unsigned char tagbuf[20] = { 0 },

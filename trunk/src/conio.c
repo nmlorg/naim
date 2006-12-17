@@ -804,15 +804,10 @@ static void gotkey_real(int c) {
 		ADDTOBUF(c);
 		inwhite = 0;
 	} else {
-		char	numbuf[5];
-		int	i;
+		char	numbuf[20];
 
-		snprintf(numbuf, sizeof(numbuf), "%i", c);
-		ADDTOBUF('&');
-		ADDTOBUF('#');
-		for (i = 0; numbuf[i] != 0; i++)
-			ADDTOBUF(numbuf[i]);
-		ADDTOBUF(';');
+		snprintf(numbuf, sizeof(numbuf), "&#%i;", c);
+		ADDSTOBUF(numbuf);
 	}
 
 	withtextcomp = 0;
