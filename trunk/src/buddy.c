@@ -20,10 +20,10 @@ extern int	printtitle;
 
 extern int buddyc G_GNUC_INTERNAL,
 	wbuddy_widthy G_GNUC_INTERNAL,
-	inplayback G_GNUC_INTERNAL;
+	colormode G_GNUC_INTERNAL;
 int	buddyc = -1,
 	wbuddy_widthy = -1,
-	inplayback = 0;
+	colormode = COLOR_HONOR_USER;
 
 static void iupdate(void) {
 	time_t	t;
@@ -800,7 +800,10 @@ void	playback(conn_t *const conn, buddywin_t *const bwin, const int lines) {
 		assert(playbackstart >= 0);
 		pos = 0;
 		playbacklen = filesize-playbackstart;
-		inplayback = 1;
+		if (secs_getvar_int("color"))
+			colormode = COLOR_FORCE_ON;
+		else
+			colormode = COLOR_FORCE_OFF;
 		while (fgets(buf, sizeof(buf), rfile) != NULL) {
 			long	len = strlen(buf);
 
@@ -812,7 +815,7 @@ void	playback(conn_t *const conn, buddywin_t *const bwin, const int lines) {
 				lastprogress = now;
 			}
 		}
-		inplayback = 0;
+		colormode = COLOR_HONOR_USER;
 		fclose(rfile);
 	}
 }
