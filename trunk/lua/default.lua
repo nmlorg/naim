@@ -654,12 +654,15 @@ end, 100)
 
 naim.hooks.add('proto_chat_user_nickchanged', function(conn, chat, who, newnick)
 	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
 
 	assert(not group.members[newnick])
 	group.members[newnick] = group.members[who]
 	group.members[who] = nil
 
-	window:event("misc", "<font color=\"#00FFFF\">" .. who .. "</font> is now known as <font color=\"#00FFFF\">" .. newnick .. "</font>.")
+	if window then
+		window:event("misc", "<font color=\"#00FFFF\">" .. who .. "</font> is now known as <font color=\"#00FFFF\">" .. newnick .. "</font>.")
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_topicchanged', function(conn, chat, topic, by)
