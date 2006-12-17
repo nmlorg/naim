@@ -52,7 +52,7 @@ void	do_resize(conn_t *conn, buddywin_t *bwin) {
 	werase(&(bwin->nwin._win->win));
 	nw_move(&(bwin->nwin), height-1, 0);
 	nw_printf(&(bwin->nwin), 0, 0, "\n\n\n");
-	playback(conn, bwin, height);
+	logging_playback(conn, bwin, height);
 	bwin->nwin.small = small;
 }
 
@@ -261,10 +261,6 @@ static void wsetup_colors(void) {
 	fprintf(stderr, " done\r\n");
 }
 
-#define NWIN(WIN)	(struct winwin_t *)newwin(faimconf.WIN.widthy, faimconf.WIN.widthx, \
-	faimconf.WIN.starty, faimconf.WIN.startx);
-#define NPAD(WIN)	(struct winwin_t *)newpad(faimconf.WIN.pady, faimconf.WIN.widthx);
-
 void	whidecursor(void) {
 	if (curs_set(0) != ERR)
 		leaveok(stdscr, TRUE);
@@ -312,31 +308,31 @@ void	wsetup(void) {
 	}
 
 	assert(&(win_input._win->win) == NULL);
-	win_input._win = NWIN(winput);
+	win_input._win = (struct winwin_t *)newwin(faimconf.winput.widthy, faimconf.winput.widthx, faimconf.winput.starty, faimconf.winput.startx);
 	assert(&(win_input._win->win) != NULL);
 	nw_initwin(&win_input, cINPUT);
 	scrollok(&(win_input._win->win), FALSE);
 
 	assert(&(win_buddy._win->win) == NULL);
-	win_buddy._win = NPAD(wstatus);
+	win_buddy._win = (struct winwin_t *)newpad(faimconf.wstatus.pady, faimconf.wstatus.widthx);
 	assert(&(win_buddy._win->win) != NULL);
 	nw_initwin(&win_buddy, cWINLIST);
 	scrollok(&(win_buddy._win->win), FALSE);
 
 	assert(&(win_info._win->win) == NULL);
-	win_info._win = NWIN(winfo);
+	win_info._win = (struct winwin_t *)newwin(faimconf.winfo.widthy, faimconf.winfo.widthx, faimconf.winfo.starty, faimconf.winfo.startx);
 	assert(&(win_info._win->win) != NULL);
 	nw_initwin(&win_info, cTEXT);
 	scrollok(&(win_info._win->win), FALSE);
 
 	assert(&(win_away._win->win) == NULL);
-	win_away._win = NWIN(waway);
+	win_away._win = (struct winwin_t *)newwin(faimconf.waway.widthy, faimconf.waway.widthx, faimconf.waway.starty, faimconf.waway.startx);
 	assert(&(win_away._win->win) != NULL);
 	nw_initwin(&win_away, cWINLIST-1);
 	scrollok(&(win_away._win->win), FALSE);
 
 	assert(&(win_textedit._win->win) == NULL);
-	win_textedit._win = NWIN(wtextedit);
+	win_textedit._win = (struct winwin_t *)newwin(faimconf.wtextedit.widthy, faimconf.wtextedit.widthx, faimconf.wtextedit.starty, faimconf.wtextedit.startx);
 	assert(&(win_textedit._win->win) != NULL);
 	nw_initwin(&win_textedit, cWINLIST-1);
 	scrollok(&(win_textedit._win->win), FALSE);
@@ -512,10 +508,10 @@ void	nw_touchwin(win_t *win) {
 	touchwin(&(win->_win->win));
 }
 
-void	nw_newwin(win_t *win) {
+void	nw_newwin(win_t *win, const int height, const int width) {
 	nw_delwin(win);
 	win->height = faimconf.wstatus.pady;
-	win->_win = NPAD(wstatus);
+	win->_win = (struct winwin_t *)newpad(height, width);
 	assert(&(win->_win->win) != NULL);
 }
 
@@ -608,12 +604,4 @@ void	nw_getpass(win_t *win, char *pass, int len) {
 		statrefresh();
 	} while ((i == -1) || ((pass[i] != '\n') && (pass[i] != '\r') && ((i+1) < len)));
 	pass[i] = 0;
-}
-
-void	*playback_fcreate() {
-	return(NULL);
-}
-
-void	*playback_ffind() {
-	return(NULL);
 }

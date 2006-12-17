@@ -358,7 +358,7 @@ void	nw_addstr(win_t *win, const unsigned char *) G_GNUC_INTERNAL;
 void	nw_move(win_t *win, int row, int col) G_GNUC_INTERNAL;
 void	nw_delwin(win_t *win) G_GNUC_INTERNAL;
 void	nw_touchwin(win_t *win) G_GNUC_INTERNAL;
-void	nw_newwin(win_t *win) G_GNUC_INTERNAL;
+void	nw_newwin(win_t *win, const int height, const int width) G_GNUC_INTERNAL;
 void	nw_hline(win_t *win, unsigned long ch, int row) G_GNUC_INTERNAL;
 void	nw_vline(win_t *win, unsigned long ch, int col) G_GNUC_INTERNAL;
 void	nw_mvwin(win_t *win, int row, int col) G_GNUC_INTERNAL;

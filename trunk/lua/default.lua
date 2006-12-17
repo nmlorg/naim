@@ -633,14 +633,17 @@ end, 100)
 naim.hooks.add('proto_disconnected', function(conn, errorcode)
 	conn.online = nil
 	conn.groups = {}
-	conn.buddies = {}
+
+	for k,buddy in pairs(conn.buddies) do
+		buddy.session = nil
+	end
 end, 100)
 
 naim.hooks.add('proto_userinfo', function(conn, who, info, warnlev, signontime, idletime, class)
 	local buddy = conn.buddies[who]
 
 	conn:echo("Information about <font color=\"#00FFFF\">" .. who .. "</font>:<br><font color=\"#808080\">"
-		.. (buddy and buddy.caps and "Client capabilities: <b>" .. table.concat(buddy.caps, ' ') .. "</b><br>" or "")
+		.. (buddy and buddy.session and buddy.session.caps and "Client capabilities: <b>" .. table.concat(buddy.session.caps, ' ') .. "</b><br>" or "")
 		.. (warnlev > 0 and "&nbsp; &nbsp; &nbsp; Warning level: <b>" .. warnlev .. "</b><br>" or "")
 		.. (signontime > 0 and "&nbsp; &nbsp; &nbsp; &nbsp; Online time: <b>" .. naim.internal.dtime(os.time()-signontime) .. "</b><br>" or "")
 		.. (idletime > 0 and "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Idle time: <b>" .. naim.internal.dtime(60*idletime) .. "</b><br>" or "")
@@ -662,65 +665,74 @@ naim.hooks.add('proto_buddy_nickchanged', function(conn, who, newnick)
 	end
 end, 100)
 
---naim.hooks.add('proto_buddy_coming', function(conn, who)
---end, 100)
+naim.hooks.add('proto_buddy_coming', function(conn, who)
+	local buddy = conn.buddies[who]
+	assert(buddy)
+	assert(not buddy.session)
+
+	buddy.session = {}
+end, 100)
 
 naim.hooks.add('proto_buddy_idle', function(conn, who, idletime)
 	local window = conn.windows[who]
 	local buddy = conn.buddies[who]
 	assert(buddy)
+	assert(buddy.session)
 
 	local idle = idletime >= 10 and true or nil
 
 	if window then
-		if idle and not buddy.idle then
+		if idle and not buddy.session.idle then
 			window:event2("event", who, "is now", "idle")
-		elseif not idle and buddy.idle then
+		elseif not idle and buddy.session.idle then
 			window:event2("event", who, "is no longer", "idle")
 		end
 	end
 
-	buddy.idle = idle
+	buddy.session.idle = idle
 end, 100)
 
 naim.hooks.add('proto_buddy_away', function(conn, who)
 	local window = conn.windows[who]
 	local buddy = conn.buddies[who]
 	assert(buddy)
+	assert(buddy.session)
 
 	if window then
-		if not buddy.away then
+		if not buddy.session.away then
 			window:event2("event", who, "is now", "away")
 		end
 	end
 
-	buddy.away = true
+	buddy.session.away = true
 end, 100)
 
 naim.hooks.add('proto_buddy_unaway', function(conn, who)
 	local window = conn.windows[who]
 	local buddy = conn.buddies[who]
 	assert(buddy)
+	assert(buddy.session)
 
 	if window then
-		if buddy.away then
+		if buddy.session.away then
 			window:event2("event", who, "is no longer", "away")
 		end
 	end
 
-	buddy.away = nil
+	buddy.session.away = nil
 end, 100)
 
 naim.hooks.add('proto_buddy_capschanged', function(conn, who, caps)
 	local buddy = conn.buddies[who]
 	assert(buddy)
+	assert(buddy.session)
 
-	if not buddy.caps or table.concat(buddy.caps, ' ') ~= caps then
+	if not buddy.session.caps or table.concat(buddy.session.caps, ' ') ~= caps then
 		local capst = naim.internal.split(caps, ' ')
 		local window = conn.windows[who]
 
-		if window and buddy.caps then
-			local c1, c2 = naim.internal.v2k(buddy.caps), naim.internal.v2k(capst)
+		if window and buddy.session.caps then
+			local c1, c2 = naim.internal.v2k(buddy.session.caps), naim.internal.v2k(capst)
 
 			for k,v in pairs(c1) do
 				if not c2[k] then
@@ -735,7 +747,7 @@ naim.hooks.add('proto_buddy_capschanged', function(conn, who, caps)
 			end
 		end
 
-		buddy.caps = capst
+		buddy.session.caps = capst
 	end
 end, 100)
 
