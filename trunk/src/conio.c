@@ -350,8 +350,7 @@ CONIOAREQ(string,message)
 	assert(tmptr != NULL);
 
 	if (bwin != NULL) {
-		const char *format = NULL;
-		char	*pre, *post;
+		const char *format = NULL, *pre = getvar(conn, "im_prefix"), *post = getvar(conn, "im_suffix");
 
 		switch (bwin->et) {
 		  case CHAT:
@@ -369,36 +368,20 @@ CONIOAREQ(string,message)
 			return;
 		}
 
-		if ((pre = getvar(conn, "im_prefix")) != NULL)
-			pre = strdup(pre);
-		if ((post = getvar(conn, "im_suffix")) != NULL)
-			post = strdup(post);
-
 		WINTIME(&(bwin->nwin), IMWIN);
 		hwprintf(&(bwin->nwin), C(IMWIN,SELF),
 			format, (conn->sn != NULL)?conn->sn:"(me)");
 		hwprintf(&(bwin->nwin), C(IMWIN,TEXT),
 			" %s%s%s<br>", pre?pre:"", args[1], post?post:"");
-
-		FREESTR(pre);
-		FREESTR(post);
 	}
 	if ((conn != curconn) || (conn->curbwin == NULL)
 		|| (firetalk_compare_nicks(conn->conn, conn->curbwin->winname, args[0]) != FE_SUCCESS)) {
-		char	*pre, *post;
-
-		if ((pre = getvar(conn, "im_prefix")) != NULL)
-			pre = strdup(pre);
-		if ((post = getvar(conn, "im_suffix")) != NULL)
-			post = strdup(post);
+		const char *pre = getvar(conn, "im_prefix"), *post = getvar(conn, "im_suffix");
 
 		WINTIME(&(conn->nwin), CONN);
 		hwprintf(&(conn->nwin), C(CONN,SELF), "-&gt; *<B>%s</B>*", args[0]);
 		hwprintf(&(conn->nwin), C(CONN,TEXT), " %s%s%s<br>", pre?pre:"", args[1], post?post:"");
 		naim_lastupdate(conn);
-
-		FREESTR(pre);
-		FREESTR(post);
 	}
 
 	logim(conn, conn->sn, args[0], args[1]);
@@ -558,8 +541,7 @@ CONIOAOPT(string,filename)
 		fprintf(file, "#WINLIST Auto\n\n");
 
 	for (i = 0; i < rc_var_s_c; i++) {
-		const char
-			*glob = script_getvar(rc_var_s_ar[i].var),
+		const char *glob = script_getvar(rc_var_s_ar[i].var),
 			*def = rc_var_s_ar[i].val,
 			*use, *cm, *q;
 
@@ -587,11 +569,9 @@ CONIOAOPT(string,filename)
 	}
 
 	for (i = 0; i < rc_var_i_c; i++) {
-		const char
-			*glob = script_getvar(rc_var_i_ar[i].var),
+		const char *glob = script_getvar(rc_var_i_ar[i].var),
 			*cm;
-		const int
-			globi = atoi(glob),
+		const int globi = atoi(glob),
 			defi = rc_var_i_ar[i].val;
 		int	usei;
 
@@ -614,11 +594,9 @@ CONIOAOPT(string,filename)
 	}
 
 	for (i = 0; i < rc_var_b_c; i++) {
-		const char
-			*glob = script_getvar(rc_var_b_ar[i].var),
+		const char *glob = script_getvar(rc_var_b_ar[i].var),
 			*cm;
-		const int
-			globi = atoi(glob),
+		const int globi = atoi(glob),
 			defi = rc_var_b_ar[i].val;
 		int	usei;
 
@@ -657,7 +635,7 @@ CONIOAOPT(string,filename)
 	}
 
 	{
-		const char	*binding, *def;
+		const char *binding, *def;
 		char	key[10];
 		int	base;
 
@@ -716,10 +694,8 @@ CONIOAOPT(string,filename)
 	}
 
 	{
-		extern html_clean_t
-			*html_cleanar;
-		extern int
-			html_cleanc;
+		extern html_clean_t *html_cleanar;
+		extern int html_cleanc;
 		int	i;
 
 		fprintf(file, "# Filters.\n");
@@ -750,30 +726,30 @@ CONIOAOPT(string,filename)
 "\n",				c->winname, home);
 
 		{
-			buddylist_t	*blist = c->buddyar;
+			buddylist_t *blist = c->buddyar;
 
 			if (blist != NULL) {
 			  fprintf(file, "# Add your buddies.\n");
 			  do {
-			    if (USER_PERMANENT(blist)) {
-				char	*b = USER_ACCOUNT(blist),
- 					*g = USER_GROUP(blist),
-					*n = (blist->_name != NULL)?blist->_name:"",
-					*bq = (strchr(b, ' ') != NULL)?"\"":"",
-					*gq = ((*g == 0)
-						|| (strchr(g, ' ') != NULL))?"\"":"";
+				if (USER_PERMANENT(blist)) {
+					char	*b = USER_ACCOUNT(blist),
+ 						*g = USER_GROUP(blist),
+						*n = (blist->_name != NULL)?blist->_name:"",
+						*bq = (strchr(b, ' ') != NULL)?"\"":"",
+						*gq = ((*g == 0)
+							|| (strchr(g, ' ') != NULL))?"\"":"";
 
-				fprintf(file,
+					fprintf(file,
 "%s:addbuddy\t%s%s%s\t%s%s%s\t%s\n",
-					c->winname, bq, b, bq, gq, g, gq, n);
-			    }
+						c->winname, bq, b, bq, gq, g, gq, n);
+				}
 			  } while ((blist = blist->next) != NULL);
 			  fprintf(file, "\n");
 			}
 		}
 
 		{
-			ignorelist_t	*blist = c->idiotar;
+			ignorelist_t *blist = c->idiotar;
 
 			if (blist != NULL) {
 			  fprintf(file, "# Add your ignore list.\n");
@@ -796,7 +772,7 @@ CONIOAOPT(string,filename)
 		}
 
 		{
-			buddywin_t	*bwin = c->curbwin;
+			buddywin_t *bwin = c->curbwin;
 
 			if (bwin != NULL) {
 			  fprintf(file, "# Rejoin your channels.\n");
@@ -839,8 +815,7 @@ CONIOAOPT(string,filename)
 		}
 
 		for (i = 0; i < rc_var_s_c; i++) {
-			const char
-				*loc = getvar(c, rc_var_s_ar[i].var),
+			const char *loc = getvar(c, rc_var_s_ar[i].var),
 				*glob = script_getvar(rc_var_s_ar[i].var),
 				*q;
 
@@ -859,8 +834,7 @@ CONIOAOPT(string,filename)
 		}
 
 		for (i = 0; i < rc_var_i_c; i++) {
-			const char
-				*loc = getvar(c, rc_var_i_ar[i].var),
+			const char *loc = getvar(c, rc_var_i_ar[i].var),
 				*glob = script_getvar(rc_var_i_ar[i].var);
 
 			if (loc != glob) {
@@ -876,8 +850,7 @@ CONIOAOPT(string,filename)
 		}
 
 		for (i = 0; i < rc_var_b_c; i++) {
-			const char
-				*loc = getvar(c, rc_var_b_ar[i].var),
+			const char *loc = getvar(c, rc_var_b_ar[i].var),
 				*glob = script_getvar(rc_var_b_ar[i].var);
 
 			if (loc != glob) {
