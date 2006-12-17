@@ -27,8 +27,9 @@ int	nlua_script_parse(const char *script) {
 char	*nlua_expand(const char *script) {
 	char	*result;
 
-	_getsubtable("internal");
-	_getitem("expandstring");
+	_get_global_ent(lua, "naim", "internal", "expandstring", NULL);
+//	_getsubtable("internal");
+//	_getitem("expandstring");
 	lua_pushstring(lua, script);
 	lua_pcall(lua, 1, 1, 0);		/* Feed the error message to the caller if there is one */
 	result = strdup(lua_tostring(lua, -1));
@@ -41,8 +42,9 @@ char	*nlua_expand(const char *script) {
 int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
 	char	*lcmd;
 
-	_getmaintable();			// { naim }
-	_getitem("call");			// { naim.call }
+	_get_global_ent(lua, "naim.call", NULL);
+//	_getmaintable();			// { naim }
+//	_getitem("call");			// { naim.call }
 	if (!lua_isfunction(lua, -1)) {
 		static int complained = 0;
 
@@ -54,18 +56,6 @@ int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
 		return(0);
 	}
 
-	_getmaintable();			// { naim, naim.call }
-	_getitem("commands");			// { naim.commands, naim.call }
-	if (!lua_istable(lua, -1)) {
-		static int complained = 0;
-
-		lua_pop(lua, 2);		// {}
-		if (!complained && (conn != NULL)) {
-			complained++;
-			status_echof(conn, "naim's Lua commands table went away. This is a bug in a user script. I'll continue for now, but Lua commands will no longer work. Sorry.");
-		}
-		return(0);
-	}
 	lcmd = strdup(cmd);
 	{
 		char	*p;
@@ -73,10 +63,13 @@ int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
 		for (p = lcmd; *p; p++)
 			*p = tolower(*p);
 	}
-	lua_pushstring(lua, lcmd);		// { CMD, naim.commands, naim.call }
+	_get_global_ent(lua, "naim", "commands", lcmd, NULL);
+//	_getmaintable();			// { naim, naim.call }
+//	_getitem("commands");			// { naim.commands, naim.call }
+//	lua_pushstring(lua, lcmd);		// { CMD, naim.commands, naim.call }
 	free(lcmd);
-	lua_gettable(lua, -2);			// { naim.commands[CMD], naim.commands, naim.call }
-	lua_remove(lua, -2);			// { naim.commands[CMD], naim.call }
+//	lua_gettable(lua, -2);			// { naim.commands[CMD], naim.commands, naim.call }
+//	lua_remove(lua, -2);			// { naim.commands[CMD], naim.call }
 	if (lua_isnil(lua, -1)) {
 		lua_pop(lua, 2);		// {}
 		return(0);

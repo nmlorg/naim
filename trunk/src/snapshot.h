@@ -1,1 +1,1 @@
-#define NAIM_SNAPSHOT "-2006-06-23-0304 (development snapshot)"
+#define NAIM_SNAPSHOT "-2006-06-27-1559 (development snapshot)"
