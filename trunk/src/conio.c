@@ -1078,18 +1078,32 @@ CONIOAOPT(entity,name)
 	}
 }
 
+void	naim_eval(const char *_str) {
+	int	len = strlen(_str);
+	char	*str = malloc(len+2), *p;
+
+	strncpy(str, _str, len+2);
+	while ((p = strrchr(str, ';')) != NULL)
+		*p = 0;
+	for (p = str; *p != 0; p += strlen(p)+1)
+		conio_handlecmd(script_expand(p));
+	free(str);
+}
+
 CONIOFUNC(eval) {
 CONIODESC(Evaluate a command with $-variable substitution)
 CONIOAREQ(string,script)
-	script_script_parse(args[0]);
+	if (args[0][0] == '/')
+		naim_eval(args[0]);
+	else
+		script_script_parse(args[0]);
 }
 
 CONIOFUNC(say) {
 CONIODESC(Send a message to the current window; as in /say I am happy)
 CONIOAREQ(string,message)
 CONIOWHER(NOTSTATUS)
-	const char
-		*newargs[2] = { conn->curbwin->winname, args[0] };
+	const char *newargs[2] = { conn->curbwin->winname, args[0] };
 
 	conio_msg(conn, 2, newargs);
 }
@@ -1873,8 +1887,7 @@ static html_clean_t
 	{ "b4",		"before"	},
 };
 
-static void
-	conio_filter_defaults(void) {
+static void conio_filter_defaults(void) {
 	int	i;
 
 	for (i = 0; i < sizeof(conio_filter_defaultar)/sizeof(*conio_filter_defaultar); i++) {
@@ -2836,7 +2849,7 @@ void	conio_handlecmd(const char *buf) {
 
 	assert(buf != NULL);
 
-	while (*buf == '/')
+	while ((*buf == '/') || isspace(*buf))
 		buf++;
 
 	if (*buf == 0)
@@ -2940,7 +2953,7 @@ void	conio_handleline(const char *line) {
 	else if (!inconn)
 		conio_handlecmd(line);
 	else {
-		const char	*args[] = { NULL, line };
+		const char *args[] = { NULL, line };
 
 		curconn->curbwin->keepafterso = 1;
 		conio_msg(curconn, 2, args);
@@ -3725,7 +3738,7 @@ static void gotkey_real(int c) {
 				break;
 			}
 		} else if (binding != NULL)
-			conio_handlecmd(binding);
+			naim_eval(binding);
 		if (bindfunc != NULL)
 			bindfunc(buf, &bufloc);
 	} else if (naimisprint(c)) {
