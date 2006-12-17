@@ -106,7 +106,7 @@ nFIRE_HANDLER(naim_newnick) {
 
 	STRREPLACE(conn->sn, newnick);
 
-	secs_setvar("SN", newnick);
+	script_setvar("SN", newnick);
 }
 
 nFIRE_HANDLER(naim_nickchange) {
@@ -185,7 +185,7 @@ nFIRE_HANDLER(naim_postselect) {
 	now = tv.tv_sec;
 	nowf = tv.tv_usec/1000000. + ((double)now);
 	snprintf(buf, sizeof(buf), "%lu", now);
-	secs_setvar("nowi", buf);
+	script_setvar("nowi", buf);
 }
 
 void	naim_setversion(conn_t *conn) {
@@ -245,12 +245,12 @@ nFIRE_HANDLER(naim_doinit) {
 	naim_set_info(conn, conn->profile);
 
 	if (awaytime > 0)
-		firetalk_set_away(sess, secs_getvar("awaymsg"), 0);
+		firetalk_set_away(sess, script_getvar("awaymsg"), 0);
 }
 
 nFIRE_HANDLER(naim_setidle) {
 	va_list	msg;
-	long	*idle, idletime = secs_getvar_int("idletime");
+	long	*idle, idletime = script_getvar_int("idletime");
 
 	va_start(msg, conn);
 	idle = va_arg(msg, long *);
@@ -696,11 +696,11 @@ static int recvfrom_display_user(conn_t *conn, char **name, char **dest,
 		if (!(*flags & RF_AUTOMATIC)) {
 			int	autoreply = getvar_int(conn, "autoreply");
 
-			if ((autoreply > 0) && (awaytime > 0) && (*secs_getvar("awaymsg") != 0)
+			if ((autoreply > 0) && (awaytime > 0) && (*script_getvar("awaymsg") != 0)
 				&& ((now - bwin->informed) > 60*autoreply)
 				&& (firetalk_compare_nicks(conn->conn, *name, conn->sn) != FE_SUCCESS)) {
-				int	autoaway = secs_getvar_int("autoaway"),
-					idletime = secs_getvar_int("idletime");
+				int	autoaway = script_getvar_int("autoaway"),
+					idletime = script_getvar_int("idletime");
 
 				if ((autoaway == 0) || (idletime >= (now-awaytime)/60) || (idletime >= 10)) {
 					sendaway(conn, *name);
@@ -2170,7 +2170,7 @@ conn_t	*naim_newconn(int proto) {
 }
 
 void	naim_lastupdate(conn_t *conn) {
-	int	autohide = secs_getvar_int("autohide");
+	int	autohide = script_getvar_int("autohide");
 
 	if ((conn->lastupdate + autohide) < nowf)
 		conn->lastupdate = nowf;
