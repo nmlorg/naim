@@ -122,7 +122,7 @@ nFIRE_HANDLER(naim_nickchange) {
 	if ((buddy = rgetlist(conn, oldnick)) == NULL)
 		return;
 	if (strcmp(buddy->_account, newnick) != 0) {
-		script_hook_changebuddy(conn, buddy, newnick);
+		script_hook_changebuddy(buddy, newnick);
 		STRREPLACE(buddy->_account, newnick);
 	}
 

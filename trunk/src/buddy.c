@@ -629,9 +629,11 @@ void	bclose(conn_t *conn, buddywin_t *bwin, int _auto) {
 	if (bwin == NULL)
 		return;
 
+	assert(bwin->conn == conn);
+
 	verify_winlist_sanity(conn, bwin);
 
-	script_hook_delwin(conn, bwin);
+	script_hook_delwin(bwin);
 
 	switch (bwin->et) {
 	  case BUDDY:
@@ -914,7 +916,8 @@ void	bnewwin(conn_t *conn, const char *name, et_t et) {
 		}
 	}
 
-	script_hook_newwin(conn, bwin);
+	bwin->conn = conn;
+	script_hook_newwin(bwin);
 }
 
 void	bcoming(conn_t *conn, const char *buddy) {
@@ -926,7 +929,7 @@ void	bcoming(conn_t *conn, const char *buddy) {
 	blist = rgetlist(conn, buddy);
 	assert(blist != NULL);
 	if (strcmp(blist->_account, buddy) != 0) {
-		script_hook_changebuddy(conn, blist, buddy);
+		script_hook_changebuddy(blist, buddy);
 		STRREPLACE(blist->_account, buddy);
 	}
 	if ((bwin = bgetbuddywin(conn, blist)) == NULL) {

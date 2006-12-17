@@ -5,14 +5,6 @@
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
-#include <naim/naim.h>
-#include <naim/modutil.h>
-#include "naim-int.h"
-
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-
 #include "moon-int.h"
 
 #define NLUA_STRING_GET(ctype, varname) \
@@ -23,6 +15,14 @@ static int _nlua_ ## ctype ## _get_ ## varname(lua_State *L) { \
 	return(1); \
 }
 
+static int _lua2conio(lua_State *L, int first, const char **args, const int argmax) {
+	int	argc;
+
+	for (argc = 0; (argc < argmax) && (lua_type(L, argc+first) != LUA_TNONE); argc++)
+		args[argc] = lua_tostring(L, argc+first);
+
+	return(argc);
+}
 
 
 
@@ -95,28 +95,15 @@ static int l_conn_echo(lua_State *L) {
 	return(0);
 }
 
-typedef struct {
-	int	argc;
-	const char *args[CONIO_MAXPARMS];
-} _lua2conio_ret;
-
-static _lua2conio_ret *_lua2conio(lua_State *L, int first) {
-	static _lua2conio_ret ret;
-
-	for (ret.argc = 0; (ret.argc < CONIO_MAXPARMS) && (lua_type(L, ret.argc+first) != LUA_TNONE); ret.argc++)
-		ret.args[ret.argc] = lua_tostring(L, ret.argc+first);
-
-	return(&ret);
-}
-
 static int l_conn_msg(lua_State *L) {
 	extern void conio_msg(conn_t *conn, int argc, const char **args);
 	conn_t *conn = _get_conn_t(L, 1);
-	_lua2conio_ret *ret = _lua2conio(L, 2);
+	const char *args[CONIO_MAXPARMS];
+	int	argc = _lua2conio(L, 2, args, CONIO_MAXPARMS);
 	const char *error;
 
-	if ((error = conio_valid("msg", conn, ret->argc)) == NULL)
-		conio_msg(conn, ret->argc, ret->args);
+	if ((error = conio_valid("msg", conn, argc)) == NULL)
+		conio_msg(conn, argc, args);
 	else {
 		lua_pushstring(L, error);
 		return(lua_error(L));
@@ -139,20 +126,20 @@ const struct luaL_reg naimprototypeconnlib[] = {
 
 
 
-void	nlua_hook_newwin(conn_t *conn, buddywin_t *bwin) {
+void	nlua_hook_newwin(buddywin_t *bwin) {
 	_getsubtable("internal");
 	_getitem("newwin");
-	_push_conn_t(lua, conn);
+	_push_conn_t(lua, bwin->conn);
 	lua_pushstring(lua, bwin->winname);
 	lua_pushlightuserdata(lua, bwin);
 	if (lua_pcall(lua, 3, 0, 0))
 		lua_pop(lua, 3);
 }
 
-void	nlua_hook_delwin(conn_t *conn, buddywin_t *bwin) {
+void	nlua_hook_delwin(buddywin_t *bwin) {
 	_getsubtable("internal");
 	_getitem("delwin");
-	_push_conn_t(lua, conn);
+	_push_conn_t(lua, bwin->conn);
 	lua_pushstring(lua, bwin->winname);
 	if (lua_pcall(lua, 2, 0, 0))
 		lua_pop(lua, 2);
@@ -172,13 +159,13 @@ NLUA_STRING_GET(buddywin_t, winname);
 
 static int _nlua_buddywin_t_msg(lua_State *L) {
 	extern void conio_msg(conn_t *conn, int argc, const char **args);
-	conn_t *conn = _get_conn_t(L, 1);
-	buddywin_t *bwin = _get_buddywin_t(L, 2);
-	_lua2conio_ret *ret = _lua2conio(L, 3);
+	buddywin_t *bwin = _get_buddywin_t(L, 1);
+	const char *args[CONIO_MAXPARMS] = { bwin->winname };
+	int	argc = _lua2conio(L, 2, args+1, CONIO_MAXPARMS-1)+1;
 	const char *error;
 
-	if ((error = conio_valid("msg", conn, ret->argc)) == NULL)
-		conio_msg(conn, ret->argc, ret->args);
+	if ((error = conio_valid("msg", bwin->conn, argc)) == NULL)
+		conio_msg(bwin->conn, argc, args);
 	else {
 		lua_pushstring(L, error);
 		return(lua_error(L));
@@ -195,30 +182,30 @@ const struct luaL_reg naimprototypewindows[] = {
 
 
 
-void	nlua_hook_newbuddy(conn_t *conn, buddylist_t *buddy) {
+void	nlua_hook_newbuddy(buddylist_t *buddy) {
 	_getsubtable("internal");
 	_getitem("newbuddy");
-	_push_conn_t(lua, conn);
+	_push_conn_t(lua, buddy->conn);
 	lua_pushstring(lua, USER_ACCOUNT(buddy));
 	lua_pushlightuserdata(lua, buddy);
 	if (lua_pcall(lua, 3, 0, 0))
 		lua_pop(lua, 3);
 }
 
-void	nlua_hook_changebuddy(conn_t *conn, buddylist_t *buddy, const char *newaccount) {
+void	nlua_hook_changebuddy(buddylist_t *buddy, const char *newaccount) {
 	_getsubtable("internal");
 	_getitem("changebuddy");
-	_push_conn_t(lua, conn);
+	_push_conn_t(lua, buddy->conn);
 	lua_pushstring(lua, USER_ACCOUNT(buddy));
 	lua_pushstring(lua, newaccount);
 	if (lua_pcall(lua, 3, 0, 0))
 		lua_pop(lua, 3);
 }
 
-void	nlua_hook_delbuddy(conn_t *conn, buddylist_t *buddy) {
+void	nlua_hook_delbuddy(buddylist_t *buddy) {
 	_getsubtable("internal");
 	_getitem("delbuddy");
-	_push_conn_t(lua, conn);
+	_push_conn_t(lua, buddy->conn);
 	lua_pushstring(lua, USER_ACCOUNT(buddy));
 	if (lua_pcall(lua, 2, 0, 0))
 		lua_pop(lua, 2);

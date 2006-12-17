@@ -47,7 +47,8 @@ buddylist_t *raddbuddy(conn_t *conn, const char *screenname, const char *group, 
 	buddy->offline = 1;
 	buddy->isaway = buddy->isidle = 0;
 
-	script_hook_newbuddy(conn, buddy);
+	buddy->conn = conn;
+	script_hook_newbuddy(buddy);
 
 	return(buddy);
 }
@@ -79,7 +80,8 @@ void	rdelbuddy(conn_t *conn, const char *screenname) {
 			firetalk_subcode_send_request(conn->conn, screenname, "AUTOPEER", "-AUTOPEER");
 		buddy->peer = 0;
 		conn->buddyar = buddy->next;
-		script_hook_delbuddy(conn, buddy);
+		assert(buddy->conn == conn);
+		script_hook_delbuddy(buddy);
 		do_delbuddy(buddy);
 		return;
 	}
@@ -91,7 +93,8 @@ void	rdelbuddy(conn_t *conn, const char *screenname) {
 				firetalk_subcode_send_request(conn->conn, screenname, "AUTOPEER", "-AUTOPEER");
 			b->peer = 0;
 			buddy->next = buddy->next->next;
-			script_hook_delbuddy(conn, b);
+			assert(b->conn == conn);
+			script_hook_delbuddy(b);
 			do_delbuddy(b);
 			return;
 		}
