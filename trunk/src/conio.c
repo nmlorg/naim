@@ -111,11 +111,10 @@ static void conio_bind_defaults(void) {
 	int	i;
 
 	for (i = 0; i < conio_bind_defaultc; i++) {
-		char	buf[1024];
+		extern void ua_bind(conn_t *conn, int argc, const char **args);
+		const char *_args[] = { conio_bind_defaultar[i].key, conio_bind_defaultar[i].cmd };
 
-		snprintf(buf, sizeof(buf), "bind %s %s", conio_bind_defaultar[i].key,
-			conio_bind_defaultar[i].cmd);
-		ua_handlecmd(buf);
+		ua_bind(curconn, 2, _args);
 	}
 }
 

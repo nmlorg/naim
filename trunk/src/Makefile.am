@@ -7,15 +7,17 @@ BUILT_SOURCES = \
 	commands.txt
 
 DISTCLEANFILES = \
+	cmdar.c \
+	cmdar.h \
 	conio_keys.h \
-	conio_cmds.h \
 	${BUILT_SOURCES}
 	
 EXTRA_DIST = \
 	${pkgdoc_DATA} \
 	cmplhlp2.sh \
 	cmplhelp.sh \
-	gencmds.sh \
+	gencmdarc.sh \
+	gencmdarh.sh \
 	gencmd2.sh \
 	genkeys.sh \
 	main_stub.c \
@@ -27,6 +29,7 @@ NAIM_CORE = \
 	alias.c \
 	atomizer.c \
 	buddy.c \
+	cmdar.c \
 	commands.c \
 	conio.c \
 	echof.c \
@@ -77,8 +80,11 @@ INCLUDES = -I${top_srcdir}/include -I${top_srcdir}/libfiretalk ${INCLTDL}
 conio_keys.h: ${srcdir}/conio.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" SRCDIR=${srcdir} ${srcdir}/genkeys.sh > conio_keys.h
 
-conio_cmds.h: ${srcdir}/commands.c config.h
-	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmds.sh > conio_cmds.h
+cmdar.c: ${srcdir}/commands.c config.h
+	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmdarc.sh > cmdar.c
+
+cmdar.h: ${srcdir}/commands.c config.h
+	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmdarh.sh > cmdar.h
 
 commands.txt: ${srcdir}/commands.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmd2.sh > commands.txt
@@ -89,16 +95,18 @@ help.h: ${top_srcdir}/doc/naim.hlp
 help.c: ${top_srcdir}/doc/naim.hlp
 	AWK="${AWK}" "${srcdir}/cmplhelp.sh" < ${top_srcdir}/doc/naim.hlp > help.c
 
-naim-commands.${OBJEXT}: conio_cmds.h
-libnaim_la-commands.${LOBJEXT}: conio_cmds.h
+naim-cmdar.${OBJEXT}: cmdar.h
+libnaim_la-cmdar.${LOBJEXT}: cmdar.h
+naim-commands.${OBJEXT}: cmdar.h
+libnaim_la-commands.${LOBJEXT}: cmdar.h
 naim-conio.${OBJEXT}: conio_keys.h
 libnaim_la-conio.${LOBJEXT}: conio_keys.h
-naim-events.${OBJEXT}: conio_cmds.h
-libnaim_la-events.${LOBJEXT}: conio_cmds.h
-naim-fireio.${OBJEXT}: conio_cmds.h
-libnaim_la-fireio.${LOBJEXT}: conio_cmds.h
-naim-helpcmd.${OBJEXT}: conio_cmds.h
-libnaim_la-helpcmd.${LOBJEXT}: conio_cmds.h
+naim-events.${OBJEXT}: cmdar.h
+libnaim_la-events.${LOBJEXT}: cmdar.h
+naim-fireio.${OBJEXT}: cmdar.h
+libnaim_la-fireio.${LOBJEXT}: cmdar.h
+naim-helpcmd.${OBJEXT}: cmdar.h
+libnaim_la-helpcmd.${LOBJEXT}: cmdar.h
 
 install: install-am install-global-symlink
 

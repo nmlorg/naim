@@ -63,8 +63,8 @@ am_liblua_la_OBJECTS = lua511/lapi.lo lua511/lcode.lo lua511/ldebug.lo \
 	lua511/linit.lo
 liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
 libnlua_la_DEPENDENCIES = liblua.la
-am_libnlua_la_OBJECTS = libnlua_la-commands.lo libnlua_la-conn.lo \
-	libnlua_la-moon.lo libnlua_la-strings.lo
+am_libnlua_la_OBJECTS = libnlua_la-conn.lo libnlua_la-moon.lo \
+	libnlua_la-naim_commands.lo libnlua_la-strings.lo
 libnlua_la_OBJECTS = $(am_libnlua_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_lua_OBJECTS = lua511/lua.$(OBJEXT)
@@ -198,10 +198,9 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 LOBJEXT = lo
 DISTCLEANFILES = \
-	default_lua.h naim_commands.h
+	default_lua.h
 
 EXTRA_DIST = \
-	bindcmds.sh \
 	cmpllua.sh \
 	default.lua \
 	examples/eliza.lua \
@@ -219,10 +218,10 @@ liblua_la_SOURCES = \
 
 liblua_la_LIBADD = -lm
 libnlua_la_SOURCES = \
-	commands.c conn.c moon.c strings.c moon-int.h
+	conn.c moon.c moon-int.h naim_commands.c strings.c
 
 libnlua_la_LIBADD = liblua.la
-libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk
+libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
 lua_SOURCES = \
 	lua511/lua.c
 
@@ -391,14 +390,14 @@ distclean-compile:
 .c.lo:
 	$(LTCOMPILE) -c -o $@ $<
 
-libnlua_la-commands.lo: commands.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-commands.lo `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
-
 libnlua_la-conn.lo: conn.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-conn.lo `test -f 'conn.c' || echo '$(srcdir)/'`conn.c
 
 libnlua_la-moon.lo: moon.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-moon.lo `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
+
+libnlua_la-naim_commands.lo: naim_commands.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-naim_commands.lo `test -f 'naim_commands.c' || echo '$(srcdir)/'`naim_commands.c
 
 libnlua_la-strings.lo: strings.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-strings.lo `test -f 'strings.c' || echo '$(srcdir)/'`strings.c
@@ -586,9 +585,6 @@ default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
 
 libnlua_la-moon.${LOBJEXT}: default_lua.h
-
-naim_commands.h: ${top_srcdir}/src/commands.c
-	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS} -I${srcdir}/lua511 -I${top_srcdir}/src -I${top_srcdir}/include -I${top_srcdir}/libfiretalk" ${srcdir}/bindcmds.sh > naim_commands.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

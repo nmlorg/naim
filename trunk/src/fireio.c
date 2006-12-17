@@ -10,7 +10,7 @@
 
 #include "naim-int.h"
 #include "snapshot.h"
-#include "conio_cmds.h"
+#include "cmdar.h"
 
 extern win_t	win_input;
 extern conn_t	*curconn;

@@ -7,7 +7,7 @@
 
 #include "naim-int.h"
 #include "help.h"
-#include "conio_cmds.h"
+#include "cmdar.h"
 
 extern conn_t	*curconn;
 extern faimconf_t faimconf;

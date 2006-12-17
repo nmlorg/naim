@@ -42,7 +42,7 @@ static int l_conio(lua_State *L)
 	
 	if (!s)
 	{
-		lua_pushstring(L, "string was nil");
+		lua_pushstring(L, "l_conio: string was nil");
 		return lua_error(L);
 	}
 	script_client_cmdhandler(s);
@@ -54,11 +54,6 @@ static int l_echo(lua_State *L) {
 	return(0);
 }
 
-static int naimcats(lua_State *L) {
-	lua_pushstring(L, "hello kitties");
-	return(1);
-}
-
 static const struct luaL_Reg naimlib[] = {
 	{"debug", l_debug},
 	{"curconn", l_curconn},
@@ -67,14 +62,66 @@ static const struct luaL_Reg naimlib[] = {
 	{NULL, NULL} /* sentinel */
 };
 
+static const char *skipword(const char *str) {
+	int	inquote = 0;
+
+	while (isspace(*str))
+		str++;
+
+	while ((*str != 0) && (inquote || !isspace(*str))) {
+		if (*str == '"')
+			inquote = !inquote;
+		str++;
+	}
+
+	while (isspace(*str))
+		str++;
+	return(str);
+}
+
+static const char *grabword(char *str) {
+	int	inquote = 0;
+	char	*start;
+
+	while (isspace(*str))
+		str++;
+	start = str;
+
+	while ((*str != 0) && (inquote || !isspace(*str))) {
+		if (*str == '"') {
+			memmove(str, str+1, strlen(str+1)+1);
+			inquote = !inquote;
+			continue;
+		}
+		str++;
+	}
+
+	*str = 0;
+
+	return(start);
+}
+
+static int _nlua_pullword(lua_State *L) {
+	const char *string = lua_tostring(L, 1), *car, *cdr;
+	char	*copy;
+
+	if (string == NULL) {
+		lua_pushstring(L, "_nlua_firstwhite: string was nil");
+		return(lua_error(L));
+	}
+	copy = strdup(string);
+	car = grabword(copy);
+	cdr = car + strlen(car)+1;
+	lua_pushstring(L, car);
+	lua_pushstring(L, cdr);
+	free(copy);
+	return(2);
+}
+
 static const struct luaL_reg naim_internallib[] = {
-	/* reserved for further use */
+	{ "pullword",	_nlua_pullword },
 	{NULL, NULL} /* sentinel */
 };
-
-extern const struct luaL_reg naim_prototypes_connectionslib[];
-extern const struct luaL_reg naim_prototypes_windowslib[];
-extern const struct luaL_reg naim_prototypes_buddieslib[];
 
 static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	int ref = (int)userdata;
@@ -147,15 +194,19 @@ static const struct luaL_reg naim_hooks_recvfromlib[] = {
 	{NULL, NULL} /* sentinel */
 };
 
-static void _loadfunctions()
-{
+static void _loadfunctions(void) {
+	extern const struct luaL_reg naim_prototypes_connectionslib[],
+		naim_prototypes_windowslib[],
+		naim_prototypes_buddieslib[];
+	extern void naim_commandsreg(lua_State *L);
+
 	luaL_register(lua, "naim", naimlib);
 	luaL_register(lua, "naim.internal", naim_internallib);
 	luaL_register(lua, "naim.prototypes.connections", naim_prototypes_connectionslib);
 	luaL_register(lua, "naim.prototypes.windows", naim_prototypes_windowslib);
 	luaL_register(lua, "naim.prototypes.buddies", naim_prototypes_buddieslib);
 	luaL_register(lua, "naim.hooks.recvfrom", naim_hooks_recvfromlib);
-	lua_register(lua, "cats", naimcats);
+	naim_commandsreg(lua);
 }
 
 void nlua_init()
