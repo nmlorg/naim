@@ -29,25 +29,19 @@ static char naim_version[1024];
 static int fireio_proto_newnick(void *userdata, const char *signature, conn_t *conn, const char *newnick) {
 	STRREPLACE(conn->sn, newnick);
 
-	script_setvar("SN", newnick);
-
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_proto_nickchanged(void *userdata, const char *signature, conn_t *conn, const char *oldnick, const char *newnick) {
+static int fireio_proto_user_nickchanged(void *userdata, const char *signature, conn_t *conn, const char *oldnick, const char *newnick) {
 	buddywin_t *bwin;
 	buddylist_t *buddy = conn->buddyar;
 
 	if ((buddy = rgetlist(conn, oldnick)) == NULL)
 		return(HOOK_CONTINUE);
-	if (strcmp(buddy->_account, newnick) != 0) {
-		script_hook_changebuddy(buddy, newnick);
+	if (strcmp(buddy->_account, newnick) != 0)
 		STRREPLACE(buddy->_account, newnick);
-	}
 
 	if ((bwin = bgetbuddywin(conn, buddy)) != NULL) {
-		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> is now known as <font color=\"#00FFFF\">%s</font>.\n",
-			oldnick, newnick);
 		STRREPLACE(bwin->winname, newnick);
 		bupdate();
 	}
@@ -1133,7 +1127,7 @@ void	fireio_hook_init(void) {
 	HOOK_ADD(proto_connected,	mod, fireio_connected,		100, NULL);
 	HOOK_ADD(proto_connectfailed,	mod, fireio_connectfailed,	100, NULL);
 	HOOK_ADD(proto_newnick,		mod, fireio_proto_newnick,	100, NULL);
-	HOOK_ADD(proto_nickchanged,	mod, fireio_proto_nickchanged,	100, NULL);
+	HOOK_ADD(proto_user_nickchanged, mod, fireio_proto_user_nickchanged, 100, NULL);
 	HOOK_ADD(proto_warned,		mod, fireio_warned,		100, NULL);
 	HOOK_ADD(proto_error_msg,	mod, fireio_error_msg,		100, NULL);
 	HOOK_ADD(proto_error_disconnect, mod, fireio_error_disconnect,	100, NULL);

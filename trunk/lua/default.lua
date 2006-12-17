@@ -1,28 +1,30 @@
 function naim.prototypes.windows.event(window, e, s)
 	if window.eventtab and window.eventtab[e] then
-		window.eventtab[e](window, e, s)
-	elseif window.eventtab and window.eventtab.all then
-		window.eventtab.all(window, e, s)
+		window.eventtab[e].func(window, e, s)
+	elseif window.eventtab and window.eventtab.default then
+		window.eventtab.default.func(window, e, s)
 	elseif window.conn.eventtab and window.conn.eventtab[e] then
-		window.conn.eventtab[e](window, e, s)
-	elseif window.conn.eventtab and window.conn.eventtab.all then
-		window.conn.eventtab.all(window, e, s)
+		window.conn.eventtab[e].func(window, e, s)
+	elseif window.conn.eventtab and window.conn.eventtab.default then
+		window.conn.eventtab.default.func(window, e, s)
 	elseif naim.eventtab[e] then
-		naim.eventtab[e](window, e, s)
-	elseif naim.eventtab.all then
-		naim.eventtab.all(window, e, s)
+		naim.eventtab[e].func(window, e, s)
+	elseif naim.eventtab.default then
+		naim.eventtab.default.func(window, e, s)
 	end
 end
 
 function naim.internal.eventeval(code)
-	local functabfunc = assert(loadstring("return {" .. code .. "}"))
+	local functabfunc = assert(loadstring("return {" .. (code and code or "") .. "}"))
 
 	setfenv(functabfunc, {
 		display = function(window, e, s)
-			window:echo(s)
+			if s then
+				window:echo(s)
+			end
 		end,
 		notify = function(window, e, s)
-			window:echo("notification not implemented")
+			window:notify()
 		end,
 		ignore = function(window, e, s)
 		end,
@@ -35,11 +37,14 @@ function naim.internal.eventeval(code)
 	if #functab == 0 then
 		return nil
 	else
-		return function(w, e, s)
-			for _,f in ipairs(functab) do
-				f(w, e, s)
-			end
-		end
+		return {
+			func = function(w, e, s)
+				for _,f in ipairs(functab) do
+					f(w, e, s)
+				end
+			end,
+			code = code,
+		}
 	end
 end
 
@@ -77,6 +82,8 @@ function naim.internal.rometatable(name)
 	})
 end
 
+naim.name = "default"
+
 naim.variables = {}
 
 naim.sockets = {}
@@ -84,9 +91,17 @@ naim.sockets = {}
 naim.connections = {}
 setmetatable(naim.connections, naim.internal.rometatable("connections"))
 
-naim.eventtab = {
-	all = naim.internal.eventeval("display")
-}
+do
+	local display = naim.internal.eventeval("display")
+	local notify = naim.internal.eventeval("display,notify")
+
+	naim.eventtab = {
+		message = notify,
+		attacked = notify,
+		attacks = notify,
+		default = display,
+	}
+end
 
 function naim.internal.varsub(s, t)
 	s = string.gsub(s, "$%((.*)%)",
@@ -349,7 +364,33 @@ naim.commands.help = {
 	end,
 }
 
-naim.commands.x_on = {
+naim.commands.listevents = {
+	min = 0,
+	max = 0,
+	desc = "EXPERIMENTAL List active event handlers",
+	args = {},
+	func = function(conn, arg)
+		local seen = {}
+
+		naim.echo("Rules used in the current scope:")
+
+		for _,scope in ipairs({ conn:curwin() ~= conn and conn:curwin() or {}, conn, naim }) do
+			if scope.eventtab then
+				for e,t in pairs(scope.eventtab) do
+					if not seen[e] then
+						seen[e] = true
+
+						local s = "Scope " .. scope.name .. " event " .. e .. ":"
+
+						naim.echo("&nbsp;&nbsp;" .. s .. string.rep("&nbsp;", 30-s:len()) .. "&nbsp;" .. t.code .. " (" .. tostring(t.func) .. ")")
+					end
+				end
+			end
+		end
+	end,
+}
+
+naim.commands.on = {
 	min = 2,
 	max = 3,
 	desc = "EXPERIMENTAL Event behavior control",
@@ -365,6 +406,8 @@ naim.commands.x_on = {
 
 				if not naim.connections[c] then
 					error(c .. " is not a valid connection name")
+				elseif not w or w == "" then
+					return naim.connections[c]
 				elseif not naim.connections[c].windows[w] then
 					error(w .. " is not a valid window name in " .. c)
 				else
@@ -385,11 +428,28 @@ naim.commands.x_on = {
 
 		local scope = findscope()
 
-		if not scope.eventtab or e == "all" then
+		if e == "all" then
+			scope.eventtab = {}
+			e = "default"
+		elseif not scope.eventtab then
 			scope.eventtab = {}
 		end
 
-		scope.eventtab[e] = naim.internal.eventeval(code)
+		local evald = naim.internal.eventeval(code)
+
+		if scope.eventtab[e] then
+			if evald then
+				naim.echo("Changed rule for scope " .. scope.name .. " event " .. e .. ".")
+			else
+				naim.echo("Removed rule for scope " .. scope.name .. " event " .. e .. ".")
+			end
+		elseif evald then
+			naim.echo("Added rule for scope " .. scope.name .. " event " .. e .. ".")
+		else
+			naim.echo("No rule for scope " .. scope.name .. " event " .. e .. ".")
+		end
+
+		scope.eventtab[e] = evald
 	end,
 }
 
@@ -397,6 +457,20 @@ naim.commands.x_on = {
 
 
 
+
+naim.hooks.add('proto_user_nickchanged', function(conn, who, newnick)
+	naim.internal.changebuddy(conn, who, newnick)
+
+	local window = conn.windows[who]
+
+	if window then
+		window:echo("<font color=\"#00FFFF\">" .. who .. "</font> is now known as <font color=\"#00FFFF\">" .. newnick .. "</font>.")
+		window.name = newnick
+		assert(not conn.windows[newnick])
+		conn.windows[newnick] = conn.windows[who]
+		conn.windows[who] = nil
+	end
+end, 100)
 
 naim.hooks.add('proto_chat_joined', function(conn, chat)
 	assert(not conn.groups[string.lower(chat)])
@@ -463,18 +537,25 @@ naim.hooks.add('proto_chat_kicked', function(conn, chat, by, reason)
 end, 100)
 
 naim.hooks.add('proto_chat_oped', function(conn, chat, by)
-	conn.groups[string.lower(chat)].admin = true
+	local group = conn.groups[string.lower(chat)]
 
-	local window = conn.windows[string.lower(chat)]
+	group.admin = true
 
-	if window then
-		window:event("attacked")
+	if group.synched then
+		local window = conn.windows[string.lower(chat)]
+
+		if window then
+			window:event("attacked")
+		end
 	end
 end, 100)
 
 naim.hooks.add('proto_chat_deoped', function(conn, chat, by)
-	conn.groups[string.lower(chat)].admin = nil
+	local group = conn.groups[string.lower(chat)]
 
+	group.admin = nil
+
+	assert(group.synched)
 	local window = conn.windows[string.lower(chat)]
 
 	if window then
@@ -531,18 +612,25 @@ naim.hooks.add('proto_chat_user_kicked', function(conn, chat, who, by, reason)
 end, 100)
 
 naim.hooks.add('proto_chat_user_oped', function(conn, chat, who, by)
-	conn.groups[string.lower(chat)].members[who].admin = true
+	local group = conn.groups[string.lower(chat)]
 
-	local window = conn.windows[string.lower(chat)]
+	group.members[who].admin = true
 
-	if window then
-		window:event("attacks")
+	if group.synched then
+		local window = conn.windows[string.lower(chat)]
+
+		if window then
+			window:event("attacks")
+		end
 	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_deoped', function(conn, chat, who, by)
-	conn.groups[string.lower(chat)].members[who].admin = nil
+	local group = conn.groups[string.lower(chat)]
 
+	group.members[who].admin = nil
+
+	assert(group.synched)
 	local window = conn.windows[string.lower(chat)]
 
 	if window then
