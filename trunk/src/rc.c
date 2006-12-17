@@ -8,9 +8,9 @@
 
 #include "naim-int.h"
 
-extern conn_t	*curconn;
-extern const char	*home;
-extern time_t	now;
+extern conn_t *curconn;
+extern const char *home;
+extern time_t now;
 
 buddylist_t *raddbuddy(conn_t *conn, const char *screenname, const char *group, const char *friendly) {
 	buddylist_t *buddy = NULL;
@@ -164,7 +164,20 @@ buddylist_t *rgetlist(conn_t *conn, const char *screenname) {
 	return(NULL);
 }
 
-const char *buddy_tabcomplete(conn_t *const conn, const char *start, const char *buf, const int bufloc, int *const match, const char **desc) {
+buddylist_t *rgetlist_friendly(conn_t *conn, const char *friendly) {
+	buddylist_t *blist = NULL;
+
+	assert(conn != NULL);
+	assert(friendly != NULL);
+	if ((blist = conn->buddyar) != NULL)
+		do {
+			if ((blist->_name != NULL) && (firetalk_compare_nicks(conn->conn, blist->_name, friendly) == FE_SUCCESS))
+				return(blist);
+		} while ((blist = blist->next) != NULL);
+	return(NULL);
+}
+
+const char *account_tabcomplete(conn_t *const conn, const char *start, const char *buf, const int bufloc, int *const match, const char **desc) {
 	static char str[1024];
 	buddylist_t *blist = NULL;
 	size_t	slen;
@@ -174,8 +187,7 @@ const char *buddy_tabcomplete(conn_t *const conn, const char *start, const char 
 	if ((blist = conn->buddyar) != NULL)
 		do {
 			if (aimncmp(blist->_account, start, slen) == 0) {
-				const char
-					*name = blist->_account;
+				const char *name = blist->_account;
 				int	j;
 
 				if (match != NULL)
@@ -191,6 +203,83 @@ const char *buddy_tabcomplete(conn_t *const conn, const char *start, const char 
 				return(str);
 			}
 		} while ((blist = blist->next) != NULL);
+	return(NULL);
+}
+
+const char *buddy_tabcomplete(conn_t *const conn, const char *start, const char *buf, const int bufloc, int *const match, const char **desc) {
+	static char str[1024];
+	buddylist_t *blist = NULL;
+	size_t	slen;
+
+	assert(start != NULL);
+	slen = strlen(start);
+	if ((blist = conn->buddyar) != NULL)
+		do {
+			if (aimncmp(blist->_account, start, slen) == 0) {
+				const char *name = blist->_account;
+				int	j;
+
+				if (match != NULL)
+					*match = bufloc - (start-buf);
+				if (desc != NULL)
+					*desc = blist->_name;
+				for (j = 0; (j < sizeof(str)-1) && (*name != 0); j++) {
+					while (*name == ' ')
+						name++;
+					str[j] = *(name++);
+				}
+				str[j] = 0;
+				return(str);
+			}
+		} while ((blist = blist->next) != NULL);
+	if ((blist = conn->buddyar) != NULL)
+		do {
+			if ((blist->_name != NULL) && (aimncmp(blist->_name, start, slen) == 0)) {
+				const char *name = blist->_name;
+				int	j;
+
+				if (match != NULL)
+					*match = bufloc - (start-buf);
+				if (desc != NULL)
+					*desc = blist->_account;
+				for (j = 0; (j < sizeof(str)-1) && (*name != 0); j++) {
+					while (*name == ' ')
+						name++;
+					str[j] = *(name++);
+				}
+				str[j] = 0;
+				return(str);
+			}
+		} while ((blist = blist->next) != NULL);
+	return(NULL);
+}
+
+const char *idiot_tabcomplete(conn_t *const conn, const char *start, const char *buf, const int bufloc, int *const match, const char **desc) {
+	static char str[1024];
+	ignorelist_t *idiot = NULL;
+	size_t	slen;
+
+	assert(start != NULL);
+	slen = strlen(start);
+	if ((idiot = conn->idiotar) != NULL)
+		do {
+			if (aimncmp(idiot->screenname, start, slen) == 0) {
+				const char *name = idiot->screenname;
+				int	j;
+
+				if (match != NULL)
+					*match = bufloc - (start-buf);
+				if (desc != NULL)
+					*desc = idiot->notes;
+				for (j = 0; (j < sizeof(str)-1) && (*name != 0); j++) {
+					while (*name == ' ')
+						name++;
+					str[j] = *(name++);
+				}
+				str[j] = 0;
+				return(str);
+			}
+		} while ((idiot = idiot->next) != NULL);
 	return(NULL);
 }
 
