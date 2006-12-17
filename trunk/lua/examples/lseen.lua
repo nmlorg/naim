@@ -1,11 +1,12 @@
 -- IRC "seen" modules for naim
 -- Copywrite 2006 Andrew Chin (achin@eminence32.net)
--- ver 2006/07/03 rev 4
+-- ver 2006/8/26
 
 
-if lseen == nil then
-	lseen = {}
-	lseen.db = {}
+if not lseen then
+	lseen = {
+		db = {}
+	}
 end
 
 
@@ -19,10 +20,11 @@ function lseen.recvfrom(conn, sn, dest, text, flags)
 
 	who = string.match(text,"^!seen ([%w%p`]*).*")
 		
-	if who ~= nil then
+	if who then
 		who = string.lower(who)
 
 		if who == conn.sn then
+			naim.echo("who:"..conn.sn)
 			msg = "I'm right here!"
 		else 
 			msg = lseen.seen(who)
@@ -32,7 +34,7 @@ function lseen.recvfrom(conn, sn, dest, text, flags)
 			msg = "I see you..."
 		end
 		
-		if dest ~= nil then 	conn:msg(dest, msg) 
+		if dest then 	conn:msg(dest, msg) 
 		else conn:msg(sn, msg) end
 	end
 
@@ -76,7 +78,7 @@ function lseen.nick(conn, room, oldnick, newnick)
 end
 
 function lseen.saw(conn, sn, dest, text, flags)
-	if dest ~= nil then
+	if dest then
 		lsn = string.lower(sn)
 		lseen.db[lsn] = {}
 		lseen.db[lsn].lastseen = os.time()
@@ -102,7 +104,7 @@ function prettydiff(sec)
 		minutes = math.fmod(minutes,60)
 	end
 
-	if hours ~= nil then
+	if hours then
 		return hours .. " hours, " .. minutes .. " minutes"
 	else
 		return minutes .. " minutes, " .. seconds .. " seconds"
@@ -112,7 +114,7 @@ end
 
 function lseen.seen(who)
 
-	if lseen.db[who] == nil then
+	if not lseen.db[who] then
 		return "I haven't seen ".. who
 	end
 	return who .. " was last seen " .. lseen.db[who].event .. " " .. lseen.db[who].target .. " " .. prettydiff(os.difftime(os.time(), lseen.db[who].lastseen)) .. " ago" 
@@ -125,19 +127,19 @@ naim.commands.unloadlseen = {
 	args = {},
 	desc = "Unload the lseen module",
 	func = function (conn)
-		if lseen.ref ~= nil then
+		if lseen.ref then
 			naim.hooks.del('proto_recvfrom', lseen.ref)
 		end
-	if lseen.leftref ~= nil then
+	if lseen.leftref then
 		naim.hooks.del('proto_chat_user_left', lseen.leftref)
 	end
-	if lseen.joinref ~= nil then
+	if lseen.joinref then
 		naim.hooks.del('proto_chat_user_joined', lseen.joinref)
 	end
-	if lseen.kickref ~= nil then
+	if lseen.kickref then
 		naim.hooks.del('proto_chat_user_kicked', lseen.kickref)
 	end
-	if lseen.nickref ~= nil then
+	if lseen.nickref then
 		naim.hooks.del('proto_chat_user_nickchanged', lseen.nickref)
 	end
 	naim.echo("[lseen] unloaded.")
@@ -148,13 +150,14 @@ function lseen.save(filename)
 
 	filename = naim.internal.varsub(filename, { HOME = os.getenv("HOME") })
     f = io.open(filename,"w")
-      if f == nil then
+      if not f then
          naim.echo("[lseen] Error:  can't open that file")
          return
       end
 
+		f:write("if not lseen then naim.echo(\"You need to load the lseen.lua script first!\") else \n")
       for k,v in pairs(lseen.db) do
-         if v.lastseen == nil then naim.echo(k) end
+         if not v.lastseen then naim.echo(k) end
          f:write("lseen.db['"..k.. "'] = {")
 			for kk,vv in pairs(v) do
 				f:write(kk .. " = '" .. vv .. "';\n")
@@ -162,6 +165,7 @@ function lseen.save(filename)
 			f:write("}\n")
       end
 		f:write("naim.echo('[lseen] seen databases imported')")
+		f:write("\nend")
       f:close()
       naim.echo("[lseen] database written to ".. filename)
 
@@ -174,8 +178,8 @@ naim.commands.savelseen = {
 	args = {'filename'},
 	desc = "Save the seen database to a file",
 	func = function (conn, filename) 
-		if filename[1] == nil then
-			if naim.variables.lseendb==nil or naim.variables.lseendb=="" then
+		if not filename[1] then
+			if not naim.variables.lseendb or naim.variables.lseendb == "" then
 				lseen.save("$HOME/lseen.db")
 			else
 				lseen.save(naim.variables.lseendb)
@@ -193,7 +197,7 @@ function lseen.load (filename)
 	filename = naim.internal.varsub(filename, { HOME = os.getenv("HOME") })
 	dofile(filename)
 	--f = io.open(filename,"r")
-   --     if f == nil then
+   --     if not f then
    --         naim.echo("[lseen] Error: can't open that file")
    --         return
    --      end
@@ -201,7 +205,7 @@ function lseen.load (filename)
    --   for line in f:lines() do
    --      for nick, prop, val in string.gmatch(line, "([%w_`-=]+)\.([%w]+)=([%w%p]+)") do
    --         --naim.echo(nick.."."..prop.."="..val)
-   --         if lseen.db[nick] == nil then lseen.db[nick] = {} end
+   --         if not lseen.db[nick] then lseen.db[nick] = {} end
    --         lseen.db[nick][prop] = val
    --      end
    --   end
@@ -218,8 +222,8 @@ naim.commands.loadlseen = {
 	args = {'filename'},
 	desc = "Load a seen database from a file",
 	func = function (conn, filename)
-		if filename[1] == nil then
-			if naim.variables.lseendb == nil or naim.variables.lseendb=="" then
+		if not filename[1] then
+			if not naim.variables.lseendb or naim.variables.lseendb=="" then
 				lseen.load("$HOME/lseen.db")
 			else
 				lseen.load(naim.variables.lseendb)
@@ -232,12 +236,12 @@ naim.commands.loadlseen = {
 
 
 function lseen.periodic(now, nowf)
-	if tonumber(naim.variables.lseenautosave) > 0 then
-		if lseen.periodiccounter == nil then lseen.periodiccounter = 0 end
+	if naim.variables.lseenautosave and tonumber(naim.variables.lseenautosave) > 0 then
+		if not lseen.periodiccounter then lseen.periodiccounter = 0 end
 		lseen.periodiccounter = lseen.periodiccounter + 1
 		if lseen.periodiccounter  >= tonumber(naim.variables.lseenautosave) then
 
-			if naim.variables.lseendb == nil then
+			if not naim.variables.lseendb then
 				--naim.echo("will save to $HOME/lseen.db")
 				lseen.save("$HOME/lseen.db")
 			else
@@ -249,27 +253,27 @@ function lseen.periodic(now, nowf)
 	end
 end
 
-if lseen.ref ~= nil then
+if lseen.ref then
 	naim.hooks.del('proto_recvfrom', lseen.ref)
 end
 
-if lseen.leftref ~= nil then
+if lseen.leftref then
 	naim.hooks.del('proto_chat_user_left', lseen.leftref)
 end
 
-if lseen.joinref ~= nil then
+if lseen.joinref then
 	naim.hooks.del('proto_chat_user_joined', lseen.joinref)
 end
 
-if lseen.kickref ~= nil then
+if lseen.kickref then
 	naim.hooks.del('proto_chat_user_kicked', lseen.kickref)
 end
 
-if lseen.nickref ~= nil then
+if lseen.nickref then
 	naim.hooks.del('proto_chat_user_nickchanged', lseen.nickref)
 end
 
-if lseen.periodicref ~= nil then
+if lseen.periodicref then
 	naim.hooks.del('periodic', lseen.periodicref)
 end
 
@@ -281,4 +285,4 @@ lseen.nickref = naim.hooks.add('proto_chat_user_nickchanged', lseen.nick, 200)
 lseen.periodicref = naim.hooks.add('periodic',lseen.periodic, 200)
 naim.echo("[lseen] naim seen module loaded. Currently tracking JOIN PART KICK QUIT NICK and messages")
 naim.echo("[lseen] commands:  /unloadlseen /savelseen /loadlseen")
-
+naim.echo("[lseen] set $lseendb to a filename and $lseenautosave to a number to enable automatic periodic write of the lseen database")

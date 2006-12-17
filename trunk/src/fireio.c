@@ -885,10 +885,6 @@ static int fireio_chat_kicked(void *userdata, const char *signature, conn_t *con
 	bwin = cgetwin(conn, room);
 	bwin->e.chat->offline = 1;
 	bwin->e.chat->isoper = 0;
-	if (getvar_int(conn, "chatter") & CH_ATTACKED)
-		bwin->waiting = 1;
-	window_echof(bwin, "You have been kicked from chat %s%s%s by <font color=\"#00FFFF\">%s</font> (</B><body>%s</body><B>).\n",
-			q, room, q, by, reason);
 	firetalk_chat_join(conn->conn, room);
 	bupdate();
 
@@ -901,50 +897,6 @@ static int fireio_chat_invited(void *userdata, const char *signature, conn_t *co
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
 	echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> invites you to chat %s%s%s: </B><body>%s</body><B>.\n", who, q, room, q, message);
-
-	return(HOOK_CONTINUE);
-}
-
-static int fireio_chat_user_joined(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *extra) {
-	buddywin_t *bwin;
-	const char *q;
-
-	q = (strchr(room, ' ') != NULL)?"\"":"";
-
-	bwin = cgetwin(conn, room);
-
-	if (getvar_int(conn, "chatverbose") & CH_USERS)
-		bwin->waiting = 1;
-
-	bupdate();
-
-	return(HOOK_CONTINUE);
-}
-
-static int fireio_chat_user_left(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *reason) {
-	buddywin_t *bwin;
-	const char *q;
-
-	q = (strchr(room, ' ') != NULL)?"\"":"";
-
-	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatverbose") & CH_USERS)
-		bwin->waiting = 1;
-	bupdate();
-
-	return(HOOK_CONTINUE);
-}
-
-static int fireio_chat_user_kicked(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *by, const char *reason) {
-	buddywin_t *bwin;
-	const char *q;
-
-	q = (strchr(room, ' ') != NULL)?"\"":"";
-
-	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatter") & CH_ATTACKS)
-		bwin->waiting = 1;
-	bupdate();
 
 	return(HOOK_CONTINUE);
 }
@@ -995,8 +947,6 @@ static int fireio_chat_oped(void *userdata, const char *signature, conn_t *conn,
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatter") & CH_ATTACKED)
-		bwin->waiting = 1;
 	bwin->e.chat->isoper = 1;
 	bupdate();
 
@@ -1004,17 +954,15 @@ static int fireio_chat_oped(void *userdata, const char *signature, conn_t *conn,
 }
 
 static int fireio_chat_user_oped(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *by) {
+#ifndef RAWIRCMODES
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatverbose") & CH_MISC)
-		bwin->waiting = 1;
-#ifndef RAWIRCMODES
 	if (by != NULL)
 		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has been oped by <font color=\"#00FFFF\">%s</font>.\n",
 			who, by);
-#endif
 	bupdate();
+#endif
 
 	return(HOOK_CONTINUE);
 }
@@ -1023,8 +971,6 @@ static int fireio_chat_deoped(void *userdata, const char *signature, conn_t *con
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatter") & CH_ATTACKED)
-		bwin->waiting = 1;
 	bwin->e.chat->isoper = 0;
 	bupdate();
 
@@ -1032,51 +978,23 @@ static int fireio_chat_deoped(void *userdata, const char *signature, conn_t *con
 }
 
 static int fireio_chat_user_deoped(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *by) {
+#ifndef RAWIRCMODES
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatter") & CH_ATTACKS)
-		bwin->waiting = 1;
-	if (firetalk_compare_nicks(conn->conn, conn->sn, who) == FE_SUCCESS)
-		bwin->e.chat->isoper = 0;
-#ifndef RAWIRCMODES
 	window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has been deoped by <font color=\"#00FFFF\">%s</font>.\n",
 		who, by);
-#endif
 	bupdate();
+#endif
 
 	return(HOOK_CONTINUE);
 }
 
 static int fireio_chat_topicchanged(void *userdata, const char *signature, conn_t *conn, const char *room, const char *topic, const char *by) {
 	buddywin_t *bwin;
-	const char *q;
-
-	q = (strchr(room, ' ') != NULL)?"\"":"";
 
 	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatter") & CH_MISC)
-		bwin->waiting = 1;
 	STRREPLACE(bwin->blurb, topic);
-	if (by != NULL)
-		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has changed the topic on %s%s%s to </B><body>%s</body><B>.\n",
-			by, q, room, q, topic);
-	else
-		window_echof(bwin, "Topic for %s: </B><body>%s</body><B>.\n",
-			room, topic);
-	bupdate();
-
-	return(HOOK_CONTINUE);
-}
-
-static int fireio_chat_user_nickchanged(void *userdata, const char *signature, conn_t *conn, const char *room, const char *oldnick, const char *newnick) {
-	buddywin_t *bwin;
-
-	bwin = cgetwin(conn, room);
-	if (getvar_int(conn, "chatter") & CH_MISC)
-		bwin->waiting = 1;
-	window_echof(bwin, "<font color=\"#00FFFF\">%s</font> is now known as <font color=\"#00FFFF\">%s</font>.\n",
-		oldnick, newnick);
 	bupdate();
 
 	return(HOOK_CONTINUE);
@@ -1246,12 +1164,8 @@ void	fireio_hook_init(void) {
 	HOOK_ADD(proto_chat_deoped,	mod, fireio_chat_deoped,	100, NULL);
 	HOOK_ADD(proto_chat_kicked,	mod, fireio_chat_kicked,	100, NULL);
 	HOOK_ADD(proto_chat_invited,	mod, fireio_chat_invited,	100, NULL);
-	HOOK_ADD(proto_chat_user_joined, mod, fireio_chat_user_joined,	100, NULL);
-	HOOK_ADD(proto_chat_user_left,	mod, fireio_chat_user_left,	100, NULL);
 	HOOK_ADD(proto_chat_user_oped,	mod, fireio_chat_user_oped,	100, NULL);
 	HOOK_ADD(proto_chat_user_deoped, mod, fireio_chat_user_deoped,	100, NULL);
-	HOOK_ADD(proto_chat_user_kicked, mod, fireio_chat_user_kicked,	100, NULL);
-	HOOK_ADD(proto_chat_user_nickchanged, mod, fireio_chat_user_nickchanged, 100, NULL);
 	HOOK_ADD(proto_chat_topicchanged, mod, fireio_chat_topicchanged, 100, NULL);
 	HOOK_ADD(proto_chat_keychanged,	mod, fireio_chat_keychanged,	100, NULL);
 	HOOK_ADD(proto_file_offer,	mod, fireio_file_offer,		100, NULL);
