@@ -350,7 +350,8 @@ CONIOAREQ(string,message)
 	assert(tmptr != NULL);
 
 	if (bwin != NULL) {
-		const char *format = NULL, *pre, *post;
+		const char *format = NULL;
+		char	*pre, *post;
 
 		switch (bwin->et) {
 		  case CHAT:
@@ -384,7 +385,7 @@ CONIOAREQ(string,message)
 	}
 	if ((conn != curconn) || (conn->curbwin == NULL)
 		|| (firetalk_compare_nicks(conn->conn, conn->curbwin->winname, args[0]) != FE_SUCCESS)) {
-		const char *pre, *post;
+		char	*pre, *post;
 
 		if ((pre = getvar(conn, "im_prefix")) != NULL)
 			pre = strdup(pre);

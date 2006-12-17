@@ -507,12 +507,9 @@
 @@ lua_str2number converts a string to a number.
 */
 #define LUA_NUMBER_SCAN		"%lf"
-#ifdef LUA_NUMBER_DOUBLE
-#define LUA_NUMBER_FMT		"%.14g"
-#else
-#define LUA_NUMBER_FMT		"%d"
-#endif
-#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
+//#define LUA_NUMBER_FMT	"%.14g"
+#define LUA_NUMBER_FMT		"%li"
+#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (long int)(n))
 #define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
 #define lua_str2number(s,p)	strtod((s), (p))
 
