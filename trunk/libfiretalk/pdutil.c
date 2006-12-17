@@ -212,7 +212,8 @@ void	firetalk_sock_close(firetalk_sock_t *sock) {
 	assert(sock->canary == SOCK_CANARY);
 	assert((sock->fd == -1) || (sock->state != FCS_NOTCONNECTED));
 
-	close(sock->fd);
+	if (sock->fd != -1)
+		close(sock->fd);
 	firetalk_sock_init(sock);
 }
 

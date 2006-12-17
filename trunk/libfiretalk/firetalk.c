@@ -1254,7 +1254,6 @@ void	firetalk_callback_file_offer(struct firetalk_driver_connection_t *c, const 
 	iter->filefd = -1;
 	iter->port = htons(port);
 	iter->type = type;
-	iter->next = iter;
 	if (inet_aton(ipstring, &iter->inet_ip) == 0) {
 		assert(conn->file_head == iter);
 		firetalk_file_cancel(conn, iter);
@@ -1534,6 +1533,7 @@ fte_t	firetalk_handle_file_synack(firetalk_connection_t *conn, firetalk_transfer
 		return(FE_CONNECT);
 	}
 
+	file->sock.state = FCS_ACTIVE;
 	file->state = FF_STATE_TRANSFERRING;
 
 	if (conn->callbacks[FC_FILE_START])
@@ -1572,6 +1572,7 @@ fte_t	firetalk_im_add_buddy(firetalk_connection_t *conn, const char *const name,
 		ret = firetalk_protocols[conn->protocol]->im_add_buddy(conn->handle, iter->nickname, iter->group, iter->friendly);
 		if (ret != FE_SUCCESS)
 			return(ret);
+		iter->uploaded = 1;
 	}
 
 	if ((isonline_hack != NULL) && (firetalk_protocols[conn->protocol]->comparenicks(iter->nickname, isonline_hack) == FE_SUCCESS))
@@ -2025,6 +2026,7 @@ fte_t	firetalk_file_offer(firetalk_connection_t *conn, const char *const nicknam
 
 	iter->size = (long)s.st_size;
 
+	firetalk_sock_init(&(iter->sock));
 	iter->sock.fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (iter->sock.fd == -1) {
 		assert(conn->file_head == iter);
@@ -2308,6 +2310,7 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 					} else {
 						close(fileiter->sock.fd);
 						fileiter->sock.fd = s;
+						fileiter->sock.state = FCS_ACTIVE;
 						fileiter->state = FF_STATE_TRANSFERRING;
 						if (fchandle->callbacks[FC_FILE_START])
 							fchandle->callbacks[FC_FILE_START](fchandle, fchandle->clientstruct, fileiter, fileiter->clientfilestruct);

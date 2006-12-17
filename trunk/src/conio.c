@@ -1531,12 +1531,12 @@ CONIOAOPT(account,name)
 		status_echof(conn, "<font color=\"#00FFFF\">%s</font> is not in your buddy list.\n",
 			name);
 
+	assert(rgetlist(conn, name) == NULL);
+
 	if ((argc == 0) && (lastclose != NULL)) {
 		free(lastclose);
 		lastclose = NULL;
 	}
-
-	assert(rgetlist(conn, name) == NULL);
 }
 
 CONIOFUNC(op) {
