@@ -49,16 +49,16 @@ CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 liblua_la_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_liblua_la_OBJECTS = liblua/lapi.lo liblua/lcode.lo liblua/ldebug.lo \
-	liblua/ldo.lo liblua/ldump.lo liblua/lfunc.lo liblua/lgc.lo \
-	liblua/llex.lo liblua/lmem.lo liblua/lobject.lo \
-	liblua/lopcodes.lo liblua/lparser.lo liblua/lstate.lo \
-	liblua/lstring.lo liblua/ltable.lo liblua/ltm.lo \
-	liblua/lundump.lo liblua/lvm.lo liblua/lzio.lo \
-	liblua/lauxlib.lo liblua/lbaselib.lo liblua/ldblib.lo \
-	liblua/liolib.lo liblua/lmathlib.lo liblua/loslib.lo \
-	liblua/ltablib.lo liblua/lstrlib.lo liblua/loadlib.lo \
-	liblua/linit.lo moon.lo moon_conn.lo moon_strings.lo
+am_liblua_la_OBJECTS = lua511/lapi.lo lua511/lcode.lo lua511/ldebug.lo \
+	lua511/ldo.lo lua511/ldump.lo lua511/lfunc.lo lua511/lgc.lo \
+	lua511/llex.lo lua511/lmem.lo lua511/lobject.lo \
+	lua511/lopcodes.lo lua511/lparser.lo lua511/lstate.lo \
+	lua511/lstring.lo lua511/ltable.lo lua511/ltm.lo \
+	lua511/lundump.lo lua511/lvm.lo lua511/lzio.lo \
+	lua511/lauxlib.lo lua511/lbaselib.lo lua511/ldblib.lo \
+	lua511/liolib.lo lua511/lmathlib.lo lua511/loslib.lo \
+	lua511/ltablib.lo lua511/lstrlib.lo lua511/loadlib.lo \
+	lua511/linit.lo moon.lo moon_conn.lo moon_strings.lo
 liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src
 depcomp =
@@ -196,17 +196,17 @@ EXTRA_DIST = \
 
 noinst_LTLIBRARIES = liblua.la
 liblua_la_SOURCES = \
-	liblua/lapi.c liblua/lcode.c liblua/ldebug.c liblua/ldo.c liblua/ldump.c liblua/lfunc.c liblua/lgc.c liblua/llex.c liblua/lmem.c \
-	liblua/lobject.c liblua/lopcodes.c liblua/lparser.c liblua/lstate.c liblua/lstring.c liblua/ltable.c liblua/ltm.c \
-	liblua/lundump.c liblua/lvm.c liblua/lzio.c liblua/lauxlib.c liblua/lbaselib.c liblua/ldblib.c liblua/liolib.c \
-	liblua/lmathlib.c liblua/loslib.c liblua/ltablib.c liblua/lstrlib.c liblua/loadlib.c liblua/linit.c liblua/lapi.h \
-	liblua/ldebug.h liblua/lgc.h liblua/lmem.h liblua/lparser.h liblua/ltable.h liblua/luaconf.h liblua/lvm.h liblua/lauxlib.h \
-	liblua/ldo.h liblua/llex.h liblua/lobject.h liblua/lstate.h liblua/ltm.h liblua/lualib.h liblua/lzio.h liblua/lcode.h \
-	liblua/lfunc.h liblua/llimits.h liblua/lopcodes.h liblua/lstring.h liblua/lua.h liblua/lundump.h \
+	lua511/lapi.c lua511/lcode.c lua511/ldebug.c lua511/ldo.c lua511/ldump.c lua511/lfunc.c lua511/lgc.c lua511/llex.c lua511/lmem.c \
+	lua511/lobject.c lua511/lopcodes.c lua511/lparser.c lua511/lstate.c lua511/lstring.c lua511/ltable.c lua511/ltm.c \
+	lua511/lundump.c lua511/lvm.c lua511/lzio.c lua511/lauxlib.c lua511/lbaselib.c lua511/ldblib.c lua511/liolib.c \
+	lua511/lmathlib.c lua511/loslib.c lua511/ltablib.c lua511/lstrlib.c lua511/loadlib.c lua511/linit.c lua511/lapi.h \
+	lua511/ldebug.h lua511/lgc.h lua511/lmem.h lua511/lparser.h lua511/ltable.h lua511/luaconf.h lua511/lvm.h lua511/lauxlib.h \
+	lua511/ldo.h lua511/llex.h lua511/lobject.h lua511/lstate.h lua511/ltm.h lua511/lualib.h lua511/lzio.h lua511/lcode.h \
+	lua511/lfunc.h lua511/llimits.h lua511/lopcodes.h lua511/lstring.h lua511/lua.h lua511/lundump.h \
 	moon.c moon_conn.c moon_strings.c moon-int.h
 
 liblua_la_LIBADD = -lm
-INCLUDES = -I${srcdir}/liblua
+INCLUDES = -I${srcdir}/lua511
 all: all-am
 
 .SUFFIXES:
@@ -249,101 +249,101 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-liblua/$(am__dirstamp):
-	@$(mkdir_p) liblua
-	@: > liblua/$(am__dirstamp)
-liblua/lapi.lo: liblua/$(am__dirstamp)
-liblua/lcode.lo: liblua/$(am__dirstamp)
-liblua/ldebug.lo: liblua/$(am__dirstamp)
-liblua/ldo.lo: liblua/$(am__dirstamp)
-liblua/ldump.lo: liblua/$(am__dirstamp)
-liblua/lfunc.lo: liblua/$(am__dirstamp)
-liblua/lgc.lo: liblua/$(am__dirstamp)
-liblua/llex.lo: liblua/$(am__dirstamp)
-liblua/lmem.lo: liblua/$(am__dirstamp)
-liblua/lobject.lo: liblua/$(am__dirstamp)
-liblua/lopcodes.lo: liblua/$(am__dirstamp)
-liblua/lparser.lo: liblua/$(am__dirstamp)
-liblua/lstate.lo: liblua/$(am__dirstamp)
-liblua/lstring.lo: liblua/$(am__dirstamp)
-liblua/ltable.lo: liblua/$(am__dirstamp)
-liblua/ltm.lo: liblua/$(am__dirstamp)
-liblua/lundump.lo: liblua/$(am__dirstamp)
-liblua/lvm.lo: liblua/$(am__dirstamp)
-liblua/lzio.lo: liblua/$(am__dirstamp)
-liblua/lauxlib.lo: liblua/$(am__dirstamp)
-liblua/lbaselib.lo: liblua/$(am__dirstamp)
-liblua/ldblib.lo: liblua/$(am__dirstamp)
-liblua/liolib.lo: liblua/$(am__dirstamp)
-liblua/lmathlib.lo: liblua/$(am__dirstamp)
-liblua/loslib.lo: liblua/$(am__dirstamp)
-liblua/ltablib.lo: liblua/$(am__dirstamp)
-liblua/lstrlib.lo: liblua/$(am__dirstamp)
-liblua/loadlib.lo: liblua/$(am__dirstamp)
-liblua/linit.lo: liblua/$(am__dirstamp)
+lua511/$(am__dirstamp):
+	@$(mkdir_p) lua511
+	@: > lua511/$(am__dirstamp)
+lua511/lapi.lo: lua511/$(am__dirstamp)
+lua511/lcode.lo: lua511/$(am__dirstamp)
+lua511/ldebug.lo: lua511/$(am__dirstamp)
+lua511/ldo.lo: lua511/$(am__dirstamp)
+lua511/ldump.lo: lua511/$(am__dirstamp)
+lua511/lfunc.lo: lua511/$(am__dirstamp)
+lua511/lgc.lo: lua511/$(am__dirstamp)
+lua511/llex.lo: lua511/$(am__dirstamp)
+lua511/lmem.lo: lua511/$(am__dirstamp)
+lua511/lobject.lo: lua511/$(am__dirstamp)
+lua511/lopcodes.lo: lua511/$(am__dirstamp)
+lua511/lparser.lo: lua511/$(am__dirstamp)
+lua511/lstate.lo: lua511/$(am__dirstamp)
+lua511/lstring.lo: lua511/$(am__dirstamp)
+lua511/ltable.lo: lua511/$(am__dirstamp)
+lua511/ltm.lo: lua511/$(am__dirstamp)
+lua511/lundump.lo: lua511/$(am__dirstamp)
+lua511/lvm.lo: lua511/$(am__dirstamp)
+lua511/lzio.lo: lua511/$(am__dirstamp)
+lua511/lauxlib.lo: lua511/$(am__dirstamp)
+lua511/lbaselib.lo: lua511/$(am__dirstamp)
+lua511/ldblib.lo: lua511/$(am__dirstamp)
+lua511/liolib.lo: lua511/$(am__dirstamp)
+lua511/lmathlib.lo: lua511/$(am__dirstamp)
+lua511/loslib.lo: lua511/$(am__dirstamp)
+lua511/ltablib.lo: lua511/$(am__dirstamp)
+lua511/lstrlib.lo: lua511/$(am__dirstamp)
+lua511/loadlib.lo: lua511/$(am__dirstamp)
+lua511/linit.lo: lua511/$(am__dirstamp)
 liblua.la: $(liblua_la_OBJECTS) $(liblua_la_DEPENDENCIES) 
 	$(LINK)  $(liblua_la_LDFLAGS) $(liblua_la_OBJECTS) $(liblua_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f liblua/lapi.$(OBJEXT)
-	-rm -f liblua/lapi.lo
-	-rm -f liblua/lauxlib.$(OBJEXT)
-	-rm -f liblua/lauxlib.lo
-	-rm -f liblua/lbaselib.$(OBJEXT)
-	-rm -f liblua/lbaselib.lo
-	-rm -f liblua/lcode.$(OBJEXT)
-	-rm -f liblua/lcode.lo
-	-rm -f liblua/ldblib.$(OBJEXT)
-	-rm -f liblua/ldblib.lo
-	-rm -f liblua/ldebug.$(OBJEXT)
-	-rm -f liblua/ldebug.lo
-	-rm -f liblua/ldo.$(OBJEXT)
-	-rm -f liblua/ldo.lo
-	-rm -f liblua/ldump.$(OBJEXT)
-	-rm -f liblua/ldump.lo
-	-rm -f liblua/lfunc.$(OBJEXT)
-	-rm -f liblua/lfunc.lo
-	-rm -f liblua/lgc.$(OBJEXT)
-	-rm -f liblua/lgc.lo
-	-rm -f liblua/linit.$(OBJEXT)
-	-rm -f liblua/linit.lo
-	-rm -f liblua/liolib.$(OBJEXT)
-	-rm -f liblua/liolib.lo
-	-rm -f liblua/llex.$(OBJEXT)
-	-rm -f liblua/llex.lo
-	-rm -f liblua/lmathlib.$(OBJEXT)
-	-rm -f liblua/lmathlib.lo
-	-rm -f liblua/lmem.$(OBJEXT)
-	-rm -f liblua/lmem.lo
-	-rm -f liblua/loadlib.$(OBJEXT)
-	-rm -f liblua/loadlib.lo
-	-rm -f liblua/lobject.$(OBJEXT)
-	-rm -f liblua/lobject.lo
-	-rm -f liblua/lopcodes.$(OBJEXT)
-	-rm -f liblua/lopcodes.lo
-	-rm -f liblua/loslib.$(OBJEXT)
-	-rm -f liblua/loslib.lo
-	-rm -f liblua/lparser.$(OBJEXT)
-	-rm -f liblua/lparser.lo
-	-rm -f liblua/lstate.$(OBJEXT)
-	-rm -f liblua/lstate.lo
-	-rm -f liblua/lstring.$(OBJEXT)
-	-rm -f liblua/lstring.lo
-	-rm -f liblua/lstrlib.$(OBJEXT)
-	-rm -f liblua/lstrlib.lo
-	-rm -f liblua/ltable.$(OBJEXT)
-	-rm -f liblua/ltable.lo
-	-rm -f liblua/ltablib.$(OBJEXT)
-	-rm -f liblua/ltablib.lo
-	-rm -f liblua/ltm.$(OBJEXT)
-	-rm -f liblua/ltm.lo
-	-rm -f liblua/lundump.$(OBJEXT)
-	-rm -f liblua/lundump.lo
-	-rm -f liblua/lvm.$(OBJEXT)
-	-rm -f liblua/lvm.lo
-	-rm -f liblua/lzio.$(OBJEXT)
-	-rm -f liblua/lzio.lo
+	-rm -f lua511/lapi.$(OBJEXT)
+	-rm -f lua511/lapi.lo
+	-rm -f lua511/lauxlib.$(OBJEXT)
+	-rm -f lua511/lauxlib.lo
+	-rm -f lua511/lbaselib.$(OBJEXT)
+	-rm -f lua511/lbaselib.lo
+	-rm -f lua511/lcode.$(OBJEXT)
+	-rm -f lua511/lcode.lo
+	-rm -f lua511/ldblib.$(OBJEXT)
+	-rm -f lua511/ldblib.lo
+	-rm -f lua511/ldebug.$(OBJEXT)
+	-rm -f lua511/ldebug.lo
+	-rm -f lua511/ldo.$(OBJEXT)
+	-rm -f lua511/ldo.lo
+	-rm -f lua511/ldump.$(OBJEXT)
+	-rm -f lua511/ldump.lo
+	-rm -f lua511/lfunc.$(OBJEXT)
+	-rm -f lua511/lfunc.lo
+	-rm -f lua511/lgc.$(OBJEXT)
+	-rm -f lua511/lgc.lo
+	-rm -f lua511/linit.$(OBJEXT)
+	-rm -f lua511/linit.lo
+	-rm -f lua511/liolib.$(OBJEXT)
+	-rm -f lua511/liolib.lo
+	-rm -f lua511/llex.$(OBJEXT)
+	-rm -f lua511/llex.lo
+	-rm -f lua511/lmathlib.$(OBJEXT)
+	-rm -f lua511/lmathlib.lo
+	-rm -f lua511/lmem.$(OBJEXT)
+	-rm -f lua511/lmem.lo
+	-rm -f lua511/loadlib.$(OBJEXT)
+	-rm -f lua511/loadlib.lo
+	-rm -f lua511/lobject.$(OBJEXT)
+	-rm -f lua511/lobject.lo
+	-rm -f lua511/lopcodes.$(OBJEXT)
+	-rm -f lua511/lopcodes.lo
+	-rm -f lua511/loslib.$(OBJEXT)
+	-rm -f lua511/loslib.lo
+	-rm -f lua511/lparser.$(OBJEXT)
+	-rm -f lua511/lparser.lo
+	-rm -f lua511/lstate.$(OBJEXT)
+	-rm -f lua511/lstate.lo
+	-rm -f lua511/lstring.$(OBJEXT)
+	-rm -f lua511/lstring.lo
+	-rm -f lua511/lstrlib.$(OBJEXT)
+	-rm -f lua511/lstrlib.lo
+	-rm -f lua511/ltable.$(OBJEXT)
+	-rm -f lua511/ltable.lo
+	-rm -f lua511/ltablib.$(OBJEXT)
+	-rm -f lua511/ltablib.lo
+	-rm -f lua511/ltm.$(OBJEXT)
+	-rm -f lua511/ltm.lo
+	-rm -f lua511/lundump.$(OBJEXT)
+	-rm -f lua511/lundump.lo
+	-rm -f lua511/lvm.$(OBJEXT)
+	-rm -f lua511/lvm.lo
+	-rm -f lua511/lzio.$(OBJEXT)
+	-rm -f lua511/lzio.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -362,7 +362,7 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf liblua/.libs liblua/_libs
+	-rm -rf lua511/.libs lua511/_libs
 
 distclean-libtool:
 	-rm -f libtool
@@ -468,7 +468,7 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-rm -f liblua/$(am__dirstamp)
+	-rm -f lua511/$(am__dirstamp)
 	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
