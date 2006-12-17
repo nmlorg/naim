@@ -155,3 +155,120 @@ maintainers from using Oscar. It is possible for third-party clients to use the 
 protocol, but I would prefer to spend my time working on new features to spending it in
 keeping up with AOL's latest protocol revisions, rush-testing new releases, and
 publicizing the problem and availability of corrected versions.
+
+=Buddy List=
+==How do I remove someone from my buddy list? /delbuddy isn't working.==
+The /addbuddy and /delbuddy commands are used to manipulate your buddy list, not your
+window list. naim includes a feature called autoquery which makes naim open windows for
+buddies who are online when you sign on, and for buddies that sign on after you; this is
+why /addbuddying someone causes a window to open for them. To disable this feature, type
+/set autoquery 0.
+
+If you /close a window for a buddy, naim will keep them on your buddy list; if they sign
+on again, naim will open a window for them. However, immediately after you /close a
+window, you can type /delbuddy to remove that individual from your buddy list. 
+
+==Every time I start up naim, your name (naim help) is always added to my buddy list! How
+can I stop that?==
+naim will read start-up commands from a file called .naimrc in your home directory. If
+this file doesn't exist, a built-in default is used instead, and one of the things it does
+is add my screen name to your buddy list. If you don't like this behavior, you can
+/delbuddy naimhelp, then /save to write-out a .naimrc which will not contain me in your
+buddy list. If you have used /save in the past without first removing me, your .naimrc
+will include an addbuddy naimhelp, which you will need to remove manually (or /delbuddy me
+and type /save again).
+
+==One of my contacts always shows up offline, even when he is talking to me. What is wrong?==
+There are several possibilities. If you have not received any messages from the buddy:
+
+  # Your buddy has you blocked. This will prevent your buddy from seeing you online, and
+will prevent you from seeing your buddy online. Neither of you will be able to send
+messages to each other or retrieve each other's profile. You can check for this by using
+the /info buddyname command from two accounts at the same time. If one /info buddyname
+fails while the other succeeds, it is likely your contact has blocked the account where
+/info fails.
+  # You have your buddy blocked. Blocking has the same effects regardless of which user is
+doing the blocking. You can check to see if you have blocked the buddy by checking /ignore
+(which provides a list).
+  # Your buddy has privacy mode enabled and has not added you to the allow list. Privacy
+mode makes it so only people on a special allow list can communicate with the user, and
+all other users are treated as if they are blocked (as with 1. or 2.). Many clients use
+their buddy list as the allow list. You can tell this is happening if you are able to
+/info buddyname from one account but not from any others. 
+
+If you have or have not received messages from the buddy in question, it may be one of the
+following:
+
+  # You have exceeded the maximum number of buddies for your account. At the time of
+writing, AOL's Instant Messenger servers limit each account to 200 simultaneous buddies.
+The protocol does not declare this limit and the server does not emit an error message if
+you go over it; your buddy tracking simply starts behaving erratically. You can check for
+this by using the /names command and manually counting entries.
+  # Your buddy is using the invisible feature of AOL Instant Messenger. This feature is
+similar to the privacy feature mentioned in 3., but only blocks tracking information.
+Userinfo requests and private messages can still be sent between clients. Unfortunately,
+this clashes with naim's automatic message queueing feature, and causes the unfortunate
+side effect of not being able to send messages to invisible users. You can tell this is
+happening if you have less than 200 buddies, a user is showing up as offline, but the user
+is also able to send you messages (and you are unable to reply).
+  # The AIM service is experiencing technical difficulties and your session has become
+unstable. This happens from time to time, and breaks naim's session tracking ability in
+the same way as the invisible feature. You can not usually confirm or rule out this
+possibility. 
+
+=Connections=
+==I read somewhere naim is an IRC client as well, is this true? Will it allow me to be on
+IRC and AIM simultaneously?==
+Is there a way to juggle two open connections? I noticed that if I have an AIM/TOC
+connection open, and then open an IRC connection, then I can't switch to any of the
+windows of the old connection with the normal keys (Tab, Home, and End).
+
+naim supports the TOC1 (AIM and ICQ), IRC (EFnet and Undernet), and SLCP (The lily CMC)
+protocols. naim also supports multiple simultaneous connections, allowing you to have as
+many open connections as your system supports.
+
+For example, type /newconn Undernet IRC to create a separate connection window for IRC
+called "Undernet", then /connect nickname us.undernet.org to connect.
+
+Use the Ins and Del keys to switch between connections. Your current connection will
+appear on the right side of the status bar next to the amount of time you have been
+connected. Active windows will show up regardless of which connection window you are in,
+and Ctrl-N will cross connections to jump to the next active window.
+
+==Does naim support connecting to AIM through a proxy server?==
+naim does not have specific proxy support, but all is not lost! The ProxyChains utility
+"allows you to use SSH, TELNET, VNC, FTP and any other Internet application from behind
+HTTP(HTTPS) and SOCKS(4/5) proxy servers. This 'proxifier' provides proxy server support
+to any app." As of this writing, ProxyChains is available from http://proxychains.sf.net/.
+
+==Do you happen to know of any Yahoo!, MSN Messenger, etc. clients similar to naim?==
+naim already supports IRC (http://www.irchelp.org/), and work is underway at adding Yahoo!
+and MSN Messenger support. Please contact me if you are anxiously waiting for these, or
+any other protocols, so our available energies can be directed where they are most desired.
+
+=Logging=
+==How does logging work in naim? Does it support per connection, or per buddy logging?==
+To enable session logging for connection AIM, type /set AIM:logfile aim.log and then /set
+AIM:log 1.
+
+naim also includes support for per-window logging, which is always enabled. naim will log
+all window activity into a ~/.naimlog/<conn>/<name>.html file by default. For example, any
+messages you exchange with "naim help" will be logged to ~/.naimlog/AIM/naimhelp.html .
+
+To turn off per-window logging, type /set logdir "/dev/null" and then /save. 
+
+=IRC=
+==How do I keep from manually logging into all of my servers and channels everytime I login?==
+Using the /save command after you've logged into all of your servers and channels will
+save those settings, and automatically log back into them the next time you sign on. If
+you have registered names which require passwords, naim will prompt you for them when
+logging back in.
+
+==What commands can I use in a naim IRC connection?==
+naim implements many common IRC commands. Here are a few:
+
+  # /join <channel> - joins a channel
+  # /part <channel> - parts a channel
+  # /accept <filename> - accepts a file transfer
+  # /CTCP <nick> - requests another user's version information.
+  # /whois <nick> - requests another user's whois information.
