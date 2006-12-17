@@ -190,7 +190,9 @@ DISTCLEANFILES = \
 
 EXTRA_DIST = \
 	cmpllua.sh \
-	default.lua
+	default.lua \
+	examples/eliza.lua \
+	examples/testnaim.lua
 
 noinst_LTLIBRARIES = liblua.la
 liblua_la_SOURCES = \
@@ -415,6 +417,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/examples
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
