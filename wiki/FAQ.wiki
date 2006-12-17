@@ -57,3 +57,32 @@ PgDn keys on the numeric keypad, as such:
 
 I have never used a computer keyboard which used these bindings instead of KEY_PGUP, etc.,
 but I included them in naim's /bind "just in case."
+
+==Is there a way to go backwards in my buddy list?==
+Home, Alt-Tab, and Shift-Tab will cycle backwards through your window list.
+
+However, on my system at least, Shift-Tab generates the same control sequence as Tab by
+itself. Typing:
+{{{
+loadkeys -d
+keycode 15 = Tab Tab
+alt keycode 15 = Meta_Tab
+shift keycode 15 = F26
+string F26 ="\033[Z"
+}}}
+
+into the command prompt on my machine before running naim allows Shift-Tab to work like
+Home. This affects other curses programs (including Lynx) as well, so you may consider
+adding that to your system boot scripts.
+
+=Configuration=
+==How can I configure naim?==
+Many aspects of naim's operation are configurable through the use of variables, such as
+$autohide (which controls how long the status window and window list window will appear on
+the screen when one changes). To change these variables, use the /set command. For
+example, to make both windows wait around for 10 seconds, instead of the default 3, just
+type /set autohide 10.
+
+For most other configurable pieces, there are specific /-commands to use, which will be
+described in /help commands. For example, to add me to to your buddy list, just type
+/addbuddy nmlorg or '/addbuddy "n ml org"'. 
