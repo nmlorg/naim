@@ -628,7 +628,7 @@ nFIRE_HANDLER(chat_MODECHANGED) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_modechanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, made, by);
+	HOOK_CALL(proto_chat_modechanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, mode, by);
 }
 #endif
 
