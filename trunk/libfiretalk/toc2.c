@@ -83,7 +83,7 @@ static uint8_t toc_get_frame_type_from_header(const unsigned char *const header)
 static uint16_t toc_get_sequence_from_header(const unsigned char *const header);
 static uint16_t toc_get_length_from_header(const unsigned char *const header);
 static char *toc_quote(const char *const string, const int outside_flag);
-static int toc_internal_disconnect(handle_t *c, const int error);
+static int toc_internal_disconnect(handle_t *c, const fte_t error);
 static int toc_internal_split_exchange(const char *const string);
 static char *toc_internal_split_name(const char *const string);
 static fte_t toc_send_printf(handle_t *c, const char *const format, ...);
@@ -300,8 +300,7 @@ static const char *aim_normalize_room_name(const char *const name) {
 	return(newname);
 }
 
-static char *aim_handle_ect(handle_t *conn, const char *const from,
-		char *const message, const int reply) {
+static char *aim_handle_ect(handle_t *conn, const char *const from, char *const message, const int reply) {
 	char	*ectbegin, *ectend, *textbegin, *textend;
 
 	while ((ectbegin = strstr(message, ECT_TOKEN)) != NULL) {
@@ -446,7 +445,7 @@ static void toc_infoget_parse_userinfo(handle_t *c, toc_infoget_t *i) {
 }
 
 #ifdef ENABLE_DIRECTORY
-static void toc_infoget_parse_dir(handle_t *c, struct s_toc_infoget *inf) {
+static void toc_infoget_parse_dir(handle_t *c, toc_infoget_t *inf) {
 	const char *tokens[] = {
 			/* 0 */ "<TR><TD>First Name:</TD><TD><B>",
 			/* 1 */ "<TR><TD>Last Name:</TD><TD><B>",
@@ -664,8 +663,8 @@ static char *toc_hash_password(const char *const password) {
 }
 
 static fte_t toc_compare_nicks (const char *s1, const char *s2) {
-	if ((s1 == NULL) || (s2 == NULL))
-		return(FE_NOMATCH);
+	assert(s1 != NULL);
+	assert(s2 != NULL);
 
 	while (*s1 == ' ')
 		s1++;
@@ -686,7 +685,7 @@ static fte_t toc_compare_nicks (const char *s1, const char *s2) {
 	return(FE_SUCCESS);
 }
 
-static int toc_internal_disconnect(handle_t *c, const int error) {
+static int toc_internal_disconnect(handle_t *c, const fte_t error) {
 	if (c->nickname != NULL) {
 		free(c->nickname);
 		c->nickname = NULL;
@@ -995,6 +994,11 @@ static fte_t toc_disconnect(handle_t *c) {
 	return(toc_internal_disconnect(c, FE_USERDISCONNECT));
 }
 
+static fte_t toc_disconnected(handle_t *c, const fte_t reason) {
+	assert(firetalk_internal_get_connectstate(c) == FCS_NOTCONNECTED);
+	return(toc_internal_disconnect(c, reason));
+}
+
 static fte_t toc_signon(handle_t *c, const char *const username) {
 	firetalk_connection_t *conn = firetalk_find_handle(c);
 
@@ -1026,7 +1030,7 @@ static fte_t toc_im_remove_group(handle_t *c, const char *const group) {
 	int	count = 0, slen = 0;
 
 	if (fchandle->buddy_head != NULL) {
-		struct s_firetalk_buddy *iter;
+		firetalk_buddy_t *iter;
 
 		for (iter = fchandle->buddy_head; iter != NULL; iter = iter->next)
 			if (toc_compare_nicks(iter->group, group) != FE_NOMATCH) {
@@ -2495,8 +2499,8 @@ got_data_connecting_start:
 #ifdef ENABLE_GETREALNAME
 			char	realname[128];
 #endif
-			struct s_firetalk_buddy *buddyiter;
-			struct s_firetalk_deny *denyiter;
+			firetalk_buddy_t *buddyiter;
+			firetalk_deny_t *denyiter;
 
 			/* ask the client to handle its init */
 			firetalk_callback_doinit(c, c->nickname);
@@ -2752,6 +2756,7 @@ const firetalk_driver_t firetalk_protocol_toc2 = {
 	comparenicks:		toc_compare_nicks,
 	isprintable:		toc_isprint,
 	disconnect:		toc_disconnect,
+	disconnected:		toc_disconnected,
 	signon:			toc_signon,
 	get_info:		toc_get_info,
 	set_info:		toc_set_info,

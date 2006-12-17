@@ -755,6 +755,11 @@ static fte_t lily_disconnect(lily_conn_t *c) {
 	return(lily_internal_disconnect(c, FE_USERDISCONNECT));
 }
 
+static fte_t lily_disconnected(lily_conn_t *c, const fte_t reason) {
+	assert(firetalk_internal_get_connectstate(c) == FCS_NOTCONNECTED);
+	return(lily_internal_disconnect(c, reason));
+}
+
 static lily_conn_t *lily_create_handle(void) {
 	lily_conn_t *c;
 
@@ -840,7 +845,10 @@ static char lily_tolower(const char c) {
 }
 
 static fte_t lily_compare_nicks(const char *const nick1, const char *const nick2) {
-	int i = 0;
+	int	i = 0;
+
+        assert(nick1 != NULL);
+        assert(nick2 != NULL);
 
 	while (nick1[i] != '\0') {
 		if (lily_tolower(nick1[i]) != lily_tolower(nick2[i]))
@@ -1817,6 +1825,7 @@ const firetalk_driver_t firetalk_protocol_slcp = {
 	comparenicks:		lily_compare_nicks,
 	isprintable:		lily_isprint,
 	disconnect:		lily_disconnect,
+	disconnected:		lily_disconnected,
 	signon:			lily_signon,
 	get_info:		lily_get_info,
 	set_info:		lily_set_info,

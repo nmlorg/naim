@@ -890,10 +890,11 @@ nFIRE_HANDLER(naim_chat_getmessage) {
 	message = html_clean(va_arg(msg, const unsigned char *));
 	va_end(msg);
 
-	if (firetalk_compare_nicks(conn->conn, who, conn->sn) == FE_SUCCESS)
-		return;
-
+	assert(who != NULL);
 	assert(message != NULL);
+
+	if ((conn->sn != NULL) && (firetalk_compare_nicks(conn->conn, who, conn->sn) == FE_SUCCESS))
+		return;
 
 	naim_recvfrom(conn, who, room, message, strlen(message),
 		isautoreply?RF_AUTOMATIC:RF_NONE);
@@ -2071,134 +2072,75 @@ conn_t	*naim_newconn(int proto) {
 	{
 		conn->conn = firetalk_create_handle(proto, conn);
 
-		firetalk_register_callback(conn->conn, FC_DOINIT,
-			naim_doinit);
-		firetalk_register_callback(conn->conn, FC_POSTSELECT,
-			naim_postselect);
-		firetalk_register_callback(conn->conn, FC_CONNECTED,
-			naim_connected);
-		firetalk_register_callback(conn->conn, FC_CONNECTFAILED,
-			naim_connectfailed);
-		firetalk_register_callback(conn->conn, FC_ERROR,
-			naim_error_msg);
-		firetalk_register_callback(conn->conn, FC_DISCONNECT,
-			naim_error_disconnect);
-		firetalk_register_callback(conn->conn, FC_SETIDLE,
-			naim_setidle);
+		firetalk_register_callback(conn->conn, FC_DOINIT,			naim_doinit);
+		firetalk_register_callback(conn->conn, FC_POSTSELECT,			naim_postselect);
+		firetalk_register_callback(conn->conn, FC_CONNECTED,			naim_connected);
+		firetalk_register_callback(conn->conn, FC_CONNECTFAILED,		naim_connectfailed);
+		firetalk_register_callback(conn->conn, FC_ERROR,			naim_error_msg);
+		firetalk_register_callback(conn->conn, FC_DISCONNECT,			naim_error_disconnect);
+		firetalk_register_callback(conn->conn, FC_SETIDLE,			naim_setidle);
 
-		firetalk_register_callback(conn->conn, FC_EVILED,
-			naim_warned);
-		firetalk_register_callback(conn->conn, FC_NEWNICK,
-			naim_newnick);
+		firetalk_register_callback(conn->conn, FC_EVILED,			naim_warned);
+		firetalk_register_callback(conn->conn, FC_NEWNICK,			naim_newnick);
 		/* FC_PASSCHANGED */
 
-		firetalk_register_callback(conn->conn, FC_IM_GOTINFO,
-			naim_userinfo_handler);
-		firetalk_register_callback(conn->conn, FC_IM_USER_NICKCHANGED,
-			naim_nickchange);
-		firetalk_register_callback(conn->conn, FC_IM_GETMESSAGE,
-			naim_im_handle);
-		firetalk_register_callback(conn->conn, FC_IM_GETACTION,
-			naim_act_handle);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYADDED,
-			naim_buddyadded);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYREMOVED,
-			naim_buddyremoved);
-		firetalk_register_callback(conn->conn, FC_IM_DENYADDED,
-			naim_denyadded);
-		firetalk_register_callback(conn->conn, FC_IM_DENYREMOVED,
-			naim_denyremoved);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYONLINE,
-			naim_buddy_coming);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYOFFLINE,
-			naim_buddy_going);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYAWAY,
-			naim_buddy_away);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYUNAWAY,
-			naim_buddy_unaway);
-		firetalk_register_callback(conn->conn, FC_IM_IDLEINFO,
-			naim_buddy_idle);
-		firetalk_register_callback(conn->conn, FC_IM_TYPINGINFO,
-			naim_buddy_typing);
-		firetalk_register_callback(conn->conn, FC_IM_EVILINFO,
-			naim_buddy_eviled);
-		firetalk_register_callback(conn->conn, FC_IM_CAPABILITIES,
-			naim_buddy_caps);
+		firetalk_register_callback(conn->conn, FC_IM_GOTINFO,			naim_userinfo_handler);
+		firetalk_register_callback(conn->conn, FC_IM_USER_NICKCHANGED,		naim_nickchange);
+		firetalk_register_callback(conn->conn, FC_IM_GETMESSAGE,		naim_im_handle);
+		firetalk_register_callback(conn->conn, FC_IM_GETACTION,			naim_act_handle);
+		firetalk_register_callback(conn->conn, FC_IM_BUDDYADDED,		naim_buddyadded);
+		firetalk_register_callback(conn->conn, FC_IM_BUDDYREMOVED,		naim_buddyremoved);
+		firetalk_register_callback(conn->conn, FC_IM_DENYADDED,			naim_denyadded);
+		firetalk_register_callback(conn->conn, FC_IM_DENYREMOVED,		naim_denyremoved);
+		firetalk_register_callback(conn->conn, FC_IM_BUDDYONLINE,		naim_buddy_coming);
+		firetalk_register_callback(conn->conn, FC_IM_BUDDYOFFLINE,		naim_buddy_going);
+		firetalk_register_callback(conn->conn, FC_IM_BUDDYAWAY,			naim_buddy_away);
+		firetalk_register_callback(conn->conn, FC_IM_BUDDYUNAWAY,		naim_buddy_unaway);
+		firetalk_register_callback(conn->conn, FC_IM_IDLEINFO,			naim_buddy_idle);
+		firetalk_register_callback(conn->conn, FC_IM_TYPINGINFO,		naim_buddy_typing);
+		firetalk_register_callback(conn->conn, FC_IM_EVILINFO,			naim_buddy_eviled);
+		firetalk_register_callback(conn->conn, FC_IM_CAPABILITIES,		naim_buddy_caps);
 
-		firetalk_register_callback(conn->conn, FC_CHAT_JOINED,
-			naim_chat_joined);
-		firetalk_register_callback(conn->conn, FC_CHAT_LEFT,
-			naim_chat_left);
-		firetalk_register_callback(conn->conn, FC_CHAT_KICKED,
-			naim_chat_kicked);
-		firetalk_register_callback(conn->conn, FC_CHAT_KEYCHANGED,
-			naim_chat_KEYCHANGED);
-		firetalk_register_callback(conn->conn, FC_CHAT_GETMESSAGE,
-			naim_chat_getmessage);
-		firetalk_register_callback(conn->conn, FC_CHAT_GETACTION,
-			naim_chat_act_handle);
-		firetalk_register_callback(conn->conn, FC_CHAT_INVITED,
-			naim_chat_invited);
+		firetalk_register_callback(conn->conn, FC_CHAT_JOINED,			naim_chat_joined);
+		firetalk_register_callback(conn->conn, FC_CHAT_LEFT,			naim_chat_left);
+		firetalk_register_callback(conn->conn, FC_CHAT_KICKED,			naim_chat_kicked);
+		firetalk_register_callback(conn->conn, FC_CHAT_KEYCHANGED,		naim_chat_KEYCHANGED);
+		firetalk_register_callback(conn->conn, FC_CHAT_GETMESSAGE,		naim_chat_getmessage);
+		firetalk_register_callback(conn->conn, FC_CHAT_GETACTION,		naim_chat_act_handle);
+		firetalk_register_callback(conn->conn, FC_CHAT_INVITED,			naim_chat_invited);
 #ifdef RAWIRCMODES
-		firetalk_register_callback(conn->conn, FC_CHAT_MODECHANGED,
-			naim_chat_MODECHANGED);
+		firetalk_register_callback(conn->conn, FC_CHAT_MODECHANGED,		naim_chat_MODECHANGED);
 #endif
-		firetalk_register_callback(conn->conn, FC_CHAT_OPPED,
-			naim_chat_oped);
-		firetalk_register_callback(conn->conn, FC_CHAT_DEOPPED,
-			naim_chat_deoped);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_JOINED,
-			naim_chat_JOIN);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_LEFT,
-			naim_chat_PART);
-		firetalk_register_callback(conn->conn, FC_CHAT_GOTTOPIC,
-			naim_chat_TOPIC);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_OPPED,
-			naim_chat_OP);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_DEOPPED,
-			naim_chat_DEOP);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_KICKED,
-			naim_chat_KICK);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_NICKCHANGED,
-			naim_chat_NICK);
-		firetalk_register_callback(conn->conn, FC_CHAT_LISTMEMBER,
-			naim_chat_NAMES);
+		firetalk_register_callback(conn->conn, FC_CHAT_OPPED,			naim_chat_oped);
+		firetalk_register_callback(conn->conn, FC_CHAT_DEOPPED,			naim_chat_deoped);
+		firetalk_register_callback(conn->conn, FC_CHAT_USER_JOINED,		naim_chat_JOIN);
+		firetalk_register_callback(conn->conn, FC_CHAT_USER_LEFT,		naim_chat_PART);
+		firetalk_register_callback(conn->conn, FC_CHAT_GOTTOPIC,		naim_chat_TOPIC);
+		firetalk_register_callback(conn->conn, FC_CHAT_USER_OPPED,		naim_chat_OP);
+		firetalk_register_callback(conn->conn, FC_CHAT_USER_DEOPPED,		naim_chat_DEOP);
+		firetalk_register_callback(conn->conn, FC_CHAT_USER_KICKED,		naim_chat_KICK);
+		firetalk_register_callback(conn->conn, FC_CHAT_USER_NICKCHANGED,	naim_chat_NICK);
+		firetalk_register_callback(conn->conn, FC_CHAT_LISTMEMBER,		naim_chat_NAMES);
 
-		firetalk_register_callback(conn->conn, FC_FILE_OFFER,
-			naim_file_offer);
-		firetalk_register_callback(conn->conn, FC_FILE_START,
-			naim_file_start);
-		firetalk_register_callback(conn->conn, FC_FILE_PROGRESS,
-			naim_file_progress);
-		firetalk_register_callback(conn->conn, FC_FILE_FINISH,
-			naim_file_finish);
-		firetalk_register_callback(conn->conn, FC_FILE_ERROR,
-			naim_file_error);
+		firetalk_register_callback(conn->conn, FC_FILE_OFFER,			naim_file_offer);
+		firetalk_register_callback(conn->conn, FC_FILE_START,			naim_file_start);
+		firetalk_register_callback(conn->conn, FC_FILE_PROGRESS,		naim_file_progress);
+		firetalk_register_callback(conn->conn, FC_FILE_FINISH,			naim_file_finish);
+		firetalk_register_callback(conn->conn, FC_FILE_ERROR,			naim_file_error);
 
-		firetalk_register_callback(conn->conn, FC_NEEDPASS,
-			naim_needpass);
+		firetalk_register_callback(conn->conn, FC_NEEDPASS,			naim_needpass);
 
-		firetalk_subcode_register_request_callback(conn->conn, "VERSION",
-			naim_ctcp_VERSION);
-		firetalk_subcode_register_request_callback(conn->conn, "PING",
-			naim_ctcp_PING);
-		firetalk_subcode_register_request_callback(conn->conn, "LC",
-			naim_ctcp_LC);
-		firetalk_subcode_register_request_callback(conn->conn, "HEXTEXT",
-			naim_ctcp_HEXTEXT);
-		firetalk_subcode_register_request_callback(conn->conn, "AUTOPEER",
-			naim_ctcp_AUTOPEER);
-		firetalk_subcode_register_request_callback(conn->conn, NULL,
-			naim_ctcp_default);
+		firetalk_subcode_register_request_callback(conn->conn, "VERSION",	naim_ctcp_VERSION);
+		firetalk_subcode_register_request_callback(conn->conn, "PING",		naim_ctcp_PING);
+		firetalk_subcode_register_request_callback(conn->conn, "LC",		naim_ctcp_LC);
+		firetalk_subcode_register_request_callback(conn->conn, "HEXTEXT",	naim_ctcp_HEXTEXT);
+		firetalk_subcode_register_request_callback(conn->conn, "AUTOPEER",	naim_ctcp_AUTOPEER);
+		firetalk_subcode_register_request_callback(conn->conn, NULL,		naim_ctcp_default);
 
-		firetalk_subcode_register_reply_callback(conn->conn, "HEXTEXT",
-			naim_ctcprep_HEXTEXT);
-		firetalk_subcode_register_reply_callback(conn->conn, "VERSION",
-			naim_ctcprep_VERSION);
-		firetalk_subcode_register_reply_callback(conn->conn, "AWAY",
-			naim_ctcprep_AWAY);
-		firetalk_subcode_register_reply_callback(conn->conn, NULL,
-			naim_ctcprep_default);
+		firetalk_subcode_register_reply_callback(conn->conn, "HEXTEXT",		naim_ctcprep_HEXTEXT);
+		firetalk_subcode_register_reply_callback(conn->conn, "VERSION",		naim_ctcprep_VERSION);
+		firetalk_subcode_register_reply_callback(conn->conn, "AWAY",		naim_ctcprep_AWAY);
+		firetalk_subcode_register_reply_callback(conn->conn, NULL,		naim_ctcprep_default);
 	}
 
 	return(conn);
