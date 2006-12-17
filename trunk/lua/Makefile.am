@@ -21,7 +21,14 @@ liblua_la_SOURCES = \
 liblua_la_LIBADD = -lm
 
 libnlua_la_SOURCES = \
-	commands.c conn.c moon.c moon-int.h strings.c
+	commands.c \
+	conn.c \
+	garbage.c \
+	moon.c \
+	moon-int.h \
+	script.c \
+	util.c \
+	variables.c
 libnlua_la_LIBADD = liblua.la
 libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
 

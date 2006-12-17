@@ -13,18 +13,20 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+/* conn.c */
+void	_push_conn_t(lua_State *L, conn_t *conn);
+
+/* garbage.c */
+void	nlua_clean_garbage(void);
+void	_garbage_add(void *ptr);
+
 /* moon.c */
 extern lua_State *lua;
 
-/* moon_conn.c */
-extern void _push_conn_t(lua_State *L, conn_t *conn);
-
 /* helpful inlines */
-static inline void _getmaintable()
-{
+static inline void _getmaintable(void) {
 	lua_getglobal(lua, "naim");
-	if (!lua_istable(lua, -1))
-	{
+	if (!lua_istable(lua, -1)) {
 		printf("Argh! naim's main table in Lua went away! I can't do anything "
 			   "intelligent now, so I'm just going to explode in a burst of "
 			   "flame and let you sort out your buggy scripts.\n");
@@ -32,19 +34,16 @@ static inline void _getmaintable()
 	}
 }
 
-static inline void _getitem(const char *t)
-{
+static inline void _getitem(const char *t) {
 	lua_pushstring(lua, t);
 	lua_gettable(lua, -2);
 	lua_remove(lua, -2);
 }
 
-static inline void _getsubtable(const char *t)
-{
+static inline void _getsubtable(const char *t) {
 	_getmaintable();
 	_getitem(t);
-	if (!lua_istable(lua, -1))
-	{
+	if (!lua_istable(lua, -1)) 	{
 		printf("Argh! naim's \"%s\" table in Lua went away! I can't do anything "
 			   "intelligent now, so I'm just going to explode in a burst of "
 			   "flame and let you sort out your buggy scripts.\n", t);

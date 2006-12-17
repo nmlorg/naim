@@ -22,62 +22,39 @@ extern void (*script_client_cmdhandler)(const char *);
  *    called Lua, and is interfaced by Moon. Lua is Portuguese for Moon.
  */
 
-static int l_debug(lua_State *L)
-{
+static int _nlua_debug(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
+
 	status_echof(curconn, "%s", s);
-	return 0;
+	return(0);
 }
 
-static int l_curconn(lua_State *L)
-{
+static int _nlua_curconn(lua_State *L) {
 	_push_conn_t(L, curconn);
-	return 1;
+	return(1);
 }
 
-static int l_conio(lua_State *L)
-{
-	/* lua_pushlightuserdata(L, void *p) */
+static int _nlua_conio(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	
-	if (!s)
-	{
-		lua_pushstring(L, "l_conio: string was nil");
-		return lua_error(L);
-	}
+	if (s == NULL)
+		return(luaL_error(L, "l_conio: string was nil"));
 	script_client_cmdhandler(s);
-	return 0;
+	return(0);
 }
 
-static int l_echo(lua_State *L) {
+static int _nlua_echo(lua_State *L) {
 	echof(curconn, NULL, "%s\n", lua_tostring(L, 1));
 	return(0);
 }
 
 static const struct luaL_Reg naimlib[] = {
-	{"debug", l_debug},
-	{"curconn", l_curconn},
-	{"conio", l_conio},
-	{"echo", l_echo},
-	{NULL, NULL} /* sentinel */
+	{ "debug",	_nlua_debug },
+	{ "curconn",	_nlua_curconn },
+	{ "conio",	_nlua_conio },
+	{ "echo",	_nlua_echo },
+	{ NULL,		NULL } /* sentinel */
 };
-
-static const char *skipword(const char *str) {
-	int	inquote = 0;
-
-	while (isspace(*str))
-		str++;
-
-	while ((*str != 0) && (inquote || !isspace(*str))) {
-		if (*str == '"')
-			inquote = !inquote;
-		str++;
-	}
-
-	while (isspace(*str))
-		str++;
-	return(str);
-}
 
 static const char *grabword(char *str) {
 	int	inquote = 0;
@@ -105,10 +82,8 @@ static int _nlua_pullword(lua_State *L) {
 	const char *string = lua_tostring(L, 1), *car, *cdr;
 	char	*copy;
 
-	if (string == NULL) {
-		lua_pushstring(L, "_nlua_firstwhite: string was nil");
-		return(lua_error(L));
-	}
+	if (string == NULL)
+		return(luaL_error(L, "_nlua_firstwhite: string was nil"));
 	copy = malloc(strlen(string)+2);
 	strncpy(copy, string, strlen(string)+2);
 	car = grabword(copy);
@@ -126,7 +101,7 @@ static int _nlua_pullword(lua_State *L) {
 
 static const struct luaL_reg naim_internallib[] = {
 	{ "pullword",	_nlua_pullword },
-	{NULL, NULL} /* sentinel */
+	{ NULL,		NULL } /* sentinel */
 };
 
 static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
@@ -157,47 +132,47 @@ static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest
 	return ret;
 }
 
-static int l_hooks_recvfrom_add(lua_State *L) {
+static int _nlua_hooks_recvfrom_add(lua_State *L) {
 	void	*mod = NULL;
-	int		weight;
-	int		ref;
-	
+	int	weight,
+		ref;
+
 	luaL_checktype(L, 1, LUA_TFUNCTION);
 	weight = luaL_checkint(L, 2);
 	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
-		return luaL_error(L, "recvfrom hooks table damaged");
+		return(luaL_error(L, "recvfrom hooks table damaged"));
 	lua_pushvalue(L, 1);
 	ref = luaL_ref(L, -2); //You can retrieve an object referred by reference r by calling lua_rawgeti(L, t, r). 
 	lua_pop(L, 2);
-	
+
 	HOOK_ADD(recvfrom, mod, _nlua_recvfrom, weight, (void*)ref);
-	
-	lua_pushlightuserdata(L, (void*)ref);	/* opaque reference */
-	return 1;
+
+	lua_pushlightuserdata(L, (void *)ref);	/* opaque reference */
+	return(1);
 }
 
-static int l_hooks_recvfrom_del(lua_State *L) {
-	int		ref;
+static int _nlua_hooks_recvfrom_del(lua_State *L) {
+	int	ref;
 	void	*mod = NULL;
-	
+
 	if (!lua_islightuserdata(L, 1))
-		return luaL_typerror(L, 1, "light userdata");
+		return(luaL_typerror(L, 1, "light userdata"));
 	ref = (int)lua_touserdata(L, 1);
-	
+
 	HOOK_DEL(recvfrom, mod, _nlua_recvfrom, (void*)ref);
-	
+
 	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
-		return luaL_error(L, "recvfrom hooks table damaged");
+		return(luaL_error(L, "recvfrom hooks table damaged"));
 	luaL_unref(L, -1, ref);
 	lua_pop(L, 1);
-	
-	return 0;
+
+	return(0);
 }
 
 static const struct luaL_reg naim_hooks_recvfromlib[] = {
-	{"add", l_hooks_recvfrom_add},
-	{"del", l_hooks_recvfrom_del},
-	{NULL, NULL} /* sentinel */
+	{ "add",	_nlua_hooks_recvfrom_add },
+	{ "del",	_nlua_hooks_recvfrom_del },
+	{ NULL,		NULL } /* sentinel */
 };
 
 static void _loadfunctions(void) {
@@ -215,8 +190,7 @@ static void _loadfunctions(void) {
 	naim_commandsreg(lua);
 }
 
-void nlua_init()
-{
+void	nlua_init(void) {
 	lua = luaL_newstate();
 	
 	/* XXX: Do we need to set a panic function here? */
@@ -225,19 +199,16 @@ void nlua_init()
 		_loadfunctions();		/* this creates global "naim" for default.lua */
 	lua_gc(lua, LUA_GCRESTART, 0);
 	
-	if (luaL_loadstring(lua, default_lua) != 0)
-	{
+	if (luaL_loadstring(lua, default_lua) != 0) {
 		printf("default.lua load error: %s\n", lua_tostring(lua, -1));
 		abort();
 	}
-	if (lua_pcall(lua, 0, 0, 0) != 0)
-	{
+	if (lua_pcall(lua, 0, 0, 0) != 0) {
 		printf("default.lua run error: %s\n", lua_tostring(lua, -1));
 		abort();
 	}
 }
 
-void nlua_shutdown()
-{
+void	nlua_shutdown(void) {
 	lua_close(lua);
 }
