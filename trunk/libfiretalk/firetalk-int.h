@@ -383,8 +383,8 @@ typedef struct {
 	fte_t	(*postselect)(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except);
 	fte_t	(*got_data)(struct firetalk_driver_connection_t *c, firetalk_buffer_t *buffer);
 	fte_t	(*got_data_connecting)(struct firetalk_driver_connection_t *c, firetalk_buffer_t *buffer);
-	fte_t	(*comparenicks)(const char *const s1, const char *const s2);
-	fte_t	(*isprintable)(const int key);
+	fte_t	(*comparenicks)(struct firetalk_driver_connection_t *c, const char *const s1, const char *const s2);
+	fte_t	(*isprintable)(struct firetalk_driver_connection_t *c, const int key);
 	fte_t	(*disconnect)(struct firetalk_driver_connection_t *c);
 	fte_t	(*disconnected)(struct firetalk_driver_connection_t *c, const fte_t reason);
 	fte_t	(*signon)(struct firetalk_driver_connection_t *c, const char *const account);
@@ -411,7 +411,7 @@ typedef struct {
 	fte_t	(*chat_send_message)(struct firetalk_driver_connection_t *c, const char *const group, const char *const text, const int isauto);
 	fte_t	(*chat_send_action)(struct firetalk_driver_connection_t *c, const char *const group, const char *const text, const int isauto);
 	char	*(*subcode_encode)(struct firetalk_driver_connection_t *c, const char *const command, const char *const text);
-	const char *(*room_normalize)(const char *const group);
+	const char *(*room_normalize)(struct firetalk_driver_connection_t *c, const char *const group);
 	struct firetalk_driver_connection_t *(*create_conn)(struct firetalk_driver_cookie_t *cookie);
 	void	(*destroy_conn)(struct firetalk_driver_connection_t *c);
 } firetalk_driver_t;

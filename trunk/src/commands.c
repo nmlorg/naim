@@ -2601,10 +2601,7 @@ void	ua_handlecmd(const char *buf) {
 			return;
 	}
 
-	if (script_cmd(c, cmd, arg))
-		return;
-
-	echof(c, cmd, "Unknown command.\n");
+	script_cmd(c, cmd, arg);
 }
 
 void	(*script_client_cmdhandler)(const char *) = ua_handlecmd;

@@ -8,6 +8,8 @@ function insensitive_index(t, s)
 	end
 end
 
+setmetatable(naim.commands, { __index = insensitive_index })
+
 function naim.prototypes.windows.event(window, e, s)
 	if window.eventtab and window.eventtab[e] then
 		window.eventtab[e].func(window, e, s)
@@ -267,6 +269,18 @@ end
 
 
 function naim.call(tab, ...)
+	if type(tab) == "string" then
+		if not naim.commands[tab] then
+			naim.echo("Unknown command " .. tab:upper() .. ".")
+			return
+		end
+		tab = naim.commands[tab]
+	end
+
+	if type(tab) ~= "table" then
+		error(tostring(tab) .. " is not a command table. This is a bug in a user script.")
+	end
+
 	local conn
 	local min = tab.min
 	local max = tab.max

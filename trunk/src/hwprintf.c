@@ -26,7 +26,8 @@ typedef struct h_t {
 		unsigned char
 			inbold:1,
 			initalic:1,
-			inunderline:1;
+			inunderline:1,
+			bodytag:1;
 	} fontstack[20];
 	int	fontstacklen, pair;
 	unsigned char
@@ -478,6 +479,7 @@ static unsigned long parsehtml_tag(h_t *h, const unsigned char *text, int backup
 					h->fontstack[h->fontstacklen].inbold = h->inbold;
 					h->fontstack[h->fontstacklen].initalic = h->initalic;
 					h->fontstack[h->fontstacklen].inunderline = h->inunderline;
+					h->fontstack[h->fontstacklen].bodytag = 1;
 					if (h->fontstacklen < sizeof(h->fontstack)/sizeof(*(h->fontstack)))
 						h->fontstacklen++;
 					{
@@ -509,8 +511,21 @@ static unsigned long parsehtml_tag(h_t *h, const unsigned char *text, int backup
 					}
 				}
 			}
-		    } else
-			h->inbold = h->initalic = h->inunderline = h->fontstacklen = 0;
+		    } else {
+			if (h->fontstacklen > 0) {
+				int	i;
+
+				for (i = h->fontstacklen-1; i >= 0; i--)
+					if (h->fontstack[i].bodytag)
+						break;
+				h->pair = h->fontstack[i].pair;
+				h->inbold = h->fontstack[i].inbold;
+				h->initalic = h->fontstack[i].initalic;
+				h->inunderline = h->fontstack[i].inunderline;
+			} else
+				h->inbold = h->initalic = h->inunderline = 0;
+			h->fontstacklen = 0;
+		    }
 		}
 	} else
 		return(0);
