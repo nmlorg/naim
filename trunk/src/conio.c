@@ -28,11 +28,11 @@
 
 extern win_t	win_input, win_buddy, win_info;
 extern conn_t	*curconn;
-extern faimconf_t	faimconf;
+extern faimconf_t faimconf;
 extern int	stayconnected, quakeoff;
 extern time_t	now, awaytime;
 extern double	nowf, changetime;
-extern const char	*home, *sty;
+extern const char *home, *sty;
 extern char	*statusbar_text;
 
 extern int scrollbackoff G_GNUC_INTERNAL,
@@ -55,8 +55,7 @@ char	**names = NULL,
 	*lastclose = NULL;
 namescomplete_t namescomplete;
 
-static const char
-	*collist[] = {
+static const char *collist[] = {
 	"CLEAR/BLACK",
 	"RED",
 	"GREEN",
@@ -67,8 +66,7 @@ static const char
 	"WHITE/GREY"
 };
 
-static const char
-	*forelist[] = {
+static const char *forelist[] = {
 	"EVENT",
 	"EVENT_ALT",
 	"TEXT",
@@ -85,8 +83,7 @@ static const char
 	"BUDDY_TYPING",
 };
 
-static const char
-	*backlist[] = {
+static const char *backlist[] = {
 	"INPUT",
 	"WINLIST",
 	"WINLISTHIGHLIGHT",
@@ -96,8 +93,7 @@ static const char
 };
 
 static struct {
-	const char
-		*key,
+	const char *key,
 		*cmd;
 } conio_bind_defaultar[] = {
 	{ "up",		":INPUT_SCROLL_BACK" },
@@ -1690,7 +1686,7 @@ CONIOAOPT(string,chain)
 	int	i;
 
 	if (argc == 0) {
-		const char *chains[] = { "preselect", "postselect", "getcmd", "notify", "periodic", "recvfrom", "sendto", "proto_user_onlineval" };
+		const char *chains[] = { "preselect", "postselect", "notify", "periodic", "recvfrom", "sendto", "proto_user_onlineval" };
 
 		for (i = 0; i < sizeof(chains)/sizeof(*chains); i++) {
 			if (i > 0)
@@ -2538,7 +2534,7 @@ CONIODESC(Disconnect from the current session)
 #endif
 
 
-static int	modlist_filehelper(const char *path, lt_ptr data) {
+static int modlist_filehelper(const char *path, lt_ptr data) {
 	conn_t	*conn = (conn_t *)data;
 	const char *filename = naim_basename(path);
 
@@ -2550,10 +2546,9 @@ static int	modlist_filehelper(const char *path, lt_ptr data) {
 	return(0);
 }
 
-static int	modlist_helper(lt_dlhandle mod, lt_ptr data) {
+static int modlist_helper(lt_dlhandle mod, lt_ptr data) {
 	conn_t	*conn = (conn_t *)data;
-	const lt_dlinfo
-		*dlinfo = lt_dlgetinfo(mod);
+	const lt_dlinfo *dlinfo = lt_dlgetinfo(mod);
 	char	*tmp;
 	double	*ver;
 
@@ -2878,20 +2873,25 @@ const char *conio_valid(const char *cmd, conn_t *conn, const int argc) {
 	return(NULL);
 }
 
-HOOK_DECLARE(getcmd);
 void	conio_handlecmd(const char *buf) {
 	conn_t	*c = NULL;
 	char	line[1024], *cmd, *arg, *tmp;
 	const char *args[CONIO_MAXPARMS], *error;
 	const cmdar_t *com;
-	int	a = 0;
+	int	a = 0, builtinonly = 0;
 
 	assert(buf != NULL);
 
-	while ((*buf == '/') || isspace(*buf))
+	while (isspace(*buf))
 		buf++;
+	if (*buf == '/')
+		buf++;
+	if (*buf == '/') {
+		builtinonly = 1;
+		buf++;
+	}
 
-	if (*buf == 0)
+	if ((*buf == 0) || isspace(*buf) || (*buf == '/'))
 		return;
 
 	strncpy(line, buf, sizeof(line)-1);
@@ -2925,14 +2925,16 @@ void	conio_handlecmd(const char *buf) {
 	} else
 		c = curconn;
 
-	if (script_cmd(cmd, arg, c) == 1)
-		return;
+	if (!builtinonly) {
+		if (script_cmd(cmd, arg, c) == 1)
+			return;
 
-	if (alias_doalias(cmd, arg) == 1)
-		return;
+		if (alias_doalias(cmd, arg) == 1)
+			return;
+	}
 
 	if ((com = conio_find_cmd(cmd)) == NULL) {
-		HOOK_CALL(getcmd, c, cmd, a, args);
+		echof(c, cmd, "Unknown command.\n");
 		return;
 	}
 	assert(com->maxarg <= CONIO_MAXPARMS);
@@ -2960,7 +2962,7 @@ void	(*script_client_cmdhandler)(const char *) = conio_handlecmd;
 
 void	conio_handleline(const char *line) {
 	if (*line == '/')
-		conio_handlecmd(line+1);
+		conio_handlecmd(line);
 	else if (!inconn)
 		conio_handlecmd(line);
 	else {
@@ -3841,11 +3843,6 @@ void	gotkey(int c) {
 		gotkey_real(nw_getch());
 }
 
-static int cmd_unknown(void *userdata, conn_t *c, const char *cmd, int argc, const char **args) {
-	echof(c, cmd, "Unknown command.\n");
-	return(HOOK_STOP);
-}
-
 static int conio_preselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
 	if (*maxfd <= STDIN_FILENO)
 		*maxfd = STDIN_FILENO+1;
@@ -3866,7 +3863,6 @@ static int conio_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *ef
 void	conio_hook_init(void) {
 	void	*mod = NULL;
 
-	HOOK_ADD(getcmd, mod, cmd_unknown, 1000, NULL);
 	HOOK_ADD(preselect, mod, conio_preselect, 100, NULL);
 	HOOK_ADD(postselect, mod, conio_postselect, 100, NULL);
 }
