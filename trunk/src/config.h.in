@@ -185,6 +185,9 @@
 /* Define to 1 if you have the `strrchr' function. */
 #undef HAVE_STRRCHR
 
+/* Define to 1 if you have the `strsignal' function. */
+#undef HAVE_STRSIGNAL
+
 /* Define to 1 if `tm_gmtoff' is member of `struct tm'. */
 #undef HAVE_STRUCT_TM_TM_GMTOFF
 
