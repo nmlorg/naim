@@ -91,7 +91,7 @@ fte_t	firetalk_sock_connect(firetalk_sock_t *sock) {
 		sock->state = FCS_NOTCONNECTED;
 	}
 	assert(sock->state == FCS_NOTCONNECTED);
-	sock->bufferpos = 0;
+//	sock->bufferpos = 0;
 
 #ifdef _FC_USE_IPV6
 	if (inet6_ip && (inet6_ip->sin6_addr.s6_addr[0] || inet6_ip->sin6_addr.s6_addr[1]
@@ -151,7 +151,7 @@ fte_t	firetalk_sock_connect_host(firetalk_sock_t *sock, const char *const host, 
 	return(firetalk_sock_connect(sock));
 }
 
-fte_t	firetalk_sock_send(firetalk_sock_t *sock, const char *const buffer, const int bufferlen) {
+fte_t	firetalk_sock_send(firetalk_sock_t *sock, const void *const buffer, const int bufferlen) {
 	assert(sock->canary == SOCK_CANARY);
 	assert(sock->state != FCS_NOTCONNECTED);
 
@@ -185,7 +185,6 @@ void	firetalk_sock_init(firetalk_sock_t *sock) {
 	sock->canary = SOCK_CANARY;
 	sock->fd = -1;
 	sock->state = FCS_NOTCONNECTED;
-	sock->bufferpos = 0;
 }
 
 void	firetalk_sock_close(firetalk_sock_t *sock) {
@@ -224,27 +223,27 @@ static fte_t firetalk_sock_synack(firetalk_sock_t *sock) {
 	return(FE_SUCCESS);
 }
 
-static fte_t firetalk_sock_read(firetalk_sock_t *sock) {
-	short	length;
+static fte_t firetalk_sock_read(firetalk_sock_t *sock, firetalk_buffer_t *buffer) {
+	uint16_t length;
 
 	assert(sock->canary == SOCK_CANARY);
 
 	/* read data into handle buffer */
-	length = recv(sock->fd, &(sock->buffer[sock->bufferpos]), sizeof(sock->buffer) - sock->bufferpos, MSG_DONTWAIT);
+	length = recv(sock->fd, &(buffer->buffer[buffer->bufferpos]), buffer->buffersize - buffer->bufferpos, MSG_DONTWAIT);
 
 	if (length < 1)
 		return(FE_DISCONNECT);
-	sock->bufferpos += length;
-	sock->readdata = 1;
+	buffer->bufferpos += length;
+	buffer->readdata = 1;
 
 	return(FE_SUCCESS);
 }
 
-fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except) {
+fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, firetalk_buffer_t *buffer) {
 	assert(sock->canary == SOCK_CANARY);
 	assert((sock->fd == -1) || (sock->state != FCS_NOTCONNECTED));
 
-	sock->readdata = 0;
+//	sock->readdata = 0;
 
 	if (sock->fd == -1)
 		return(FE_SUCCESS);
@@ -254,7 +253,7 @@ fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *m
 		return(FE_SOCKET);
 //		conn->PD->disconnect(conn, conn->handle);
 	} else if (FD_ISSET(sock->fd, my_read))
-		return(firetalk_sock_read(sock));
+		return(firetalk_sock_read(sock, buffer));
 	else if (FD_ISSET(sock->fd, my_write))
 		return(firetalk_sock_synack(sock));
 	return(FE_SUCCESS);

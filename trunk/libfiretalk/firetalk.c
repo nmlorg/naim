@@ -1211,7 +1211,7 @@ void	firetalk_callback_subcode_request(struct firetalk_driver_connection_t *c, c
 	} else if ((strcmp(command,"DCC") == 0) && (args != NULL) && (strncasecmp(args, "SEND ", 5) == 0)) {
 		/* DCC send */
 		struct in_addr addr;
-		unsigned long ip;
+		uint32_t ip;
 		long	size = -1;
 		uint16_t port;
 		char	**myargs;
@@ -1232,7 +1232,7 @@ void	firetalk_callback_subcode_request(struct firetalk_driver_connection_t *c, c
 				}
 #endif
 			}
-			sscanf(myargs[1], "%lu", &ip);
+			sscanf(myargs[1], "%u", &ip);
 			ip = htonl(ip);
 			memcpy(&addr.s_addr, &ip, 4);
 			port = (uint16_t)atoi(myargs[2]);
@@ -1524,7 +1524,7 @@ fte_t	firetalk_disconnect(firetalk_connection_t *conn) {
 	return(firetalk_protocols[conn->protocol]->disconnect(conn->handle));
 }
 
-fte_t	firetalk_signon(firetalk_connection_t *conn, const char *server, short port, const char *const username) {
+fte_t	firetalk_signon(firetalk_connection_t *conn, const char *server, uint16_t port, const char *const username) {
 	VERIFYCONN;
 
 	if (conn->connected != FCS_NOTCONNECTED) {
@@ -2123,7 +2123,7 @@ fte_t	firetalk_file_offer(firetalk_connection_t *conn, const char *const nicknam
 	conn->file_head->port = ntohs(addr.sin_port);
 	conn->file_head->next = iter;
 	conn->file_head->type = FF_TYPE_DCC;
-	snprintf(args, sizeof(args), "SEND %s %lu %u %ld", conn->file_head->filename, conn->localip, conn->file_head->port, conn->file_head->size);
+	snprintf(args, sizeof(args), "SEND %s %u %u %ld", conn->file_head->filename, conn->localip, conn->file_head->port, conn->file_head->size);
 	return(firetalk_subcode_send_request(conn, nickname, "DCC", args));
 }
 
@@ -2354,7 +2354,7 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 		if (FD_ISSET(fchandle->fd, my_except))
 			firetalk_protocols[fchandle->protocol]->disconnect(fchandle->handle);
 		else if (FD_ISSET(fchandle->fd, my_read)) {
-			short	length;
+			uint16_t length;
 
 			/* read data into handle buffer */
 			length = recv(fchandle->fd, &fchandle->buffer[fchandle->bufferpos], firetalk_protocols[fchandle->protocol]->default_buffersize - fchandle->bufferpos, MSG_DONTWAIT);

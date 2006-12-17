@@ -33,6 +33,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <time.h>
 
+#include "firetalk-int.h"
+#include "firetalk.h"
+
 #define ROOMSTARTS "#+&"
 
 
@@ -70,8 +73,6 @@ struct s_irc_whois {
 	long	online,
 		idle;
 };
-
-#include "firetalk-int.h"
 
 typedef struct firetalk_driver_connection_t {
 	char	*nickname,
@@ -142,7 +143,6 @@ static const char *irc_normalize_room_name(const char *const name) {
 
 
 
-#include "firetalk.h"
 
 
 
@@ -625,7 +625,7 @@ static int irc_send_printf(irc_conn_t *c, const char *const format, ...) {
 	return(FE_SUCCESS);
 }
 
-static char **irc_recv_parse(irc_conn_t *c, unsigned char *buffer, unsigned short *bufferpos) {
+static char **irc_recv_parse(irc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos) {
 	static char *args[256];
 	static char data[513];
 	size_t curarg;
@@ -1304,7 +1304,7 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 	return(FE_SUCCESS);
 }
 
-static fte_t irc_got_data(irc_conn_t *c, unsigned char *buffer, unsigned short *bufferpos) {
+static fte_t irc_got_data(irc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos) {
 	char	**args;
 
 	while (((args = irc_recv_parse(c, buffer, bufferpos)) != NULL) && (args[1] != NULL)) {
@@ -1317,7 +1317,7 @@ static fte_t irc_got_data(irc_conn_t *c, unsigned char *buffer, unsigned short *
 	return(FE_SUCCESS);
 }
 
-static fte_t irc_got_data_connecting(irc_conn_t *c, unsigned char *buffer, unsigned short *bufferpos) {
+static fte_t irc_got_data_connecting(irc_conn_t *c, unsigned char *buffer, uint16_t *bufferpos) {
 	char	**args;
 
 	while (((args = irc_recv_parse(c, buffer, bufferpos)) != NULL) && (args[1] != NULL)) {

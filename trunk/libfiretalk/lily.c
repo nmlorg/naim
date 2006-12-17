@@ -9,9 +9,8 @@
 #include <stdlib.h>
 #include <time.h>	/* time_t */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "firetalk-int.h"
+#include "firetalk.h"
 
 #define ROOMSTARTS "-"
 
@@ -219,9 +218,6 @@ static void lily_chat_add(lily_conn_t *c, int handle, const char *const name, co
 }
 
 
-
-#include "firetalk-int.h"
-#include "firetalk.h"
 
 
 #ifdef DEBUG_ECHO
@@ -548,7 +544,7 @@ static fte_t lily_queue_printf(lily_conn_t *const c, const queuekey_t key, const
 	return(FE_SUCCESS);
 }
 
-static char *lily_recv_line(lily_conn_t *c, char *buffer, unsigned short *bufferpos) {
+static char *lily_recv_line(lily_conn_t *c, char *buffer, uint16_t *bufferpos) {
 #if 0
 	static unsigned char
 			str[1025];
@@ -1483,7 +1479,7 @@ static fte_t lily_got_cmd(lily_conn_t *c, char *str) {
 	return(FE_SUCCESS);
 }
 
-static fte_t lily_got_data(lily_conn_t *c, unsigned char *_buffer, unsigned short *bufferpos) {
+static fte_t lily_got_data(lily_conn_t *c, unsigned char *_buffer, uint16_t *bufferpos) {
 	char	*buffer = (char *)_buffer, *str;
 
 	while ((str = lily_recv_line(c, buffer, bufferpos)) != NULL)
@@ -1492,7 +1488,7 @@ static fte_t lily_got_data(lily_conn_t *c, unsigned char *_buffer, unsigned shor
 	return(FE_SUCCESS);
 }
 
-static fte_t lily_got_data_connecting(lily_conn_t *c, unsigned char *_buffer, unsigned short *bufferpos) {
+static fte_t lily_got_data_connecting(lily_conn_t *c, unsigned char *_buffer, uint16_t *bufferpos) {
 	char	*buffer = (char *)_buffer, *str;
 
 	while ((str = lily_recv_line(c, buffer, bufferpos)) != NULL) {
