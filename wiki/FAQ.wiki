@@ -272,3 +272,42 @@ naim implements many common IRC commands. Here are a few:
   # /accept <filename> - accepts a file transfer
   # /CTCP <nick> - requests another user's version information.
   # /whois <nick> - requests another user's whois information.
+
+==Can I set modes in IRC?==
+naim supports several basic channel-operator commands, including /op, /deop, /kick, and
+/topic, but is not intended to be used as a channel maintenance client (a task usually
+better left handled by "IRC bots," which usually will not ban their friends after getting
+into arguments with them).
+
+==Can I at least send a raw command to the IRC server?==
+Send a private message to the special target ":RAW", i.e. /msg :RAW MODE #channel +s Note
+that you will not be able to see the side-effects of most :RAW commands unless you /set
+showraw 1 first.
+
+==Where can I find naim help on IRC?==
+The official naim channel is #naim on the EFnet IRC Network. This is the default location
+you enter if you start naim as nirc on the command line, or create a new IRC connection
+and /connect without specifying a server. 
+
+=Keyboard Input=
+==Is there any way to get naim to not automatically escape the ampersand? Can I insert
+newlines into my messages?==
+naim includes a paste mode which changes naim's escaping behavior. In normal input mode,
+the keys &lt; &gt; &amp; are all translated to &amp;lt; &amp;gt; &amp;amp;. When in paste
+mode, &lt; &gt; &amp; are left alone, but multiple spaces are converted to &amp;nbsp; and
+the Enter key becomes &lt;br&gt;. To toggle paste mode press Ctrl-P.
+
+=Console Display Issues=
+My Linux console displays + and | instead of the line-drawing characters in the window
+list window. How do I fix this? My Linux console displays bold text as regular text. How
+do I fix this? My Linux console does not display line-drawing characters at all, leaving
+holes on my screen. How do I fix this? The window list window appears distorted on my
+screen, and does not slide off cleanly. How do I fix this?
+
+This is a deficiency in the Linux kernel's console driver related to UTF-8
+(internationalization) support. If you are using Red Hat Linux 8.0 or newer, or Fedora
+Core, or any other distribution based on either of these, you need to disable UTF-8 in
+your console session. Open /etc/sysconfig/i18n and remove the ".UTF-8" suffix in the LANG
+setting and comment out the SYSFONT line entirely. Reboot your system. If you live outside
+of the U.S., I am sorry; you can either have pretty text or internationalization support.
+Please lodge your complaint with the Linux kernel maintainers; I have no control over this. 
