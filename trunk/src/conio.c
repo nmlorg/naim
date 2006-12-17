@@ -889,14 +889,14 @@ void	gotkey(int c) {
 		gotkey_real(nw_getch());
 }
 
-static int conio_preselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
+static int conio_preselect(void *userdata, const char *signature, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
 	if (*maxfd <= STDIN_FILENO)
 		*maxfd = STDIN_FILENO+1;
 	FD_SET(STDIN_FILENO, rfd);
 	return(HOOK_CONTINUE);
 }
 
-static int conio_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd) {
+static int conio_postselect(void *userdata, const char *signature, fd_set *rfd, fd_set *wfd, fd_set *efd) {
 	if (FD_ISSET(STDIN_FILENO, rfd)) {
 		int	k = nw_getch();
 

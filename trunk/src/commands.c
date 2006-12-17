@@ -1458,7 +1458,7 @@ UAAOPT(string,chain)
 	int	i;
 
 	if (argc == 0) {
-		const char *chains[] = { "preselect", "postselect", "notify", "periodic", "sendto",
+		const char *chains[] = { "preselect", "postselect", "periodic", "sendto",
 			"proto_doinit", "proto_connected", "proto_connectfailed", "proto_newnick", "proto_nickchanged", "proto_warned", "proto_error_msg", "proto_error_disconnect", "proto_userinfo",
 			"proto_buddyadded", "proto_buddyremoved", "proto_buddy_coming", "proto_buddy_going", "proto_buddy_away", "proto_buddy_unaway", "proto_buddy_idle", "proto_buddy_eviled", "proto_buddy_capschanged", "proto_buddy_typing",
 			"proto_denyadded", "proto_denyremoved",
@@ -2117,7 +2117,7 @@ typedef struct {
 	conn_t	*conn;
 } execstub_t;
 
-static int exec_preselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
+static int exec_preselect(void *userdata, const char *signature, fd_set *rfd, fd_set *wfd, fd_set *efd, int *maxfd) {
 	execstub_t *execstub = (execstub_t *)userdata;
 
 	if (*maxfd <= execstub->fd)
@@ -2167,7 +2167,7 @@ static int exec_read(int fd, int sayit, conn_t *conn) {
 	return(0);
 }
 
-static int exec_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd) {
+static int exec_postselect(void *userdata, const char *signature, fd_set *rfd, fd_set *wfd, fd_set *efd) {
 	execstub_t *execstub = (execstub_t *)userdata;
 
 	if (FD_ISSET(execstub->fd, rfd))

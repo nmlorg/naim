@@ -26,7 +26,7 @@ awayar_t *awayar = NULL;
 #define NAIM_VERSION_STRING	"naim:" PACKAGE_VERSION NAIM_SNAPSHOT
 static char naim_version[1024];
 
-static int fireio_proto_newnick(void *userdata, conn_t *conn, const char *newnick) {
+static int fireio_proto_newnick(void *userdata, const char *signature, conn_t *conn, const char *newnick) {
 	STRREPLACE(conn->sn, newnick);
 
 	script_setvar("SN", newnick);
@@ -34,7 +34,7 @@ static int fireio_proto_newnick(void *userdata, conn_t *conn, const char *newnic
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_proto_nickchanged(void *userdata, conn_t *conn, const char *oldnick, const char *newnick) {
+static int fireio_proto_nickchanged(void *userdata, const char *signature, conn_t *conn, const char *oldnick, const char *newnick) {
 	buddywin_t *bwin;
 	buddylist_t *buddy = conn->buddyar;
 
@@ -100,7 +100,7 @@ void	naim_set_info(conn_t *conn, const char *str) {
 	}
 }
 
-static int fireio_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd) {
+static int fireio_postselect(void *userdata, const char *signature, fd_set *rfd, fd_set *wfd, fd_set *efd) {
 	struct timeval tv;
 	char	buf[1024];
 
@@ -150,7 +150,7 @@ void	naim_setversion(conn_t *conn) {
 	firetalk_subcode_register_request_reply(conn->conn, "VERSION", naim_version);
 }
 
-static int fireio_doinit(void *userdata, conn_t *conn, const char *screenname) {
+static int fireio_doinit(void *userdata, const char *signature, conn_t *conn, const char *screenname) {
 	naim_setversion(conn);
 
 	STRREPLACE(conn->sn, screenname);
@@ -168,7 +168,7 @@ static int fireio_doinit(void *userdata, conn_t *conn, const char *screenname) {
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_warned(void *userdata, conn_t *conn, int newlev, const char *who) {
+static int fireio_warned(void *userdata, const char *signature, conn_t *conn, int newlev, const char *who) {
 	echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> just warned you (%i).\n",
 		who, newlev);
 	conn->warnval = newlev;
@@ -176,7 +176,7 @@ static int fireio_warned(void *userdata, conn_t *conn, int newlev, const char *w
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_idle(void *userdata, conn_t *conn, const char *who, long idletime) {
+static int fireio_buddy_idle(void *userdata, const char *signature, conn_t *conn, const char *who, long idletime) {
 	if (idletime >= 10)
 		bidle(conn, who, 1);
 	else
@@ -185,7 +185,7 @@ static int fireio_buddy_idle(void *userdata, conn_t *conn, const char *who, long
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_eviled(void *userdata, conn_t *conn, const char *who, long warnval) {
+static int fireio_buddy_eviled(void *userdata, const char *signature, conn_t *conn, const char *who, long warnval) {
 	buddylist_t *blist;
 
 	if ((blist = rgetlist(conn, who)) != NULL)
@@ -194,7 +194,7 @@ static int fireio_buddy_eviled(void *userdata, conn_t *conn, const char *who, lo
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_capschanged(void *userdata, conn_t *conn, const char *who, const char *caps) {
+static int fireio_buddy_capschanged(void *userdata, const char *signature, conn_t *conn, const char *who, const char *caps) {
 	buddylist_t *blist;
 
 	if ((blist = rgetlist(conn, who)) != NULL) {
@@ -240,7 +240,7 @@ static int fireio_buddy_capschanged(void *userdata, conn_t *conn, const char *wh
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_typing(void *userdata, conn_t *conn, const char *who, int typing) {
+static int fireio_buddy_typing(void *userdata, const char *signature, conn_t *conn, const char *who, int typing) {
 	buddylist_t *blist;
 
 	if ((blist = rgetlist(conn, who)) != NULL) {
@@ -253,19 +253,19 @@ static int fireio_buddy_typing(void *userdata, conn_t *conn, const char *who, in
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_away(void *userdata, conn_t *conn, const char *who) {
+static int fireio_buddy_away(void *userdata, const char *signature, conn_t *conn, const char *who) {
 	baway(conn, who, 1);
 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_unaway(void *userdata, conn_t *conn, const char *who) {
+static int fireio_buddy_unaway(void *userdata, const char *signature, conn_t *conn, const char *who) {
 	baway(conn, who, 0);
 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddyadded(void *userdata, conn_t *conn, const char *screenname, const char *group, const char *friendly) {
+static int fireio_buddyadded(void *userdata, const char *signature, conn_t *conn, const char *screenname, const char *group, const char *friendly) {
 	buddylist_t *blist;
 
 	if ((blist = rgetlist(conn, screenname)) == NULL) {
@@ -294,7 +294,7 @@ static int fireio_buddyadded(void *userdata, conn_t *conn, const char *screennam
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddyremoved(void *userdata, conn_t *conn, const char *screenname) {
+static int fireio_buddyremoved(void *userdata, const char *signature, conn_t *conn, const char *screenname) {
 	buddywin_t *bwin;
 	buddylist_t *blist;
 
@@ -315,7 +315,7 @@ static int fireio_buddyremoved(void *userdata, conn_t *conn, const char *screenn
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_denyadded(void *userdata, conn_t *conn, const char *screenname) {
+static int fireio_denyadded(void *userdata, const char *signature, conn_t *conn, const char *screenname) {
 	status_echof(conn, "Added <font color=\"#00FFFF\">%s</font> to your block list.\n", screenname);
 
 	raddidiot(conn, screenname, "block");
@@ -323,7 +323,7 @@ static int fireio_denyadded(void *userdata, conn_t *conn, const char *screenname
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_denyremoved(void *userdata, conn_t *conn, const char *screenname) {
+static int fireio_denyremoved(void *userdata, const char *signature, conn_t *conn, const char *screenname) {
 	status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> from your block list.\n", screenname);
 
 	rdelidiot(conn, screenname);
@@ -331,19 +331,19 @@ static int fireio_denyremoved(void *userdata, conn_t *conn, const char *screenna
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_coming(void *userdata, conn_t *conn, const char *who) {
+static int fireio_buddy_coming(void *userdata, const char *signature, conn_t *conn, const char *who) {
 	bcoming(conn, who);
 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_buddy_going(void *userdata, conn_t *conn, const char *who) {
+static int fireio_buddy_going(void *userdata, const char *signature, conn_t *conn, const char *who) {
 	bgoing(conn, who);
 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_recvfrom_ignorelist(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_ignorelist(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	ignorelist_t *ig;
 
 	if ((*dest != NULL) && (strcmp(*dest, ":RAW") == 0) && (getvar_int(conn, "showraw") == 0))
@@ -359,7 +359,7 @@ static int fireio_recvfrom_ignorelist(void *userdata, conn_t *conn, char **name,
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_recvfrom_decrypt(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_decrypt(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if ((*dest == NULL) && !(*flags & RF_ACTION)) {
 		buddylist_t *blist = rgetlist(conn, *name);
 
@@ -382,14 +382,14 @@ static int fireio_recvfrom_decrypt(void *userdata, conn_t *conn, char **name, ch
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_recvfrom_log(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_log(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (!(*flags & RF_NOLOG))
 		logim(conn, *name, *dest, *message);
 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_recvfrom_beep(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_beep(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (*dest == NULL) {
 		int	beeponim = getvar_int(conn, "beeponim");
 
@@ -400,7 +400,7 @@ static int fireio_recvfrom_beep(void *userdata, conn_t *conn, char **name, char 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_recvfrom_autobuddy(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_autobuddy(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (*dest == NULL) {
 		buddylist_t *blist = rgetlist(conn, *name);
 
@@ -426,7 +426,7 @@ static int fireio_recvfrom_autobuddy(void *userdata, conn_t *conn, char **name, 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_recvfrom_display_user(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_display_user(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	buddylist_t *blist;
 	buddywin_t *bwin;
 
@@ -514,7 +514,7 @@ static int fireio_recvfrom_display_user(void *userdata, conn_t *conn, char **nam
 	return(HOOK_CONTINUE);
 }
 
-static void fireio_recvfrom_display_chat_print(void *userdata, buddywin_t *bwin, const int flags, const int istome, const char *name, const char *prefix, const unsigned char *message) {
+static void fireio_recvfrom_display_chat_print(void *userdata, const char *signature, buddywin_t *bwin, const int flags, const int istome, const char *name, const char *prefix, const unsigned char *message) {
 	const char *format;
 
 	if (prefix == NULL)
@@ -540,7 +540,7 @@ void	chat_flush(buddywin_t *bwin) {
 		if (bwin->e.chat->last.reps == 1) {
 			assert(bwin->e.chat->last.lasttime != 0);
 			WINTIME_NOTNOW(&(bwin->nwin), IMWIN, bwin->e.chat->last.lasttime);
-			fireio_recvfrom_display_chat_print(NULL, bwin, bwin->e.chat->last.flags, bwin->e.chat->last.istome, bwin->e.chat->last.name, NULL, bwin->e.chat->last.line);
+			fireio_recvfrom_display_chat_print(NULL, NULL, bwin, bwin->e.chat->last.flags, bwin->e.chat->last.istome, bwin->e.chat->last.name, NULL, bwin->e.chat->last.line);
 		} else {
 			assert(bwin->e.chat->last.lasttime != 0);
 			WINTIME_NOTNOW(&(bwin->nwin), IMWIN, bwin->e.chat->last.lasttime);
@@ -552,7 +552,7 @@ void	chat_flush(buddywin_t *bwin) {
 	FREESTR(bwin->e.chat->last.name);
 }
 
-static int fireio_recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_display_chat(void *userdata, const char *signature, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	buddywin_t *bwin;
 	int	istome;
 	char	*prefix = NULL;
@@ -633,7 +633,7 @@ static int fireio_recvfrom_display_chat(void *userdata, conn_t *conn, char **nam
 	}
 
 	WINTIME(&(bwin->nwin), IMWIN);
-	fireio_recvfrom_display_chat_print(NULL, bwin, *flags, istome, *name, prefix, *message);
+	fireio_recvfrom_display_chat_print(NULL, NULL, bwin, *flags, istome, *name, prefix, *message);
 
 	free(bwin->e.chat->last.line);
 	bwin->e.chat->last.line = message_save;
@@ -648,7 +648,7 @@ static int fireio_recvfrom_display_chat(void *userdata, conn_t *conn, char **nam
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_connected(void *userdata, conn_t *conn) {
+static int fireio_connected(void *userdata, const char *signature, conn_t *conn) {
 	buddywin_t *bwin = conn->curbwin;
 
 	if (conn->online > 0) {
@@ -684,7 +684,7 @@ static const char naim_tolower_first(const char *const str) {
 	return(*str);
 }
 
-static int fireio_connectfailed(void *userdata, conn_t *conn, int err, const char *reason) {
+static int fireio_connectfailed(void *userdata, const char *signature, conn_t *conn, int err, const char *reason) {
 	if (reason != NULL)
 		echof(conn, "CONNECT", "Unable to connect to %s: %s, %c%s.\n",
 			firetalk_strprotocol(conn->proto),
@@ -717,7 +717,7 @@ static int fireio_connectfailed(void *userdata, conn_t *conn, int err, const cha
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_error_msg(void *userdata, conn_t *conn, int error, const char *target, const char *desc) {
+static int fireio_error_msg(void *userdata, const char *signature, conn_t *conn, int error, const char *target, const char *desc) {
 	buddywin_t *bwin;
 
 	if ((error == FE_MESSAGETRUNCATED) && (awaytime > 0))
@@ -751,7 +751,7 @@ static int fireio_error_msg(void *userdata, conn_t *conn, int error, const char 
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_error_disconnect(void *userdata, conn_t *conn, int error) {
+static int fireio_error_disconnect(void *userdata, const char *signature, conn_t *conn, int error) {
 	echof(conn, NULL, "Disconnected from %s: %s.\n",
 		conn->winname, firetalk_strerror(error));
 	conn->online = -1;
@@ -768,7 +768,7 @@ static int fireio_error_disconnect(void *userdata, conn_t *conn, int error) {
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_userinfo(void *userdata, conn_t *conn, const char *SN, const unsigned char *info, long warning, long online, long idle, long class) {
+static int fireio_userinfo(void *userdata, const char *signature, conn_t *conn, const char *SN, const unsigned char *info, long warning, long online, long idle, long class) {
 	if (awayc > 0) {
 		int	i;
 
@@ -845,7 +845,7 @@ buddywin_t *cgetwin(conn_t *conn, const char *roomname) {
 	return(bwin);
 }
 
-static int fireio_chat_joined(void *userdata, conn_t *conn, const char *room) {
+static int fireio_chat_joined(void *userdata, const char *signature, conn_t *conn, const char *room) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -863,7 +863,7 @@ static int fireio_chat_joined(void *userdata, conn_t *conn, const char *room) {
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_left(void *userdata, conn_t *conn, const char *room) {
+static int fireio_chat_left(void *userdata, const char *signature, conn_t *conn, const char *room) {
 	buddywin_t *bwin;
 
 	if ((bwin = bgetwin(conn, room, CHAT)) != NULL) {
@@ -875,7 +875,7 @@ static int fireio_chat_left(void *userdata, conn_t *conn, const char *room) {
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_kicked(void *userdata, conn_t *conn, const char *room, const char *by, const char *reason) {
+static int fireio_chat_kicked(void *userdata, const char *signature, conn_t *conn, const char *room, const char *by, const char *reason) {
 	buddywin_t *bwin;
 	const char *q;
 
@@ -894,7 +894,7 @@ static int fireio_chat_kicked(void *userdata, conn_t *conn, const char *room, co
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_invited(void *userdata, conn_t *conn, const char *room, const char *who, const char *message) {
+static int fireio_chat_invited(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *message) {
 	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
@@ -904,7 +904,7 @@ static int fireio_chat_invited(void *userdata, conn_t *conn, const char *room, c
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_user_joined(void *userdata, conn_t *conn, const char *room, const char *who, const char *extra) {
+static int fireio_chat_user_joined(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *extra) {
 	buddywin_t *bwin;
 	const char *q;
 
@@ -926,7 +926,7 @@ static int fireio_chat_user_joined(void *userdata, conn_t *conn, const char *roo
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_user_left(void *userdata, conn_t *conn, const char *room, const char *who, const char *reason) {
+static int fireio_chat_user_left(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *reason) {
 	buddywin_t *bwin;
 	const char *q;
 
@@ -946,7 +946,7 @@ static int fireio_chat_user_left(void *userdata, conn_t *conn, const char *room,
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_user_kicked(void *userdata, conn_t *conn, const char *room, const char *who, const char *by, const char *reason) {
+static int fireio_chat_user_kicked(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *by, const char *reason) {
 	buddywin_t *bwin;
 	const char *q;
 
@@ -962,7 +962,7 @@ static int fireio_chat_user_kicked(void *userdata, conn_t *conn, const char *roo
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_keychanged(void *userdata, conn_t *conn, const char *room, const char *what, const char *by) {
+static int fireio_chat_keychanged(void *userdata, const char *signature, conn_t *conn, const char *room, const char *what, const char *by) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -988,7 +988,7 @@ static int fireio_chat_keychanged(void *userdata, conn_t *conn, const char *room
 }
 
 #ifdef RAWIRCMODES
-static int fireio_chat_modechanged(void *userdata, conn_t *conn, const char *room, const char *mode, const char *by) {
+static int fireio_chat_modechanged(void *userdata, const char *signature, conn_t *conn, const char *room, const char *mode, const char *by) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -1004,7 +1004,7 @@ static int fireio_chat_modechanged(void *userdata, conn_t *conn, const char *roo
 }
 #endif
 
-static int fireio_chat_oped(void *userdata, conn_t *conn, const char *room, const char *by) {
+static int fireio_chat_oped(void *userdata, const char *signature, conn_t *conn, const char *room, const char *by) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -1016,7 +1016,7 @@ static int fireio_chat_oped(void *userdata, conn_t *conn, const char *room, cons
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_user_oped(void *userdata, conn_t *conn, const char *room, const char *who, const char *by) {
+static int fireio_chat_user_oped(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *by) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -1032,7 +1032,7 @@ static int fireio_chat_user_oped(void *userdata, conn_t *conn, const char *room,
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_deoped(void *userdata, conn_t *conn, const char *room, const char *by) {
+static int fireio_chat_deoped(void *userdata, const char *signature, conn_t *conn, const char *room, const char *by) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -1044,7 +1044,7 @@ static int fireio_chat_deoped(void *userdata, conn_t *conn, const char *room, co
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_user_deoped(void *userdata, conn_t *conn, const char *room, const char *who, const char *by) {
+static int fireio_chat_user_deoped(void *userdata, const char *signature, conn_t *conn, const char *room, const char *who, const char *by) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -1061,7 +1061,7 @@ static int fireio_chat_user_deoped(void *userdata, conn_t *conn, const char *roo
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_topicchanged(void *userdata, conn_t *conn, const char *room, const char *topic, const char *by) {
+static int fireio_chat_topicchanged(void *userdata, const char *signature, conn_t *conn, const char *room, const char *topic, const char *by) {
 	buddywin_t *bwin;
 	const char *q;
 
@@ -1082,7 +1082,7 @@ static int fireio_chat_topicchanged(void *userdata, conn_t *conn, const char *ro
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_chat_user_nickchanged(void *userdata, conn_t *conn, const char *room, const char *oldnick, const char *newnick) {
+static int fireio_chat_user_nickchanged(void *userdata, const char *signature, conn_t *conn, const char *room, const char *oldnick, const char *newnick) {
 	buddywin_t *bwin;
 
 	bwin = cgetwin(conn, room);
@@ -1118,7 +1118,7 @@ void	fremove(transfer_t *transfer) {
 	free(transfer);
 }
 
-static int fireio_file_offer(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, const char *from, const char *filename, long size) {
+static int fireio_file_offer(void *userdata, const char *signature, conn_t *conn, struct firetalk_transfer_t *handle, const char *from, const char *filename, long size) {
 	if (bgetwin(conn, filename, TRANSFER) == NULL) {
 		buddywin_t *bwin;
 
@@ -1141,7 +1141,7 @@ static int fireio_file_offer(void *userdata, conn_t *conn, struct firetalk_trans
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_file_start(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer) {
+static int fireio_file_start(void *userdata, const char *signature, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer) {
 	buddywin_t *bwin;
 
 	bwin = transfer->bwin;
@@ -1151,7 +1151,7 @@ static int fireio_file_start(void *userdata, conn_t *conn, struct firetalk_trans
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_file_progress(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, long bytes, long size) {
+static int fireio_file_progress(void *userdata, const char *signature, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, long bytes, long size) {
 	buddywin_t *bwin;
 
 	bwin = transfer->bwin;
@@ -1177,7 +1177,7 @@ static int fireio_file_progress(void *userdata, conn_t *conn, struct firetalk_tr
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_file_finish(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, long size) {
+static int fireio_file_finish(void *userdata, const char *signature, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, long size) {
 	buddywin_t *bwin;
 
 	bwin = transfer->bwin;
@@ -1199,7 +1199,7 @@ static int fireio_file_finish(void *userdata, conn_t *conn, struct firetalk_tran
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_file_error(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, int error) {
+static int fireio_file_error(void *userdata, const char *signature, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, int error) {
 	buddywin_t *bwin;
 
 	bwin = transfer->bwin;

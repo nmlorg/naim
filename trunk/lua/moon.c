@@ -104,74 +104,133 @@ static const struct luaL_reg naim_internallib[] = {
 	{ NULL,		NULL } /* sentinel */
 };
 
-static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
-	int ref = (int)userdata;
-	int ret;
-	
-	if (luaL_findtable(lua, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
+static int _nlua_hook(void *userdata, const char *signature, ...) {
+	va_list	msg;
+	int	ref = (int)userdata, i, args = 0, recoverable = 0;
+
+	if (luaL_findtable(lua, LUA_GLOBALSINDEX, "naim.internal.hooks", 1) != NULL)
 		abort();
 	lua_rawgeti(lua, -1, ref);
 	lua_remove(lua, -2);
-	
-	_push_conn_t(lua, conn);
-	lua_pushstring(lua, *name);
-	lua_pushstring(lua, *dest);
-	lua_pushlstring(lua, *message, *len);
-	lua_pushnumber(lua, *flags);
-	if (lua_pcall(lua, 5 /* args */, 1 /* results */, 0) != 0)
-	{
-		status_echof(curconn, "recvfrom chain %d run error: %s\n", ref, lua_tostring(lua, -1));
-		lua_pop(lua, 1);
-		return HOOK_CONTINUE;
+
+	va_start(msg, signature);
+	for (i = 0; signature[i] != 0; i++) {
+		args++;
+		switch(signature[i]) {
+		  case HOOK_T_CONNc:
+			_push_conn_t(lua, va_arg(msg, conn_t *));
+			break;
+		  case HOOK_T_STRINGc:
+			lua_pushstring(lua, va_arg(msg, const char *));
+			break;
+		  case HOOK_T_LSTRINGc: {
+				uint32_t len = va_arg(msg, uint32_t);
+				const char *str = va_arg(msg, const char *);
+
+				lua_pushlstring(lua, str, len);
+				break;
+			}
+		  case HOOK_T_UINT32c:
+			lua_pushnumber(lua, va_arg(msg, uint32_t));
+			break;
+		  case HOOK_T_FLOATc:
+			lua_pushnumber(lua, va_arg(msg, double));
+			break;
+		  case HOOK_T_WRSTRINGc: {
+				const char **str = va_arg(msg, const char **);
+
+				lua_pushstring(lua, *str);
+				recoverable++;
+				break;
+			}
+		  case HOOK_T_WRLSTRINGc: {
+				uint32_t *len = va_arg(msg, uint32_t *);
+				const char **str = va_arg(msg, const char **);
+
+				lua_pushlstring(lua, *str, *len);
+				recoverable++;
+				break;
+			}
+		  case HOOK_T_WRUINT32c: {
+				uint32_t *val = va_arg(msg, uint32_t *);
+
+				lua_pushnumber(lua, *val);
+				recoverable++;
+				break;
+			}
+		  case HOOK_T_WRFLOATc: {
+				double *val = va_arg(msg, double *);
+
+				lua_pushnumber(lua, *val);
+				recoverable++;
+				break;
+			}
+		  default:
+			lua_pushlightuserdata(lua, va_arg(msg, void *));
+			break;
+		}
 	}
-	if (!lua_isnumber(lua, -1))
-		return HOOK_CONTINUE;
-	ret = lua_tonumber(lua, -1);
+	va_end(msg);
+
+	if (lua_pcall(lua, args, 1+recoverable, 0) != 0) {
+		status_echof(curconn, "Chain %d run error: %s\n", ref, lua_tostring(lua, -1));
+		lua_pop(lua, 1);
+		return(HOOK_CONTINUE);
+	}
+	if (!lua_isnumber(lua, -1)) {
+		lua_pop(lua, 1);
+		return(HOOK_CONTINUE);
+	}
+	i = lua_tonumber(lua, -1);
 	lua_pop(lua, 1);
 
-	return ret;
+	return(i);
 }
 
-static int _nlua_hooks_recvfrom_add(lua_State *L) {
+static int _nlua_hooks_add(lua_State *L) {
 	void	*mod = NULL;
+	const char *chainname;
 	int	weight,
 		ref;
 
-	luaL_checktype(L, 1, LUA_TFUNCTION);
-	weight = luaL_checkint(L, 2);
-	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
-		return(luaL_error(L, "recvfrom hooks table damaged"));
-	lua_pushvalue(L, 1);
+	chainname = luaL_checkstring(L, 1);
+	luaL_checktype(L, 2, LUA_TFUNCTION);
+	weight = luaL_checkint(L, 3);
+	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks", 1) != NULL)
+		return(luaL_error(L, "Hooks table damaged"));
+	lua_pushvalue(L, 2);
 	ref = luaL_ref(L, -2); //You can retrieve an object referred by reference r by calling lua_rawgeti(L, t, r). 
 	lua_pop(L, 2);
 
-	HOOK_ADD(proto_recvfrom, mod, _nlua_recvfrom, weight, (void*)ref);
+	HOOK_ADD2(chainname, mod, _nlua_hook, weight, (void *)ref);
 
 	lua_pushlightuserdata(L, (void *)ref);	/* opaque reference */
 	return(1);
 }
 
-static int _nlua_hooks_recvfrom_del(lua_State *L) {
+static int _nlua_hooks_del(lua_State *L) {
+	const char *chainname;
 	int	ref;
 	void	*mod = NULL;
 
-	if (!lua_islightuserdata(L, 1))
+	chainname = luaL_checkstring(L, 1);
+	if (!lua_islightuserdata(L, 2))
 		return(luaL_typerror(L, 1, "light userdata"));
-	ref = (int)lua_touserdata(L, 1);
+	ref = (int)lua_touserdata(L, 2);
 
-	HOOK_DEL(proto_recvfrom, mod, _nlua_recvfrom, (void*)ref);
+	HOOK_DEL2(chainname, mod, _nlua_hook, (void *)ref);
 
-	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
-		return(luaL_error(L, "recvfrom hooks table damaged"));
+	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks", 1) != NULL)
+		return(luaL_error(L, "Hooks table damaged"));
 	luaL_unref(L, -1, ref);
 	lua_pop(L, 1);
 
 	return(0);
 }
 
-static const struct luaL_reg naim_hooks_recvfromlib[] = {
-	{ "add",	_nlua_hooks_recvfrom_add },
-	{ "del",	_nlua_hooks_recvfrom_del },
+static const struct luaL_reg naim_hookslib[] = {
+	{ "add",	_nlua_hooks_add },
+	{ "del",	_nlua_hooks_del },
 	{ NULL,		NULL } /* sentinel */
 };
 
@@ -186,7 +245,7 @@ static void _loadfunctions(void) {
 	luaL_register(lua, "naim.prototypes.connections", naim_prototypes_connectionslib);
 	luaL_register(lua, "naim.prototypes.windows", naim_prototypes_windowslib);
 	luaL_register(lua, "naim.prototypes.buddies", naim_prototypes_buddieslib);
-	luaL_register(lua, "naim.hooks.recvfrom", naim_hooks_recvfromlib);
+	luaL_register(lua, "naim.hooks", naim_hookslib);
 	naim_commandsreg(lua);
 }
 

@@ -35,7 +35,7 @@ nFIRE_HANDLER(newnick) {
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_newnick, conn, newnick);
+	HOOK_CALL(proto_newnick, HOOK_T_CONN HOOK_T_STRING, conn, newnick);
 }
 
 HOOK_DECLARE(proto_nickchanged);
@@ -48,7 +48,7 @@ nFIRE_HANDLER(nickchanged) {
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_nickchanged, conn, oldnick, newnick);
+	HOOK_CALL(proto_nickchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, oldnick, newnick);
 }
 
 HOOK_DECLARE(proto_doinit);
@@ -60,7 +60,7 @@ nFIRE_HANDLER(doinit) {
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_doinit, conn, screenname);
+	HOOK_CALL(proto_doinit, HOOK_T_CONN HOOK_T_STRING, conn, screenname);
 }
 
 nFIRE_HANDLER(setidle) {
@@ -79,42 +79,42 @@ HOOK_DECLARE(proto_warned);
 nFIRE_HANDLER(warned) {
 	va_list	msg;
 	const char *who;
-	int	newlev;
+	uint32_t newlev;
 
 	va_start(msg, conn);
 	newlev = va_arg(msg, int);
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_warned, conn, newlev, who);
+	HOOK_CALL(proto_warned, HOOK_T_CONN HOOK_T_UINT32 HOOK_T_STRING, conn, newlev, who);
 }
 
 HOOK_DECLARE(proto_buddy_idle);
 nFIRE_HANDLER(buddy_idle) {
 	va_list	msg;
 	const char *who;
-	long	idletime;
+	uint32_t idletime;
 
 	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	idletime = va_arg(msg, long);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_idle, conn, who, idletime);
+	HOOK_CALL(proto_buddy_idle, HOOK_T_CONN HOOK_T_STRING HOOK_T_UINT32, conn, who, idletime);
 }
 
 HOOK_DECLARE(proto_buddy_eviled);
 nFIRE_HANDLER(buddy_eviled) {
 	va_list	msg;
 	const char *who;
-	long	warnval;
+	uint32_t warnval;
 
 	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	warnval = va_arg(msg, long);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_eviled, conn, who, warnval);
+	HOOK_CALL(proto_buddy_eviled, HOOK_T_CONN HOOK_T_STRING HOOK_T_UINT32, conn, who, warnval);
 }
 
 HOOK_DECLARE(proto_buddy_capschanged);
@@ -127,21 +127,21 @@ nFIRE_HANDLER(buddy_caps) {
 	caps = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_capschanged, conn, who, caps);
+	HOOK_CALL(proto_buddy_capschanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, who, caps);
 }
 
 HOOK_DECLARE(proto_buddy_typing);
 nFIRE_HANDLER(buddy_typing) {
 	va_list	msg;
 	const char *who;
-	int	typing;
+	uint32_t typing;
 
 	va_start(msg, conn);
 	who = va_arg(msg, const char *);
 	typing = va_arg(msg, int);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_typing, conn, who, typing);
+	HOOK_CALL(proto_buddy_typing, HOOK_T_CONN HOOK_T_STRING HOOK_T_UINT32, conn, who, typing);
 }
 
 HOOK_DECLARE(proto_buddy_away);
@@ -153,7 +153,7 @@ nFIRE_HANDLER(buddy_away) {
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_away, conn, who);
+	HOOK_CALL(proto_buddy_away, HOOK_T_CONN HOOK_T_STRING, conn, who);
 }
 
 HOOK_DECLARE(proto_buddy_unaway);
@@ -165,7 +165,7 @@ nFIRE_HANDLER(buddy_unaway) {
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_unaway, conn, who);
+	HOOK_CALL(proto_buddy_unaway, HOOK_T_CONN HOOK_T_STRING, conn, who);
 }
 
 HOOK_DECLARE(proto_buddyadded);
@@ -179,7 +179,7 @@ nFIRE_HANDLER(buddyadded) {
 	friendly = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddyadded, conn, screenname, group, friendly);
+	HOOK_CALL(proto_buddyadded, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, screenname, group, friendly);
 }
 
 HOOK_DECLARE(proto_buddyremoved);
@@ -191,7 +191,7 @@ nFIRE_HANDLER(buddyremoved) {
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddyremoved, conn, screenname);
+	HOOK_CALL(proto_buddyremoved, HOOK_T_CONN HOOK_T_STRING, conn, screenname);
 }
 
 HOOK_DECLARE(proto_denyadded);
@@ -203,7 +203,7 @@ nFIRE_HANDLER(denyadded) {
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_denyadded, conn, screenname);
+	HOOK_CALL(proto_denyadded, HOOK_T_CONN HOOK_T_STRING, conn, screenname);
 }
 
 HOOK_DECLARE(proto_denyremoved);
@@ -215,7 +215,7 @@ nFIRE_HANDLER(denyremoved) {
 	screenname = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_denyremoved, conn, screenname);
+	HOOK_CALL(proto_denyremoved, HOOK_T_CONN HOOK_T_STRING, conn, screenname);
 }
 
 HOOK_DECLARE(proto_buddy_coming);
@@ -227,7 +227,7 @@ nFIRE_HANDLER(buddy_coming) {
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_coming, conn, who);
+	HOOK_CALL(proto_buddy_coming, HOOK_T_CONN HOOK_T_STRING, conn, who);
 }
 
 HOOK_DECLARE(proto_buddy_going);
@@ -239,15 +239,15 @@ nFIRE_HANDLER(buddy_going) {
 	who = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_going, conn, who);
+	HOOK_CALL(proto_buddy_going, HOOK_T_CONN HOOK_T_STRING, conn, who);
 }
 
 HOOK_DECLARE(proto_recvfrom);
 static void naim_recvfrom(conn_t *const conn,
 		const char *const _name, 
 		const char *const _dest,
-		const unsigned char *_message, int len,
-		int flags) {
+		const unsigned char *_message, uint32_t len,
+		uint32_t flags) {
  	char	*name = NULL, *dest = NULL;
 	unsigned char *message = malloc(len+1);
 
@@ -258,7 +258,8 @@ static void naim_recvfrom(conn_t *const conn,
 
 	memmove(message, _message, len);
 	message[len] = 0;
-	HOOK_CALL(proto_recvfrom, conn, &name, &dest, &message, &len, &flags);
+	HOOK_CALL(proto_recvfrom, HOOK_T_CONN HOOK_T_WRSTRING HOOK_T_WRSTRING HOOK_T_WRSTRING HOOK_T_WRUINT32 HOOK_T_WRUINT32,
+		conn, &name, &dest, &message, &len, &flags);
 	free(name);
 	free(dest);
 	free(message);
@@ -414,13 +415,13 @@ void	naim_awaylog(conn_t *conn, const char *src, const char *msg) {
 
 HOOK_DECLARE(proto_connected);
 nFIRE_HANDLER(connected) {
-	HOOK_CALL(proto_connected, conn);
+	HOOK_CALL(proto_connected, HOOK_T_CONN, conn);
 }
 
 HOOK_DECLARE(proto_connectfailed);
 nFIRE_HANDLER(connectfailed) {
 	va_list	msg;
-	int	err;
+	uint32_t err;
 	const char *reason;
 
 	va_start(msg, conn);
@@ -428,13 +429,13 @@ nFIRE_HANDLER(connectfailed) {
 	reason = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_connectfailed, conn, err, reason);
+	HOOK_CALL(proto_connectfailed, HOOK_T_CONN HOOK_T_UINT32 HOOK_T_STRING, conn, err, reason);
 }
 
 HOOK_DECLARE(proto_error_msg);
 nFIRE_HANDLER(error_msg) {
 	va_list	msg;
-	int	error;
+	uint32_t error;
 	const char *target, *desc;
 
 	va_start(msg, conn);
@@ -443,19 +444,19 @@ nFIRE_HANDLER(error_msg) {
 	desc = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_error_msg, conn, error, target, desc);
+	HOOK_CALL(proto_error_msg, HOOK_T_CONN HOOK_T_UINT32 HOOK_T_STRING HOOK_T_STRING, conn, error, target, desc);
 }
 
 HOOK_DECLARE(proto_error_disconnect);
 nFIRE_HANDLER(error_disconnect) {
 	va_list	msg;
-	int	error;
+	uint32_t error;
 
 	va_start(msg, conn);
 	error = va_arg(msg, int);
 	va_end(msg);
 
-	HOOK_CALL(proto_error_disconnect, conn, error);
+	HOOK_CALL(proto_error_disconnect, HOOK_T_CONN HOOK_T_UINT32, conn, error);
 }
 
 nFIRE_HANDLER(needpass) {
@@ -491,7 +492,7 @@ nFIRE_HANDLER(userinfo_handler) {
 	va_list	msg;
 	const char *SN;
 	const unsigned char *info;
-	long	warning, online, idle, class;
+	uint32_t warning, online, idle, class;
 
 	va_start(msg, conn);
 	SN = va_arg(msg, const char *);
@@ -502,7 +503,8 @@ nFIRE_HANDLER(userinfo_handler) {
 	class = va_arg(msg, long);
 	va_end(msg);
 
-	HOOK_CALL(proto_userinfo, conn, SN, info, warning, online, idle, class);
+	HOOK_CALL(proto_userinfo, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32 HOOK_T_UINT32 HOOK_T_UINT32 HOOK_T_UINT32,
+		conn, SN, info, warning, online, idle, class);
 }
 
 HOOK_DECLARE(proto_chat_joined);
@@ -514,7 +516,7 @@ nFIRE_HANDLER(chat_joined) {
 	room = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_joined, conn, room);
+	HOOK_CALL(proto_chat_joined, HOOK_T_CONN HOOK_T_STRING, conn, room);
 }
 
 HOOK_DECLARE(proto_chat_left);
@@ -526,7 +528,7 @@ nFIRE_HANDLER(chat_left) {
 	room = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_left, conn, room);
+	HOOK_CALL(proto_chat_left, HOOK_T_CONN HOOK_T_STRING, conn, room);
 }
 
 HOOK_DECLARE(proto_chat_kicked);
@@ -540,7 +542,7 @@ nFIRE_HANDLER(chat_kicked) {
 	reason = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_kicked, conn, room, by, reason);
+	HOOK_CALL(proto_chat_kicked, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, by, reason);
 }
 
 HOOK_DECLARE(proto_chat_invited);
@@ -554,7 +556,7 @@ nFIRE_HANDLER(chat_invited) {
 	message = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_invited, conn, room, who, message);
+	HOOK_CALL(proto_chat_invited, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, who, message);
 }
 
 HOOK_DECLARE(proto_chat_user_joined);
@@ -568,7 +570,7 @@ nFIRE_HANDLER(chat_JOIN) {
 	extra = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_user_joined, conn, room, who, extra);
+	HOOK_CALL(proto_chat_user_joined, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, who, extra);
 }
 
 HOOK_DECLARE(proto_chat_user_left);
@@ -582,7 +584,7 @@ nFIRE_HANDLER(chat_PART) {
 	reason = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_user_left, conn, room, who, reason);
+	HOOK_CALL(proto_chat_user_left, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, who, reason);
 }
 
 HOOK_DECLARE(proto_chat_user_kicked);
@@ -597,7 +599,7 @@ nFIRE_HANDLER(chat_KICK) {
 	reason = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_user_kicked, conn, room, who, by, reason);
+	HOOK_CALL(proto_chat_user_kicked, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, who, by, reason);
 }
 
 HOOK_DECLARE(proto_chat_keychanged);
@@ -611,7 +613,7 @@ nFIRE_HANDLER(chat_KEYCHANGED) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_keychanged, conn, room, what, by);
+	HOOK_CALL(proto_chat_keychanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, what, by);
 }
 
 #ifdef RAWIRCMODES
@@ -626,7 +628,7 @@ nFIRE_HANDLER(chat_MODECHANGED) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_modechanged, conn, room, made, by);
+	HOOK_CALL(proto_chat_modechanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, made, by);
 }
 #endif
 
@@ -640,7 +642,7 @@ nFIRE_HANDLER(chat_oped) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_oped, conn, room, by);
+	HOOK_CALL(proto_chat_oped, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, room, by);
 }
 
 HOOK_DECLARE(proto_chat_user_oped);
@@ -654,7 +656,7 @@ nFIRE_HANDLER(chat_OP) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_user_oped, conn, room, who, by);
+	HOOK_CALL(proto_chat_user_oped, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, who, by);
 }
 
 HOOK_DECLARE(proto_chat_deoped);
@@ -667,7 +669,7 @@ nFIRE_HANDLER(chat_deoped) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_deoped, conn, room, by);
+	HOOK_CALL(proto_chat_deoped, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING, conn, room, by);
 }
 
 HOOK_DECLARE(proto_chat_user_deoped);
@@ -681,7 +683,7 @@ nFIRE_HANDLER(chat_DEOP) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_user_deoped, conn, room, who, by);
+	HOOK_CALL(proto_chat_user_deoped, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, who, by);
 }
 
 HOOK_DECLARE(proto_chat_topicchanged);
@@ -695,7 +697,7 @@ nFIRE_HANDLER(chat_TOPIC) {
 	by = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_topicchanged, conn, room, topic, by);
+	HOOK_CALL(proto_chat_topicchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, topic, by);
 }
 
 HOOK_DECLARE(proto_chat_user_nickchanged);
@@ -709,7 +711,7 @@ nFIRE_HANDLER(chat_NICK) {
 	newnick = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_chat_user_nickchanged, conn, room, oldnick, newnick);
+	HOOK_CALL(proto_chat_user_nickchanged, HOOK_T_CONN HOOK_T_STRING HOOK_T_STRING HOOK_T_STRING, conn, room, oldnick, newnick);
 }
 
 nFIRE_HANDLER(chat_NAMES) {
@@ -788,7 +790,7 @@ nFIRE_HANDLER(file_offer) {
 	va_list	msg;
 	struct firetalk_transfer_t *handle;
 	const char *from, *filename;
-	long	size;
+	uint32_t size;
 
 	va_start(msg, conn);
 	handle = va_arg(msg, struct firetalk_transfer_t *);
@@ -797,7 +799,7 @@ nFIRE_HANDLER(file_offer) {
 	size = va_arg(msg, long);
 	va_end(msg);
 
-	HOOK_CALL(proto_file_offer, conn, handle, from, filename, size);
+	HOOK_CALL(proto_file_offer, HOOK_T_CONN HOOK_T_HANDLE HOOK_T_STRING HOOK_T_STRING HOOK_T_UINT32, conn, handle, from, filename, size);
 }
 
 HOOK_DECLARE(proto_file_start);
@@ -811,7 +813,7 @@ nFIRE_HANDLER(file_start) {
 	transfer = va_arg(msg, transfer_t *);
 	va_end(msg);
 
-	HOOK_CALL(proto_file_start, conn, handle, transfer);
+	HOOK_CALL(proto_file_start, HOOK_T_CONN HOOK_T_HANDLE HOOK_T_HANDLE, conn, handle, transfer);
 }
 
 HOOK_DECLARE(proto_file_progress);
@@ -819,8 +821,7 @@ nFIRE_HANDLER(file_progress) {
 	va_list	msg;
 	struct firetalk_transfer_t *handle;
 	transfer_t *transfer;
-	long	bytes,
-		size;
+	uint32_t bytes, size;
 
 	va_start(msg, conn);
 	handle = va_arg(msg, struct firetalk_transfer_t *);
@@ -829,7 +830,7 @@ nFIRE_HANDLER(file_progress) {
 	size = va_arg(msg, long);
 	va_end(msg);
 
-	HOOK_CALL(proto_file_progress, conn, handle, transfer, bytes, size);
+	HOOK_CALL(proto_file_progress, HOOK_T_CONN HOOK_T_HANDLE HOOK_T_HANDLE HOOK_T_UINT32 HOOK_T_UINT32, conn, handle, transfer, bytes, size);
 }
 
 HOOK_DECLARE(proto_file_finish);
@@ -837,7 +838,7 @@ nFIRE_HANDLER(file_finish) {
 	va_list	msg;
 	struct firetalk_transfer_t *handle;
 	transfer_t *transfer;
-	long	size;
+	uint32_t size;
 
 	va_start(msg, conn);
 	handle = va_arg(msg, struct firetalk_transfer_t *);
@@ -845,7 +846,7 @@ nFIRE_HANDLER(file_finish) {
 	size = va_arg(msg, long);
 	va_end(msg);
 
-	HOOK_CALL(proto_file_finish, conn, handle, transfer, size);
+	HOOK_CALL(proto_file_finish, HOOK_T_CONN HOOK_T_HANDLE HOOK_T_HANDLE HOOK_T_UINT32, conn, handle, transfer, size);
 }
 
 HOOK_DECLARE(proto_file_error);
@@ -853,7 +854,7 @@ nFIRE_HANDLER(file_error) {
 	va_list	msg;
 	struct firetalk_transfer_t *handle;
 	transfer_t *transfer;
-	int	error;
+	uint32_t error;
 
 	va_start(msg, conn);
 	handle = va_arg(msg, struct firetalk_transfer_t *);
@@ -861,7 +862,7 @@ nFIRE_HANDLER(file_error) {
 	error = va_arg(msg, int);
 	va_end(msg);
 
-	HOOK_CALL(proto_file_error, conn, handle, transfer, error);
+	HOOK_CALL(proto_file_error, HOOK_T_CONN HOOK_T_HANDLE HOOK_T_HANDLE HOOK_T_UINT32, conn, handle, transfer, error);
 }
 
 static time_t lastctcp = 0;
