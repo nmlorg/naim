@@ -64,7 +64,7 @@ struct s_firetalk_buddy {
 		warnval;
 	int	typing;
 	char	*capabilities;
-	unsigned char online:1,
+	uint8_t	online:1,
 		away:1,
 		uploaded:1;
 };
@@ -72,35 +72,35 @@ struct s_firetalk_buddy {
 struct s_firetalk_deny {
 	struct s_firetalk_deny *next;
 	char	*nickname;
-	unsigned char uploaded:1;
+	uint8_t	uploaded:1;
 };
 
 struct s_firetalk_member {
 	struct s_firetalk_member *next;
 	char *nickname;
-	unsigned char admin:1;
+	uint8_t	admin:1;
 };
 
 struct s_firetalk_room {
 	struct s_firetalk_room *next;
 	struct s_firetalk_member *member_head;
 	char	*name;
-	unsigned char admin:1,
+	uint8_t	admin:1,
 		sentjoin:1;
 };
 
 typedef struct firetalk_transfer_t {
 	struct firetalk_transfer_t *next;
-	char	*who;
-	char	*filename;
+	char	*who,
+		*filename;
 	struct in_addr inet_ip;
 #ifdef _FC_USE_IPV6
 	struct in6_addr inet6_ip;
 	int	tryinet6;
 #endif
 	uint16_t port;
-	long	size;
-	long	bytes;
+	long	size,
+		bytes;
 	uint32_t acked;
 #define FF_STATE_WAITLOCAL	0
 #define FF_STATE_WAITREMOTE	1
@@ -143,10 +143,13 @@ typedef struct {
 	struct sockaddr_in6 remote_addr6;
 	struct in6_addr local_addr6;
 #endif
-	int	readdata;
-	unsigned short bufferpos;
-	unsigned char buffer[1024*8];
 } firetalk_sock_t;
+
+typedef struct {
+	uint16_t buffersize, bufferpos;
+	uint8_t	*buffer,
+		readdata:1;
+} firetalk_buffer_t;
 
 typedef struct firetalk_connection_t {
 	struct firetalk_driver_connection_t *handle;
@@ -158,13 +161,13 @@ typedef struct firetalk_connection_t {
 	struct sockaddr_in6 remote_addr6;
 	struct in6_addr local_addr6;
 #endif
-	unsigned long localip;
+	uint32_t localip;
 	int	protocol;
 	char	*username;
 	int	fd;
 	ptrtofnct callbacks[FC_MAX];
 	unsigned char *buffer;
-	unsigned short bufferpos;
+	uint16_t bufferpos;
 	struct firetalk_connection_t *next, *prev;
 	struct s_firetalk_buddy *buddy_head;
 	struct s_firetalk_deny *deny_head;
@@ -176,7 +179,7 @@ typedef struct firetalk_connection_t {
 		*subcode_reply_default;
 	firetalk_queue_t subcode_requests,
 		subcode_replies;
-	unsigned char deleted:1;
+	uint8_t	deleted:1;
 } firetalk_connection_t;
 
 struct firetalk_driver_connection_t;
@@ -184,13 +187,13 @@ struct firetalk_driver_connection_t;
 typedef struct {
 	const char *const strprotocol;
 	const char *const default_server;
-	const short default_port;
-	const unsigned short default_buffersize;
+	const uint16_t default_port;
+	const uint16_t default_buffersize;
 	fte_t	(*periodic)(firetalk_connection_t *const conn);
 	fte_t	(*preselect)(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except, int *n);
 	fte_t	(*postselect)(struct firetalk_driver_connection_t *c, fd_set *read, fd_set *write, fd_set *except);
-	fte_t	(*got_data)(struct firetalk_driver_connection_t *c, unsigned char *buffer, unsigned short *bufferpos);
-	fte_t	(*got_data_connecting)(struct firetalk_driver_connection_t *c, unsigned char *buffer, unsigned short *bufferpos);
+	fte_t	(*got_data)(struct firetalk_driver_connection_t *c, unsigned char *buffer, uint16_t *bufferpos);
+	fte_t	(*got_data_connecting)(struct firetalk_driver_connection_t *c, unsigned char *buffer, uint16_t *bufferpos);
 	fte_t	(*comparenicks)(const char *const, const char *const);
 	fte_t	(*isprintable)(const int);
 	fte_t	(*disconnect)(struct firetalk_driver_connection_t *c);
@@ -320,9 +323,9 @@ struct sockaddr_in6 *firetalk_sock_remotehost6(firetalk_sock_t *sock);
 
 void	firetalk_sock_init(firetalk_sock_t *sock);
 void	firetalk_sock_close(firetalk_sock_t *sock);
-fte_t	firetalk_sock_send(firetalk_sock_t *sock, const char *const buffer, const int bufferlen);
+fte_t	firetalk_sock_send(firetalk_sock_t *sock, const void *const buffer, const int bufferlen);
 void	firetalk_sock_preselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, int *n);
-fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except);
+fte_t	firetalk_sock_postselect(firetalk_sock_t *sock, fd_set *my_read, fd_set *my_write, fd_set *my_except, firetalk_buffer_t *buffer);
 
 char	*firetalk_htmlclean(const char *str);
 const char *firetalk_nhtmlentities(const char *str, int len);

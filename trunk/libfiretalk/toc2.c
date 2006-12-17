@@ -6,6 +6,9 @@
 #include <time.h>
 #include <errno.h>
 
+#include "firetalk-int.h"
+#include "firetalk.h"
+
 #define TOC_HTML_MAXLEN 65536
 #define TOC_CLIENTSEND_MAXLEN (2*1024)
 #define TOC_SERVERSEND_MAXLEN (8*1024)
@@ -17,8 +20,7 @@ struct s_toc_room {
 	int	exchange;
 	char	*name;
 	long	id;
-	unsigned char
-		invited:1,
+	uint8_t	invited:1,
 		joined:1;
 };
 
@@ -33,8 +35,8 @@ struct s_toc_infoget {
 };
 
 typedef struct firetalk_driver_connection_t {
-	unsigned short local_sequence;		/* our sequence number */
-	unsigned short remote_sequence;		/* toc's sequence number */
+	uint16_t local_sequence;		/* our sequence number */
+	uint16_t remote_sequence;		/* toc's sequence number */
 	char	*nickname,			/* our nickname (correctly spaced) */
 		*awaymsg;
 	time_t	awaysince;
@@ -43,8 +45,7 @@ typedef struct firetalk_driver_connection_t {
 	time_t	lastself,			/* last time we checked our own status */
 		lasttalk;			/* last time we talked */
 	long	lastidle;			/* last idle that we told the server */
-	unsigned char
-		passchange:1,			/* whether we're changing our password right now */
+	uint8_t	passchange:1,			/* whether we're changing our password right now */
 		gotconfig:1;
 	int	connectstate,
 		permit_mode;
@@ -55,14 +56,11 @@ typedef struct firetalk_driver_connection_t {
 	int	denybuflen;
 } handle_t;
 
-#include "firetalk-int.h"
-#include "firetalk.h"
-
-#define SFLAP_FRAME_SIGNON ((unsigned char)1)
-#define SFLAP_FRAME_DATA ((unsigned char)2)
-#define SFLAP_FRAME_ERROR ((unsigned char)3)
-#define SFLAP_FRAME_SIGNOFF ((unsigned char)4)
-#define SFLAP_FRAME_KEEPALIVE ((unsigned char)5)
+#define SFLAP_FRAME_SIGNON ((uint8_t)1)
+#define SFLAP_FRAME_DATA ((uint8_t)2)
+#define SFLAP_FRAME_ERROR ((uint8_t)3)
+#define SFLAP_FRAME_SIGNOFF ((uint8_t)4)
+#define SFLAP_FRAME_KEEPALIVE ((uint8_t)5)
 
 #define SIGNON_STRING "FLAPON\r\n\r\n"
 
@@ -81,11 +79,11 @@ static char lastdir[TOC_USERNAME_MAXLEN+1] = "";
 
 /* Internal Function Declarations */
 
-static unsigned short toc_fill_header(unsigned char *const header, unsigned char const frame_type, unsigned short const sequence, unsigned short const length);
-static unsigned short toc_fill_signon(unsigned char *const signon, const char *const username);
-static unsigned char toc_get_frame_type_from_header(const unsigned char *const header);
-static unsigned short toc_get_sequence_from_header(const unsigned char *const header);
-static unsigned short toc_get_length_from_header(const unsigned char *const header);
+static uint16_t toc_fill_header(unsigned char *const header, const uint8_t frame_type, const uint16_t sequence, const uint16_t length);
+static uint16_t toc_fill_signon(unsigned char *const signon, const char *const username);
+static uint8_t toc_get_frame_type_from_header(const unsigned char *const header);
+static uint16_t toc_get_sequence_from_header(const unsigned char *const header);
+static uint16_t toc_get_length_from_header(const unsigned char *const header);
 static char *toc_quote(const char *const string, const int outside_flag);
 static int toc_internal_disconnect(handle_t *c, const int error);
 static int toc_internal_split_exchange(const char *const string);
@@ -112,9 +110,9 @@ static void toc_echof(handle_t *c, const char *const where, const char *const fo
 }
 
 static void toc_echo_send(handle_t *c, const char *const where, const unsigned char *const data, size_t _length) {
-	unsigned char	ft;
-	unsigned short	sequence,
-			length;
+	uint8_t	ft;
+	uint16_t sequence,
+		length;
 
 	assert(_length > 4);
 
@@ -131,10 +129,10 @@ static void toc_echo_send(handle_t *c, const char *const where, const unsigned c
 
 /* Internal Function Definitions */
 
-static fte_t toc_find_packet(handle_t *c, unsigned char *buffer, unsigned short *bufferpos, char *outbuffer, const int frametype, unsigned short *l) {
-	unsigned char	ft;
-	unsigned short	sequence,
-			length;
+static fte_t toc_find_packet(handle_t *c, unsigned char *buffer, uint16_t *bufferpos, char *outbuffer, const int frametype, uint16_t *l) {
+	uint8_t	ft;
+	uint16_t sequence,
+		length;
 
 	if (*bufferpos < TOC_HEADER_LENGTH) /* don't have the whole header yet */
 		return(FE_NOTFOUND);
@@ -188,19 +186,17 @@ static fte_t toc_find_packet(handle_t *c, unsigned char *buffer, unsigned short 
 		return(FE_WEIRDPACKET);
 }
 
-static unsigned short toc_fill_header(unsigned char *const header,
-	unsigned char const frame_type, unsigned short const sequence,
-	unsigned short const length) {
+static uint16_t toc_fill_header(unsigned char *const header, const uint8_t frame_type, const uint16_t sequence, const uint16_t length) {
 	header[0] = '*';		/* byte 0, length 1, magic 42 */
 	header[1] = frame_type;		/* byte 1, length 1, frame type (defined above SFLAP_FRAME_* */
 	header[2] = sequence/256;	/* byte 2, length 2, sequence number, network byte order */
-	header[3] = (unsigned char) sequence%256;
+	header[3] = (uint8_t)sequence%256;
 	header[4] = length/256;		/* byte 4, length 2, length, network byte order */
-	header[5] = (unsigned char) length%256;
+	header[5] = (uint8_t)length%256;
 	return(6+length);
 }
 
-static unsigned short toc_fill_signon(unsigned char *const signon, const char *const username) {
+static uint16_t toc_fill_signon(unsigned char *const signon, const char *const username) {
 	size_t	length = strlen(username);
 
 	signon[0] = 0;		/* byte 0, length 4, flap version (1) */
@@ -210,7 +206,7 @@ static unsigned short toc_fill_signon(unsigned char *const signon, const char *c
 	signon[4] = 0;		/* byte 4, length 2, tlv tag (1) */
 	signon[5] = 1;
 	signon[6] = length/256;	/* byte 6, length 2, username length, network byte order */
-	signon[7] = (unsigned char)length%256;
+	signon[7] = (uint8_t)length%256;
 	memcpy(signon+8, username, length);
 	return(length + 8);
 }
@@ -617,21 +613,21 @@ static fte_t toc_postselect(handle_t *c, fd_set *read, fd_set *write, fd_set *ex
 	return(FE_SUCCESS);
 }
 
-static unsigned char toc_get_frame_type_from_header(const unsigned char *const header) {
+static uint8_t toc_get_frame_type_from_header(const unsigned char *const header) {
 	return(header[1]);
 }
 
-static unsigned short toc_get_sequence_from_header(const unsigned char *const header) {
-	unsigned short sequence;
+static uint16_t toc_get_sequence_from_header(const unsigned char *const header) {
+	uint16_t sequence;
 
-	sequence = ntohs(*((unsigned short *)(&header[2])));
+	sequence = ntohs(*((uint16_t *)(&header[2])));
 	return(sequence);
 }
 
-static unsigned short toc_get_length_from_header(const unsigned char *const header) {
-	unsigned short length;
+static uint16_t toc_get_length_from_header(const unsigned char *const header) {
+	uint16_t length;
 
-	length = ntohs(*((unsigned short *)(&header[4])));
+	length = ntohs(*((uint16_t *)(&header[4])));
 	return(length);
 }
 
@@ -956,7 +952,7 @@ static fte_t toc_send_printf(handle_t *c, const char *const format, ...) {
 
 	{
 		firetalk_connection_t *fchandle = firetalk_find_handle(c);
-		unsigned short length;
+		uint16_t length;
 
 		data[datai] = 0;
 		length = toc_fill_header((unsigned char *)data, SFLAP_FRAME_DATA, ++c->local_sequence, datai-TOC_HEADER_LENGTH+1);
@@ -1438,9 +1434,9 @@ static int toc_cap(int A1, int A2, int B, int C, int D, int E1, int E2, int E3) 
 }
 
 static struct {
-	fte_t		fte;
-	unsigned char	hastarget:1;
-	const char	*str;
+	fte_t	fte;
+	uint8_t	hastarget:1;
+	const char *str;
 } toc2_errors[] = {
   /* General Errors */
 	/* 900 */ {	FE_UNKNOWN,		0, NULL },
@@ -1652,11 +1648,11 @@ static struct {
 	/* 999 */ {	FE_UNKNOWN,		0, NULL },
 };
 
-static fte_t toc_got_data(handle_t *c, unsigned char *buffer, unsigned short *bufferpos) {
+static fte_t toc_got_data(handle_t *c, unsigned char *buffer, uint16_t *bufferpos) {
 	char	*tempchr1, *arg0, **args,
 		data[TOC_SERVERSEND_MAXLEN - TOC_HEADER_LENGTH + 1];
 	fte_t	r;
-	unsigned short l;
+	uint16_t l;
 
   got_data_start:
 	r = toc_find_packet(c, buffer, bufferpos, data, SFLAP_FRAME_DATA, &l);
@@ -2290,7 +2286,7 @@ static fte_t toc_got_data(handle_t *c, unsigned char *buffer, unsigned short *bu
 					firetalk_callback_im_getmessage(c, args[1], 0, message);
 
 				if ((file = toc_get_tlv_value(args, 9, 10001)) != NULL) {
-					unsigned long	size = ntohl(*((uint32_t *)(file+4)));
+					unsigned long size = ntohl(*((uint32_t *)(file+4)));
 
 					firetalk_callback_file_offer(c,
 						/* from */	args[1],		/* user */
@@ -2326,11 +2322,11 @@ static const char *toc_make_fake_cap(const unsigned char *const str, const int l
 	return(buf);
 }
 
-static fte_t toc_got_data_connecting(handle_t *c, unsigned char *buffer, unsigned short *bufferpos) {
+static fte_t toc_got_data_connecting(handle_t *c, unsigned char *buffer, uint16_t *bufferpos) {
 	char	data[TOC_SERVERSEND_MAXLEN - TOC_HEADER_LENGTH + 1],
 		password[128];
 	fte_t	r;
-	unsigned short length;
+	uint16_t length;
 	char	*arg0,
 		**args,
 		*tempchr1;
@@ -2355,8 +2351,8 @@ got_data_connecting_start:
 			return(FE_VERSION);
 		}
 #if 0
-		srand((unsigned int) time(NULL));
-		c->local_sequence = (unsigned short)1+(unsigned short)(65536.0*rand()/(RAND_MAX+1.0));
+		srand((unsigned int)time(NULL));
+		c->local_sequence = (uint16_t)1+(uint16_t)(65536.0*rand()/(RAND_MAX+1.0));
 #else
 		c->local_sequence = 31337;
 #endif
@@ -2731,7 +2727,7 @@ static fte_t toc_chat_invite(handle_t *c, const char *const room, const char *co
 
 #ifdef ENABLE_FILE_OFFER
 static fte_t toc_file_offer(handle_t *c, const char *const nickname,
-		const char *const filename, const unsigned long localip,
+		const char *const filename, const uint32_t localip,
 		const uint16_t port, const long size) {
 	firetalk_connection_t *fchandle = firetalk_find_handle(c);
 	char	args[256];

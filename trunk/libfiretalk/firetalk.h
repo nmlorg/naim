@@ -143,7 +143,7 @@ void	firetalk_destroy_handle(struct firetalk_connection_t *conn);
 int	firetalk_get_protocol(struct firetalk_connection_t *conn);
 
 fte_t	firetalk_disconnect(struct firetalk_connection_t *conn);
-fte_t	firetalk_signon(struct firetalk_connection_t *conn, const char *const server, const short port, const char *const username);
+fte_t	firetalk_signon(struct firetalk_connection_t *conn, const char *const server, const uint16_t port, const char *const username);
 fte_t	firetalk_register_callback(struct firetalk_connection_t *conn, const int type, void (*function)(struct firetalk_connection_t *, struct firetalk_useragent_connection_t *, ...));
 struct firetalk_connection_t *firetalk_find_clientstruct(struct firetalk_useragent_connection_t *clientstruct);
 
