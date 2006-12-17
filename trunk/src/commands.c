@@ -1458,13 +1458,19 @@ UAAOPT(string,chain)
 	int	i;
 
 	if (argc == 0) {
-		const char *chains[] = { "preselect", "postselect", "notify", "periodic", "recvfrom", "sendto", "proto_user_onlineval" };
+		const char *chains[] = { "preselect", "postselect", "notify", "periodic", "sendto",
+			"proto_doinit", "proto_connected", "proto_connectfailed", "proto_newnick", "proto_nickchanged", "proto_warned", "proto_error_msg", "proto_error_disconnect", "proto_userinfo",
+			"proto_buddyadded", "proto_buddyremoved", "proto_buddy_coming", "proto_buddy_going", "proto_buddy_away", "proto_buddy_unaway", "proto_buddy_idle", "proto_buddy_eviled", "proto_buddy_capschanged", "proto_buddy_typing",
+			"proto_denyadded", "proto_denyremoved",
+			"proto_recvfrom",
+			"proto_chat_joined", "proto_chat_left", "proto_chat_oped", "proto_chat_deoped", "proto_chat_kicked", "proto_chat_invited",
+			"proto_chat_user_joined", "proto_chat_user_left", "proto_chat_user_oped", "proto_chat_user_deoped", "proto_chat_user_kicked", "proto_chat_user_nickchanged",
+			"proto_chat_topicchanged", "proto_chat_keychanged",
+			"proto_file_offer", "proto_file_start", "proto_file_progress", "proto_file_finish", "proto_file_error",
+		};
 
-		for (i = 0; i < sizeof(chains)/sizeof(*chains); i++) {
-			if (i > 0)
-				echof(conn, NULL, "-\n");
+		for (i = 0; i < sizeof(chains)/sizeof(*chains); i++)
 			ua_chains(conn, 1, chains+i);
-		}
 		echof(conn, NULL, "See <font color=\"#00FF00\">/help chains</font> for more information.\n");
 		return;
 	}
@@ -1486,25 +1492,46 @@ UAAOPT(string,chain)
 	}
 	lt_dlclose(self);
 
-	echof(conn, NULL, "Chain %s, containing %i %s.\n",
-		args[0], chain->count, (chain->count==1)?"hook":"hooks");
-	for (i = 0; i < chain->count; i++) {
+	if (chain->count == 0)
+		echof(conn, NULL, "No handler registered for chain %s.\n", args[0]);
+	else if (chain->count == 1) {
 		const char *modname, *hookname;
 
-		if (chain->hooks[i].mod == NULL)
+		if (chain->hooks[0].mod == NULL)
 			modname = "core";
 		else {
-			const lt_dlinfo *dlinfo = lt_dlgetinfo(chain->hooks[i].mod);
+			const lt_dlinfo *dlinfo = lt_dlgetinfo(chain->hooks[0].mod);
 
 			modname = dlinfo->name;
 		}
-		hookname = chain->hooks[i].name;
+		hookname = chain->hooks[0].name;
 		if (*hookname == '_')
 			hookname++;
 		if ((strncmp(hookname, modname, strlen(modname)) == 0) && (hookname[strlen(modname)] == '_'))
 			hookname += strlen(modname)+1;
-		echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(%#p) weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
-			i, modname, hookname, chain->hooks[i].userdata, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
+
+		echof(conn, NULL, "Chain %s handled by <font color=\"#808080\"><font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(%#p) weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
+			args[0], modname, hookname, chain->hooks[0].userdata, chain->hooks[0].weight, chain->hooks[0].func, chain->hooks[0].passes, chain->hooks[0].hits);
+	} else {
+		echof(conn, NULL, "Chain %s, containing %i hooks:\n", args[0], chain->count);
+		for (i = 0; i < chain->count; i++) {
+			const char *modname, *hookname;
+
+			if (chain->hooks[i].mod == NULL)
+				modname = "core";
+			else {
+				const lt_dlinfo *dlinfo = lt_dlgetinfo(chain->hooks[i].mod);
+
+				modname = dlinfo->name;
+			}
+			hookname = chain->hooks[i].name;
+			if (*hookname == '_')
+				hookname++;
+			if ((strncmp(hookname, modname, strlen(modname)) == 0) && (hookname[strlen(modname)] == '_'))
+				hookname += strlen(modname)+1;
+			echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(%#p) weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
+				i, modname, hookname, chain->hooks[i].userdata, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
+		}
 	}
 }
 
