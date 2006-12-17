@@ -1,3 +1,48 @@
+function naim.prototypes.windows.event(window, e, s)
+	if window.eventtab and window.eventtab[e] then
+		window.eventtab[e](window, e, s)
+	elseif window.eventtab and window.eventtab.all then
+		window.eventtab.all(window, e, s)
+	elseif window.conn.eventtab and window.conn.eventtab[e] then
+		window.conn.eventtab[e](window, e, s)
+	elseif window.conn.eventtab and window.conn.eventtab.all then
+		window.conn.eventtab.all(window, e, s)
+	elseif naim.eventtab[e] then
+		naim.eventtab[e](window, e, s)
+	elseif naim.eventtab.all then
+		naim.eventtab.all(window, e, s)
+	end
+end
+
+function naim.internal.eventeval(code)
+	local functabfunc = assert(loadstring("return {" .. code .. "}"))
+
+	setfenv(functabfunc, {
+		display = function(window, e, s)
+			window:echo(s)
+		end,
+		notify = function(window, e, s)
+			window:echo("notification not implemented")
+		end,
+		ignore = function(window, e, s)
+		end,
+		naim = naim,
+		string = string,
+	})
+
+	local functab = functabfunc()
+
+	if #functab == 0 then
+		return nil
+	else
+		return function(w, e, s)
+			for _,f in ipairs(functab) do
+				f(w, e, s)
+			end
+		end
+	end
+end
+
 function naim.internal.rwmetatable(prototype)
 	return({
 		__index = function(table, key)
@@ -38,6 +83,10 @@ naim.sockets = {}
 
 naim.connections = {}
 setmetatable(naim.connections, naim.internal.rometatable("connections"))
+
+naim.eventtab = {
+	all = naim.internal.eventeval("display")
+}
 
 function naim.internal.varsub(s, t)
 	s = string.gsub(s, "$%((.*)%)",
@@ -120,6 +169,11 @@ function naim.internal.delbuddy(conn, account)
 	conn.buddies[account] = nil
 	setmetatable(conn.buddies, naim.internal.rometatable("buddies"))
 end
+
+
+
+
+
 
 function naim.call(table, ...)
 	local conn
@@ -295,113 +349,238 @@ naim.commands.help = {
 	end,
 }
 
+naim.commands.x_on = {
+	min = 2,
+	max = 3,
+	desc = "EXPERIMENTAL Event behavior control",
+	args = { "target", "event", "action" },
+	func = function(conn, arg)
+		local target, e, code = unpack(arg)
+
+		local function findscope()
+			local dot = string.find(target, ':')
+
+			if dot then
+				local c, w = target:sub(1, dot-1), target:sub(dot+1)
+
+				if not naim.connections[c] then
+					error(c .. " is not a valid connection name")
+				elseif not naim.connections[c].windows[w] then
+					error(w .. " is not a valid window name in " .. c)
+				else
+					return naim.connections[c].windows[w]
+				end
+			elseif target == "default" then
+				return naim
+			elseif conn.windows[target] and naim.connections[target] then
+				error(target .. " is both a connection name and a window name; use /on " .. tostring(conn) .. ":" .. target .. " event ... or /on " .. target .. ": event ...")
+			elseif conn.windows[target] then
+				return conn.windows[target]
+			elseif naim.connections[target] then
+				return naim.connections[target]
+			else
+				error("Unrecognized target " .. target)
+			end
+		end
+
+		local scope = findscope()
+
+		if not scope.eventtab or e == "all" then
+			scope.eventtab = {}
+		end
+
+		scope.eventtab[e] = naim.internal.eventeval(code)
+	end,
+}
+
+
+
+
+
+
 naim.hooks.add('proto_chat_joined', function(conn, chat)
-	assert(conn.groups[string.lower(chat)] == nil)
+	assert(not conn.groups[string.lower(chat)])
 	conn.groups[string.lower(chat)] = {
 		members = {},
 	}
 
-	if naim.variables.autonames ~= 1 then
-		conn.windows[string.lower(chat)]:echo("You are now participating in the " .. chat .. " group.")
-	else
-		conn.windows[string.lower(chat)]:echo("You are now participating in the " .. chat .. " group. Checking for current participants...")
+	local window = conn.windows[string.lower(chat)]
+
+	if window then
+		window:echo("You are now participating in the " .. chat .. " group.")
 	end
 end, 100)
 
 naim.hooks.add('proto_chat_synched', function(conn, chat)
-	assert(conn.groups[string.lower(chat)])
-	conn.groups[string.lower(chat)].synched = true
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
 
-	local maxlen = 0
+	group.synched = true
 
-	for member,info in pairs(conn.groups[string.lower(chat)].members) do
-		local mlen = member:len() + (info.admin and 1 or 0)
+	if window and naim.variables.autonames and tonumber(naim.variables.autonames) > 0 then
+		local maxlen = 0
 
-		if mlen > maxlen then
-			maxlen = mlen
+		for member,info in pairs(group.members) do
+			local mlen = member:len() + (info.admin and 1 or 0)
+
+			if mlen > maxlen then
+				maxlen = mlen
+			end
 		end
+
+		local t = {}
+
+		for member,info in pairs(group.members) do
+			local mlen = member:len() + (info.admin and 1 or 0)
+
+			table.insert(t, (info.admin and "@" or "") .. member .. string.rep("&nbsp;", maxlen-mlen))
+		end
+
+		local p = "Users in group " .. chat .. ":"
+
+		window:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, "&nbsp;"))
 	end
-
-	local t = {}
-
-	for member,info in pairs(conn.groups[string.lower(chat)].members) do
-		local mlen = member:len() + (info.admin and 1 or 0)
-
-		table.insert(t, (info.admin and "@" or "") .. member .. string.rep("&nbsp;", maxlen-mlen))
-	end
-
-	local p = "Users in group " .. chat .. ":"
-
-	conn.windows[string.lower(chat)]:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, "&nbsp;"))
 end, 100)
 
 naim.hooks.add('proto_chat_left', function(conn, chat)
+	assert(conn.groups[string.lower(chat)])
 	conn.groups[string.lower(chat)] = nil
 end, 100)
 
-naim.hooks.add('proto_chat_kicked', function(conn, chat)
+naim.hooks.add('proto_chat_kicked', function(conn, chat, by, reason)
+	assert(conn.groups[string.lower(chat)])
 	conn.groups[string.lower(chat)] = nil
+
+	local window = conn.windows[string.lower(chat)]
+
+	if window then
+		if reason and reason ~= "" then
+			window:event("attacked", "You have been kicked from group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font> (</b><body>" .. reason .. "</body><b>).")
+		else
+			window:event("attacked", "You have been kicked from group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font>.")
+		end
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_oped', function(conn, chat, by)
 	conn.groups[string.lower(chat)].admin = true
+
+	local window = conn.windows[string.lower(chat)]
+
+	if window then
+		window:event("attacked")
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_deoped', function(conn, chat, by)
 	conn.groups[string.lower(chat)].admin = nil
+
+	local window = conn.windows[string.lower(chat)]
+
+	if window then
+		window:event("attacked")
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_joined', function(conn, chat, who, extra)
-	conn.groups[string.lower(chat)].members[who] = {}
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
 
-	if conn.groups[string.lower(chat)].synched then
+	assert(not group.members[who])
+	group.members[who] = {}
+
+	if window and group.synched then
 		if extra and extra ~= "" then
-			conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> (" .. extra .. ") has joined group " .. chat .. ".")
+			window:event("users", "<font color=\"#00FFFF\">" .. who .. "</font> (" .. extra .. ") has joined group " .. chat .. ".")
 		else
-			conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has joined group " .. chat .. ".")
+			window:event("users", "<font color=\"#00FFFF\">" .. who .. "</font> has joined group " .. chat .. ".")
 		end
 	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_left', function(conn, chat, who, reason)
-	conn.groups[string.lower(chat)].members[who] = nil
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
 
-	if reason and reason ~= "" then
-		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has left group " .. chat .. " (</b><body>" .. reason .. "</body><b>).")
-	else
-		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has left group " .. chat .. ".")
+	assert(group.members[who])
+	group.members[who] = nil
+
+	if window then
+		if reason and reason ~= "" then
+			window:event("users", "<font color=\"#00FFFF\">" .. who .. "</font> has left group " .. chat .. " (</b><body>" .. reason .. "</body><b>).")
+		else
+			window:event("users", "<font color=\"#00FFFF\">" .. who .. "</font> has left group " .. chat .. ".")
+		end
 	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_kicked', function(conn, chat, who, by, reason)
-	conn.groups[string.lower(chat)].members[who] = nil
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
 
-	if reason and reason ~= "" then
-		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has been kicked out of group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font> (</b><body>" .. reason .. "</body><b>).")
-	else
-		conn.windows[string.lower(chat)]:echo("<font color=\"#00FFFF\">" .. who .. "</font> has been kicked out of group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font>.")
+	assert(group.members[who])
+	group.members[who] = nil
+
+	if window then
+		if reason and reason ~= "" then
+			window:event("attacks", "<font color=\"#00FFFF\">" .. who .. "</font> has been kicked out of group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font> (</b><body>" .. reason .. "</body><b>).")
+		else
+			window:event("attacks", "<font color=\"#00FFFF\">" .. who .. "</font> has been kicked out of group " .. chat .. " by <font color=\"#00FFFF\">" .. by .. "</font>.")
+		end
 	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_oped', function(conn, chat, who, by)
 	conn.groups[string.lower(chat)].members[who].admin = true
+
+	local window = conn.windows[string.lower(chat)]
+
+	if window then
+		window:event("attacks")
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_deoped', function(conn, chat, who, by)
 	conn.groups[string.lower(chat)].members[who].admin = nil
+
+	local window = conn.windows[string.lower(chat)]
+
+	if window then
+		window:event("attacks")
+	end
 end, 100)
 
 naim.hooks.add('proto_chat_user_nickchanged', function(conn, chat, who, newnick)
-	conn.groups[string.lower(chat)].members[newnick] = conn.groups[string.lower(chat)].members[who]
-	conn.groups[string.lower(chat)].members[who] = nil
+	local group = conn.groups[string.lower(chat)]
+
+	assert(not group.members[newnick])
+	group.members[newnick] = group.members[who]
+	group.members[who] = nil
+
+	window:event("misc", "<font color=\"#00FFFF\">" .. who .. "</font> is now known as <font color=\"#00FFFF\">" .. newnick .. "</font>.")
 end, 100)
 
-naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
-	for k,v in pairs(naim.sockets) do
+naim.hooks.add('proto_chat_topicchanged', function(conn, chat, topic, by)
+	local group = conn.groups[string.lower(chat)]
+	local window = conn.windows[string.lower(chat)]
+
+	group.topic = topic
+
+	if window then
+		if by and by ~= "" then
+			window:event("misc", "<font color=\"#00FFFF\">" .. by .. "</font> has changed the topic on group " .. chat .. " to </B><body>" .. topic .. "</body><B>.")
+		else
+			window:event("misc", "Topic for group " .. chat .. ": </B><body>" .. topic .. "</body><B>.")
+		end
 	end
 end, 100)
 
-naim.hooks.add('postselect', function(rfd, wfd, efd)
-	for k,v in pairs(naim.sockets) do
-	end
-end, 100)
+--naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
+--	for k,v in pairs(naim.sockets) do
+--	end
+--end, 100)
+
+--naim.hooks.add('postselect', function(rfd, wfd, efd)
+--	for k,v in pairs(naim.sockets) do
+--	end
+--end, 100)
