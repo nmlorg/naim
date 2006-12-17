@@ -1,0 +1,476 @@
+== General ==
+=== How do I send an IM? &amp;bull; How do I add someone to my buddy list? ===
+
+To simply send a message to someone who is not in your buddy list, just type <code>/msg
+buddyname hello there</code>. However, if you would like to engage in a conversation
+with someone, you should first add them to your buddy list and create a ''window''
+for them. Just type <code>/addbuddy buddyname</code> or <code>/addbuddy "buddy
+name"</code> to add
+them to your list. If they are online, a window will be created automatically
+for them. If they are not online, you can type <code>/open buddyname</code> to open a
+window for them manually.
+
+Once a window has been opened for a buddy, you can use the Tab, Home, and End
+keys to cycle through your list of windows to find them, or type <code>/jump
+buddyname</code> to go directly to their window. Once you are in their window,
+anything you type that doesn't start with a "/" will be sent to them as a message. If the
+buddy is not online when you type your message, the message will be saved and
+sent the next time your buddy signs on.
+
+== Navigation ==
+
+=== How do I get the buddy list or status window to come back? ===
+
+The window list window and the status window both default to ''autohide'' mode: Whenever
+either one of them changes, they will appear on the screen for $autohide seconds, then
+disappear again. However, if you would like to make the window list window stay visible
+permanently, you can use F4 or Ctrl-F to cycle between autohide, always hidden, and always
+visible modes. There is also a <code>/winlist</code> command which will allow you to
+specify a setting to use in your .naimrc file.
+
+=== Are there any short cuts to help make talking to multiple people easier? ===
+
+naim separates each conversation into a different window, which you can cycle
+through using Tab, Home, End, and the /jump command. Your windows will be listed
+in the window list window in the upper-right corner of your screen, which is
+usually hidden when you're talking to someone. However, if you are in buddyA's
+window, and buddyC sends you a message, the window list window will unhide
+itself, buddyC's name will appear in yellow, and the []'s around his name will
+turn into ()'s. This means buddyC's window has changed since the last time you
+have seen it. In order to make chatting with multiple buddies easier, the /jump
+command will take you to the next "yellow" buddy if no name is provided.
+Therefore, if you send a message to buddyA and are waiting for a response, and
+buddyC sends you an IM in the meantime, you can just type <code>/jump</code> to take you
+directly to buddyC's window. If buddyA sends you a message while you are then
+talking to buddyC, typing <code>/jump</code> again will take you back to buddyA's window.
+
+The keys F8 and Ctrl-N do the same thing as typing <code>/jump</code> with no arguments, to
+make chatting even easier.
+
+
+=== How can I jump to the beginning of the line when running naim in screen? ===
+
+Under normal convention, Ctrl-A jumps to the beginning of the input line and
+Ctrl-E jumps to the end. GNU Screen uses the Ctrl-A key for detaching, switching
+windows, etc.  To jump to the beginning of the line when running naim under
+screen, simply press Ctrl-A a (that is, hold Ctrl, press 'a', let go of Ctrl,
+and press 'a' a second time).
+
+
+=== When using <code>/bind</code>, what keys are A1, A3, B2, C1, and C3? ===
+
+According to the ncurses header file, these keys correspond to the Home, End,
+PgUp, and PgDn keys on the numeric keypad, as such:
+ /* The keypad is arranged like this: */
+ /* a1    up    a3   */
+ /* left   b2  right  */
+ /* c1   down   c3   */
+
+I have never used a computer keyboard which used these bindings instead of
+KEY_PGUP, etc., but I included them in naim's <code>/bind</code> "just in case."
+
+
+=== Is there a way to go backwards in my buddy list? ===
+
+Home, Alt-Tab, and Shift-Tab will cycle backwards through your window list.
+
+However, on my system at least, Shift-Tab generates the same control sequence as
+Tab by itself. Typing:
+ loadkeys -d
+ keycode 15 = Tab Tab
+ alt keycode 15 = Meta_Tab
+ shift keycode 15 = F26
+ string F26 ="\033[Z"
+into the command prompt on my machine before running naim allows Shift-Tab to
+work like Home. This affects other curses programs (including Lynx) as well, so
+you may consider adding that to your system boot scripts.
+
+== Configuration ==
+
+=== How can I configure naim? ===
+
+Many aspects of naim's operation are configurable through the use of variables,
+such as $autohide (which controls how long the status window and window list
+window will appear on the screen when one changes). To change these variables,
+use the <code>/set</code> command. For example, to make both windows wait around for 10
+seconds, instead of the default 3, just type <code>/set autohide 10</code>.
+
+For most other configurable pieces, there are specific /-commands to use, which
+will be described in <code>/help commands</code>. For example, to add me to to your buddy
+list, just type <code>/addbuddy nmlorg</code> or <code>/addbuddy "n ml org"</code>.
+
+
+=== Is there a way to have naim save my configuration settings for the next time I start
+naim? &amp;bull; Where can I get an example .naimrc (naim configuration file)? ===
+
+naim will read start-up commands from a file called .naimrc in your home directory, so all
+of your configuration commands can be placed there.
+
+naim includes a /save command, which will attempt to create a suitable .naimrc file based
+on your current settings. So, once you have configured naim to your liking, just type
+<code>/save</code> and naim will use the same settings the next time it starts up
+(including your buddy list, channels you have joined on IRC, etc.). The generated .naimrc
+is also auto-documented, so feel free to use <code>/save</code> to create a "default"
+.naimrc, and customize it by hand using a text editor.
+
+You can <code>/set autosave 1</code> to have naim automatically write .naimrc whenever you
+<code>/quit</code>.
+
+=== How do I configure naim to be nice with GNU Screen? ===
+
+Solution under [[#Console Display Issues|Console Display Issues]] applies.
+
+=== Is it possible to disable the timestamps every 30 minutes? ===
+
+Type <code>/set tprint 0</code>.
+
+
+=== Is there a way to disable sounds in naim? ===
+
+The only sounds naim should make are for $beeponim or $beeponsignon, so you can just
+<code>/set beeponim 0</code>, etc. to shut them off.
+
+
+=== How do I change the colors? ===
+
+The /setcol command will let you manipulate the colors. Type <code>/setcol</code> by itself
+to see what the current values are, then <code>/setcol buddy blue</code>, etc.  to change
+them.
+
+
+=== Does naim support inverse/blinking text, or changing the background for specific buddy
+types separately from the whole buddy list? ===
+
+At present, no. If enough people request that ability, I will add it to the next
+release.
+
+
+=== Why do some people I talk to have colored text? ===
+
+naim's default behavior is to honor <font color="..."> tags sent by other users,
+which can unfortunately lead to situations in which the other user has chosen a
+font color that clashes with your background. You can either use the <code>/setcol</code>
+command to change your own background, ask them to pick a less offensive
+foreground, or <code>/set color 0</code> in naim to disable <font> tag processing.
+
+
+
+== Profiles ==
+
+=== How can I get someone's profile? ===
+
+naim includes a <code>/whois</code> (/wi, /info) command to retrieve all information AIM
+keeps on AIM users, including the profile. Unfortunately, AOL users' profiles
+are not visible to AIM users through any mechanism.
+
+
+=== How can I set my own profile? ===
+
+If you have a file called .naimprofile in your home directory when naim starts, 
+naim will use its contents instead of the built-in default. You can send SIGHUP 
+(killall -HUP naim) from the command line or type <code>/readprofile .naimprofile</code> 
+while naim is running to reload your .naimprofile.
+
+
+=== Is there a way to view a user's away message other than sending them a message? ===
+
+Unfortunately, the TOC protocol does not appear to have such a capability. naim
+uses a workaround (it puts your away message in your profile when you go <code>/away</code>),
+so naim can view other naim users' away messages, but I am unfamiliar with any
+mechanism to retrieve a WinAIM, etc. user's message (other than sending them an
+IM and hoping they send back an autoresponse).
+
+
+=== How does Gaim get the away message when you do the GetInfo? &amp;bull; Why does naim
+use TOC instead of Oscar? Isn't Oscar newer? ===
+
+Many other AIM clients use an alternative protocol, Oscar, which does have this
+capability. The original AIM protocol was Oscar, and AOL later created TOC to
+serve the needs of their Java client. In 1998 AOL released a public document
+specifying details of the TOC protocol, for use by third-party clients such as
+naim. Since then, they have made many significant changes to the Oscar protocol
+to discourage third-party client maintainers from using Oscar. It is possible
+for third-party clients to use the Oscar protocol, but I would prefer to spend
+my time working on new features to spending it in keeping up with AOL's latest
+protocol revisions, rush-testing new releases, and publicizing the problem and
+availability of corrected versions.
+
+
+
+== Buddy List ==
+
+=== How do I remove someone from my buddy list? <code>/delbuddy</code> isn't working. ===
+
+The <code>/addbuddy</code> and <code>/delbuddy</code> commands are used to manipulate your
+buddy list, not your window list. naim includes a feature called ''autoquery'' which makes
+naim open windows for buddies who are online when you sign on, and for buddies that sign
+on after you; this is why <code>/addbuddy</code>ing someone causes a window to open for
+them. To disable this feature, type <code>/set autoquery 0</code>.
+
+If you <code>/close</code> a window for a buddy, naim will keep them on your buddy list;
+if they sign on again, naim will open a window for them. However, immediately after you
+<code>/close</code> a window, you can type <code>/delbuddy</code> to remove that
+individual from your buddy list.
+
+=== Every time I start up naim, your name (naim help) is always added to my buddy list!
+How can I stop that? ===
+
+naim will read start-up commands from a file called .naimrc in your home
+directory. If this file doesn't exist, a built-in default is used instead, and
+one of the things it does is add my screen name to your buddy list. If you don't
+like this behavior, you can <code>/delbuddy naimhelp</code>, then <code>/save</code> to
+write-out a
+.naimrc which will not contain me in your buddy list. If you have used /save in
+the past without first removing me, your .naimrc will include an addbuddy
+naimhelp, which you will need to remove manually (or <code>/delbuddy</code> me and type
+<code>/save</code> again).
+
+
+=== One of my contacts '''always''' shows up offline, even when he is talking to me. What
+is wrong? ===
+
+There are several possibilities. If you have not received any messages from the 
+buddy:
+# Your buddy has you blocked. This will prevent your buddy from seeing you online, and
+will prevent you from seeing your buddy online. Neither of you will be able to send
+messages to each other or retrieve each other's profile. You can check for this by using
+the <code>/info buddyname</code> command from two accounts at the same time. If one
+<code>/info buddyname</code> fails while the other succeeds, it is likely your contact has
+blocked the account where <code>/info</code> fails.
+# You have your buddy blocked. Blocking has the same effects regardless of which user is
+doing the blocking. You can check to see if you have blocked the buddy by checking
+<code>/ignore</code> (which provides a list).
+# Your buddy has ''privacy mode'' enabled and has not added you to the ''allow list''.
+Privacy mode makes it so only people on a special ''allow list'' can communicate with the
+user, and all other users are treated as if they are blocked (as with 1. or 2.). Many
+clients use their buddy list as the allow list. You can tell this is happening if you are
+able to <code>/info buddyname</code> from one account but not from any others.
+
+If you have or have not received messages from the buddy in question, it may be one of the
+following:
+# You have exceeded the maximum number of buddies for your account. At the time of
+writing, AOL's Instant Messenger servers limit each account to 200 simultaneous buddies.
+The protocol does not declare this limit and the server does not emit an error message if
+you go over it; your buddy tracking simply starts behaving erratically. You can check for
+this by using the <code>/names</code> command and manually counting entries.
+# Your buddy is using the ''invisible'' feature of AOL Instant Messenger. This feature is
+similar to the privacy feature mentioned in 3., but only blocks tracking information.
+Userinfo requests and private messages can still be sent between clients. Unfortunately,
+this clashes with naim's automatic message queueing feature, and causes the unfortunate
+side effect of not being able to send messages to invisible users. You can tell this is
+happening if you have less than 200 buddies, a user is showing up as ''offline'', but the
+user is also able to send you messages (and you are unable to reply).
+# The AIM service is experiencing technical difficulties and your session has become
+unstable. This happens from time to time, and breaks naim's session tracking ability in
+the same way as the invisible feature. You can not usually confirm or rule out this
+possibility.
+
+== Connections ==
+
+=== I read somewhere naim is an IRC client as well, is this true? Will it allow me to be
+on IRC and AIM simultaneously? ===
+
+Is there a way to juggle two open connections? I noticed that if I have an AIM/TOC
+connection open, and then open an IRC connection, then I can't switch to any of the
+windows of the old connection with the normal keys (Tab, Home, and End).
+
+naim supports the TOC1 (AIM and ICQ), IRC (EFnet and Undernet), and SLCP (The
+lily CMC) protocols. naim also supports multiple simultaneous connections,
+allowing you to have as many open connections as your system supports.
+
+For example, type <code>/newconn Undernet IRC</code> to create a separate connection window
+for IRC called "Undernet", then <code>/connect nickname us.undernet.org</code> to connect.
+
+Use the Ins and Del keys to switch between connections. Your current connection
+will appear on the right side of the status bar next to the amount of time you
+have been connected. Active windows will show up regardless of which connection
+window you are in, and Ctrl-N will cross connections to jump to the next active
+window.
+
+
+=== Does naim support connecting to AIM through a proxy server? ===
+
+naim does not have specific proxy support, but all is not lost! The ProxyChains
+utility "allows you to use SSH, TELNET, VNC, FTP and any other Internet
+application from behind HTTP(HTTPS) and SOCKS(4/5) proxy servers. This
+'proxifier' provides proxy server support to any app." As of this writing,
+ProxyChains is available from http://proxychains.sf.net/.
+
+
+=== Do you happen to know of any Yahoo!, MSN Messenger, etc. clients similar to naim? ===
+
+naim already supports IRC (http://www.irchelp.org/), and work is underway at
+adding Yahoo! and MSN Messenger support. Please contact me if you are anxiously
+waiting for these, or any other protocols, so our available energies can be
+directed where they are most desired.
+
+
+
+== Logging ==
+
+=== How does logging work in naim? Does it support per connection, or per buddy logging? ===
+
+To enable session logging for connection AIM, type <code>/set AIM:logfile aim.log</code>
+and then <code>/set AIM:log 1</code>.
+
+naim also includes support for per-window logging, which is always enabled. naim
+will log all window activity into a ~/.naimlog/<conn>/<name>.html file by
+default. For example, any messages you exchange with "naim help" will be logged
+to ~/.naimlog/AIM/naimhelp.html .
+
+To turn off per-window logging, type <code>/set logdir "/dev/null"</code> and then
+<code>/save</code>.
+
+== IRC ==
+
+=== How do I keep from manually logging into all of my servers and channels everytime I
+login? ===
+
+Using the <code>/save</code> command after you've logged into all of your servers and
+channels will save those settings, and automatically log back into them the next time you
+sign on. If you have registered names which require passwords, naim will prompt you for
+them when logging back in.
+
+
+=== What commands can I use in a naim IRC connection? ===
+
+naim implements many common IRC commands.  Here are a few:
+# <code>/join <channel></code> - joins a channel
+# <code>/part <channel></code> - parts a channel
+# <code>/accept <filename></code> - accepts a file transfer
+# <code>/CTCP <nick></code> - requests another user's version information.
+# <code>/whois <nick></code> - requests another user's whois information
+
+
+=== Can I set modes in IRC? ===
+
+naim supports several basic channel-operator commands, including <code>/op</code>,
+<code>/deop</code>,
+<code>/kick</code>, and <code>/topic</code>, but is not intended to be used as a channel
+maintenance
+client (a task usually better left handled by "IRC bots," which usually will not
+ban their friends after getting into arguments with them).
+
+
+=== Can I at least send a raw command to the IRC server? ===
+
+Send a private message to the special target ":RAW", i.e.
+<code>/msg :RAW MODE #channel +s</code>
+Note that you will not be able to see the side-effects of most :RAW commands
+unless you <code>/set showraw 1</code> first.
+
+
+=== Where can I find naim help on IRC? ===
+
+The official naim channel is #naim on the EFnet IRC Network. This is the default location
+you enter if you start naim as <code>nirc</code> on the command line, or create a new IRC
+connection and /connect without specifying a server.
+
+
+== Keyboard Input ==
+
+=== Is there any way to get naim to not automatically escape the ampersand? &amp;bull; Can
+I insert newlines into my messages? ===
+
+naim includes a ''paste mode'' which changes naim's escaping behavior. In normal input
+mode, the keys &amp;lt; &amp;gt; &amp;amp; are all translated to &amp;amp;lt; &amp;amp;gt;
+&amp;amp;amp;. When in paste mode, &amp;lt; &amp;gt; &amp;amp; are left alone, but
+multiple spaces are converted to &amp;amp;nbsp; and the Enter key becomes
+&amp;lt;br&amp;gt;. To toggle paste mode press <code>Ctrl-P</code>.
+
+== Console Display Issues ==
+
+My Linux console displays + and | instead of the line-drawing characters in the window
+list window. How do I fix this?
+My Linux console displays bold text as regular text. How do I fix this?
+My Linux console does not display line-drawing characters at all, leaving holes on my
+screen. How do I fix this?
+The window list window appears distorted on my screen, and does not slide off cleanly. How
+do I fix this?
+
+This is a deficiency in the Linux kernel's console driver related to UTF-8
+(internationalization) support. If you are using Red Hat Linux 8.0 or newer, or
+Fedora Core, or any other distribution based on either of these, you need to
+disable UTF-8 in your console session. Open /etc/sysconfig/i18n and remove the
+".UTF-8" suffix in the LANG setting and comment out the SYSFONT line entirely.
+Reboot your system. If you live outside of the U.S., I am sorry; you can either 
+have pretty text or internationalization support. Please lodge your complaint 
+with the Linux kernel maintainers; I have no control over this.
+
+=== Configuring Mac OSX Terminal to Work with naim ===
+
+The Mac OSX terminal does not play nice with naim by default. For example, PgUp and PgDown
+scroll the terminal window instead of scrolling the current window in naim. This is easy
+to fix:
+
+'''Terminal > Window Settings > Keyboard'''
+
+For each of the following keys, click edit and change the action to "send string to
+shell:". Then enter the appropriate sequence for each:
+
+'''\033[4~'''&nbsp;&nbsp;&nbsp;&nbsp;(end)
+
+'''\033[1~'''&nbsp;&nbsp;&nbsp;&nbsp;(home)
+
+'''\033[5~'''&nbsp;&nbsp;&nbsp;&nbsp;(page up)
+
+'''\033[6~'''&nbsp;&nbsp;&nbsp;&nbsp;(page down)
+
+Keep in mind when you type the backslash ("\"), OSX will automatically change it to a
+double backslash ("\\"). You need to leave the double backslash while you're typing the
+rest of the control sequence. When you're done typing the control sequence it will look
+like this: '''\\033[4~''' 
+
+Before you click OK you need to use the arrow keys on your keyboard, and then the delete
+key, to remove one of the backslashes. Before clicking OK, the control sequence should
+look like this: '''\033[4~'''
+
+
+This was tested on Mac OSX 10.4, but should work on other versions as well.
+
+== Support ==
+
+=== I think I've found a bug, what do I do? ===
+
+First, check the BUGS file that is distributed with naim. If you see the bug
+listed and marked with a high priority, keep a look out for new versions at the
+distribution site, or through your package maintainer.
+
+If your bug is marked low priority, then evaluate whether it is of high or low
+priority to you. If you feel this is a significant issue, go ahead and send me
+an email asking me to get a move on the fix. If it's just a minor inconvenience,
+the fact that it is in BUGS means I am aware of it already, so you won't need to
+bring it to my attention.
+
+If it is not in the BUGS file at all, contact the appropriate maintainer (which
+may be me) to let them know, and carbon copy the message to me so I can keep
+track of its resolution progress.
+
+
+=== How do I figure out who to contact for issues regarding naim? ===
+
+The README file should contain the most up-to-date contact information for the
+people responsible for naim (including the maintainers of various package
+distributions, for FreeBSD, Debian, etc.).
+
+
+
+If you have any questions or concerns regarding naim, feel free to contact me at
+Daniel Reed <n@ml.org> directly.
+
+If you are interested in the development of naim, feel free to subscribe to the
+naim-users mailing list, which I use to propose/discuss significant changes, and
+answer common problems. Simply send a blank email to
+<naim-users-subscribe@n.ml.org>, then reply to the confirmation message you will
+receive.
+
+If you would like to stay up-to-date with new releases, or critical updates,
+feel free to subscribe to the moderated naim-announce mailing list. Simply send
+a blank email to <naim-announce-subscribe@n.ml.org>, then reply to the
+confirmation message you will receive.
+
+
+
+=== Where can I download naim from? ===
+
+	http://naim.n.ml.org/
