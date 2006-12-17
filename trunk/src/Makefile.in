@@ -60,43 +60,44 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(pkgdocdir)" "$(DESTDIR)$(pkgdocdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libnaim_core_la_DEPENDENCIES =
-am__libnaim_core_la_SOURCES_DIST = buddy.c conio.c echof.c events.c \
-	fireio.c hamster.c help.h help.c helpcmd.c hwprintf.c \
+@LUA_TRUE@am__DEPENDENCIES_1 = ../lua/liblua.la
+@CYGWIN_TRUE@libnaim_core_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__libnaim_core_la_SOURCES_DIST = alias.c buddy.c conio.c echof.c \
+	events.c fireio.c hamster.c help.h help.c helpcmd.c hwprintf.c \
 	linux_vsprintf.c linux_vsprintf.h main.c modutil.c naim-int.h \
-	naimrc_sample.h rc.c rodents.c script.c set.c win.c
-am__objects_1 = libnaim_core_la-buddy.lo libnaim_core_la-conio.lo \
-	libnaim_core_la-echof.lo libnaim_core_la-events.lo \
-	libnaim_core_la-fireio.lo libnaim_core_la-hamster.lo \
-	libnaim_core_la-help.lo libnaim_core_la-helpcmd.lo \
-	libnaim_core_la-hwprintf.lo libnaim_core_la-linux_vsprintf.lo \
-	libnaim_core_la-main.lo libnaim_core_la-modutil.lo \
-	libnaim_core_la-rc.lo libnaim_core_la-rodents.lo \
-	libnaim_core_la-script.lo libnaim_core_la-set.lo \
+	rc.c rodents.c set.c win.c
+am__objects_1 = libnaim_core_la-alias.lo libnaim_core_la-buddy.lo \
+	libnaim_core_la-conio.lo libnaim_core_la-echof.lo \
+	libnaim_core_la-events.lo libnaim_core_la-fireio.lo \
+	libnaim_core_la-hamster.lo libnaim_core_la-help.lo \
+	libnaim_core_la-helpcmd.lo libnaim_core_la-hwprintf.lo \
+	libnaim_core_la-linux_vsprintf.lo libnaim_core_la-main.lo \
+	libnaim_core_la-modutil.lo libnaim_core_la-rc.lo \
+	libnaim_core_la-rodents.lo libnaim_core_la-set.lo \
 	libnaim_core_la-win.lo
 @CYGWIN_TRUE@am_libnaim_core_la_OBJECTS = $(am__objects_1)
 libnaim_core_la_OBJECTS = $(am_libnaim_core_la_OBJECTS)
 @CYGWIN_TRUE@am_libnaim_core_la_rpath = -rpath $(libdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am__naim_SOURCES_DIST = buddy.c conio.c echof.c events.c fireio.c \
-	hamster.c help.h help.c helpcmd.c hwprintf.c linux_vsprintf.c \
-	linux_vsprintf.h main.c modutil.c naim-int.h naimrc_sample.h \
-	rc.c rodents.c script.c set.c win.c main_stub.c
-am__objects_2 = buddy.$(OBJEXT) conio.$(OBJEXT) echof.$(OBJEXT) \
-	events.$(OBJEXT) fireio.$(OBJEXT) hamster.$(OBJEXT) \
-	help.$(OBJEXT) helpcmd.$(OBJEXT) hwprintf.$(OBJEXT) \
-	linux_vsprintf.$(OBJEXT) main.$(OBJEXT) modutil.$(OBJEXT) \
-	rc.$(OBJEXT) rodents.$(OBJEXT) script.$(OBJEXT) set.$(OBJEXT) \
+am__naim_SOURCES_DIST = alias.c buddy.c conio.c echof.c events.c \
+	fireio.c hamster.c help.h help.c helpcmd.c hwprintf.c \
+	linux_vsprintf.c linux_vsprintf.h main.c modutil.c naim-int.h \
+	rc.c rodents.c set.c win.c main_stub.c
+am__objects_2 = alias.$(OBJEXT) buddy.$(OBJEXT) conio.$(OBJEXT) \
+	echof.$(OBJEXT) events.$(OBJEXT) fireio.$(OBJEXT) \
+	hamster.$(OBJEXT) help.$(OBJEXT) helpcmd.$(OBJEXT) \
+	hwprintf.$(OBJEXT) linux_vsprintf.$(OBJEXT) main.$(OBJEXT) \
+	modutil.$(OBJEXT) rc.$(OBJEXT) rodents.$(OBJEXT) set.$(OBJEXT) \
 	win.$(OBJEXT)
 @CYGWIN_FALSE@am__objects_3 = $(am__objects_2)
 @CYGWIN_TRUE@am__objects_3 = main_stub.$(OBJEXT)
 am_naim_OBJECTS = $(am__objects_3)
 naim_OBJECTS = $(am_naim_OBJECTS)
-@CYGWIN_FALSE@am__DEPENDENCIES_1 = ../libfiretalk/libfiretalk.a \
-@CYGWIN_FALSE@	../secs/libsecs.a
-@CYGWIN_TRUE@am__DEPENDENCIES_1 = libnaim_core.la
-naim_DEPENDENCIES = $(am__DEPENDENCIES_1)
+@CYGWIN_FALSE@am__DEPENDENCIES_2 = ../libfiretalk/libfiretalk.a \
+@CYGWIN_FALSE@	../secs/libsecs.a $(am__DEPENDENCIES_1)
+@CYGWIN_TRUE@am__DEPENDENCIES_2 = libnaim_core.la
+naim_DEPENDENCIES = $(am__DEPENDENCIES_2)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp =
 am__depfiles_maybe =
@@ -166,6 +167,8 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LUA_FALSE = @LUA_FALSE@
+LUA_TRUE = @LUA_TRUE@
 MAKEINFO = @MAKEINFO@
 NETLIB = @NETLIB@
 OBJDUMP = @OBJDUMP@
@@ -240,10 +243,11 @@ EXTRA_DIST = \
 	gencmds.sh \
 	gencmd2.sh \
 	genkeys.sh \
-	snapshot.h \
-	main_stub.c
+	main_stub.c \
+	snapshot.h
 
 NAIM_CORE = \
+	alias.c \
 	buddy.c \
 	conio.c \
 	echof.c \
@@ -259,19 +263,19 @@ NAIM_CORE = \
 	main.c \
 	modutil.c \
 	naim-int.h \
-	naimrc_sample.h \
 	rc.c \
 	rodents.c \
-	script.c \
 	set.c \
 	win.c
 
+@LUA_FALSE@LUALIB = 
+@LUA_TRUE@LUALIB = ../lua/liblua.la
 @CYGWIN_FALSE@NAIM_SOURCES = ${NAIM_CORE}
 @CYGWIN_TRUE@NAIM_SOURCES = main_stub.c
 @CYGWIN_FALSE@NAIM_LDADD = \
 @CYGWIN_FALSE@	../libfiretalk/libfiretalk.a \
 @CYGWIN_FALSE@	@LIBLTDL@ \
-@CYGWIN_FALSE@	../secs/libsecs.a \
+@CYGWIN_FALSE@	../secs/libsecs.a ${LUALIB} \
 @CYGWIN_FALSE@	@CURSESLIB@ @NETLIB@
 
 @CYGWIN_TRUE@NAIM_LDADD = libnaim_core.la
@@ -279,7 +283,7 @@ NAIM_CORE = \
 @CYGWIN_TRUE@libnaim_core_la_SOURCES = ${NAIM_CORE}
 @CYGWIN_TRUE@libnaim_core_la_CFLAGS = ${AM_CFLAGS} -DDLSEARCHPATH='"${pkgmoddir}"'
 @CYGWIN_TRUE@libnaim_core_la_LIBADD = \
-@CYGWIN_TRUE@	@LIBLTDL@ \
+@CYGWIN_TRUE@	@LIBLTDL@ ${LUALIB} \
 @CYGWIN_TRUE@	@CURSESLIB@ @NETLIB@
 
 @CYGWIN_TRUE@libnaim_core_la_LDFLAGS = -export-dynamic -no-undefined \
@@ -426,6 +430,9 @@ distclean-compile:
 .c.obj:
 	$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
+libnaim_core_la-alias.lo: alias.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-alias.lo `test -f 'alias.c' || echo '$(srcdir)/'`alias.c
+
 libnaim_core_la-buddy.lo: buddy.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-buddy.lo `test -f 'buddy.c' || echo '$(srcdir)/'`buddy.c
 
@@ -455,9 +462,6 @@ libnaim_core_la-rc.lo: rc.c
 
 libnaim_core_la-rodents.lo: rodents.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-rodents.lo `test -f 'rodents.c' || echo '$(srcdir)/'`rodents.c
-
-libnaim_core_la-script.lo: script.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-script.lo `test -f 'script.c' || echo '$(srcdir)/'`script.c
 
 libnaim_core_la-set.lo: set.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-set.lo `test -f 'set.c' || echo '$(srcdir)/'`set.c

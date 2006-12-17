@@ -302,7 +302,7 @@ static unsigned long parsehtml_tag(h_t *h, unsigned char *text, int backup) {
 						}
 					}
 					refbuf[i] = 0;
-					secs_setvar("lasturl", refbuf);
+					script_setvar("lasturl", refbuf);
 					last_inunderline = h->inunderline;
 					h->inunderline = 1;
 					found = 1;
@@ -329,7 +329,7 @@ static unsigned long parsehtml_tag(h_t *h, unsigned char *text, int backup) {
 				}
 			}
 		} else {
-			char	*lasturl = secs_getvar("lasturl");
+			char	*lasturl = script_getvar("lasturl");
 
 			h->inunderline = last_inunderline;
 			if ((lasturl != NULL) && (strncmp(textsave-backup, lasturl, strlen(lasturl)) != 0)) {
@@ -348,7 +348,7 @@ static unsigned long parsehtml_tag(h_t *h, unsigned char *text, int backup) {
 	} else if CHECKTAG("HR") {
 		nw_wrap_addstr(h, "----------------\n");
 	} else if CHECKTAG("FONT") {
-		if ((colormode == COLOR_FORCE_ON) || ((colormode == COLOR_HONOR_USER) && secs_getvar_int("color"))) {
+		if ((colormode == COLOR_FORCE_ON) || ((colormode == COLOR_HONOR_USER) && script_getvar_int("color"))) {
 		    if (*tagbuf != '/') {
 			char	*t = argbuf;
 			int	found = 0;
@@ -435,7 +435,7 @@ static unsigned long parsehtml_tag(h_t *h, unsigned char *text, int backup) {
 	} else if CHECKTAG("PRE") {
 	} else if CHECKTAG("P") {
 	} else if (CHECKTAG("HTML") || CHECKTAG("BODY") || CHECKTAG("DIV") || CHECKTAG("SPAN")) {
-		if ((colormode == COLOR_FORCE_ON) || ((colormode == COLOR_HONOR_USER) && secs_getvar_int("color"))) {
+		if ((colormode == COLOR_FORCE_ON) || ((colormode == COLOR_HONOR_USER) && script_getvar_int("color"))) {
 		    if (*tagbuf != '/') {
 			char	*t = argbuf;
 			int	found = 0;
