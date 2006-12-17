@@ -17,7 +17,7 @@
 #define CONIO_MAXPARMS	10
 
 enum {
-	cEVENT = 0,
+	cEVENT,
 	cEVENT_ALT,
 	cTEXT,
 	cSELF,
@@ -33,7 +33,7 @@ enum {
 };
 
 enum {
-	cINPUT = 0,
+	cINPUT,
 	cWINLIST,
 	cWINLISTHIGHLIGHT,
 	cCONN,
@@ -68,6 +68,12 @@ enum {
 	RF_NOLOG = (1 << 2),
 	RF_ENCRYPTED = (1 << 3),
 	RF_CHAT = (1 << 4),
+};
+
+enum {
+	COLOR_HONOR_USER,
+	COLOR_FORCE_OFF,
+	COLOR_FORCE_ON,
 };
 
 typedef struct {
