@@ -71,6 +71,41 @@ static void _getconnstable()
 	}
 }
 
+static void *_garbage_dump[100] = { 0 }, **_garbage_dump2 = NULL;
+static int _garbage_count = 0, _garbage_count2 = 0;
+
+void	nlua_clean_garbage(void) {
+	int	i;
+
+	if (_garbage_count > 0) {
+		for (i = 0; i < _garbage_count; i++) {
+			free(_garbage_dump[i]);
+			_garbage_dump[i] = NULL;
+		}
+		_garbage_count = 0;
+	}
+	if (_garbage_count2 > 0) {
+		for (i = 0; i < _garbage_count2; i++) {
+			free(_garbage_dump2[i]);
+			_garbage_dump2[i] = NULL;
+		}
+		free(_garbage_dump2);
+		_garbage_dump2 = NULL;
+		_garbage_count2 = 0;
+	}
+}
+
+static void _garbage_add(void *ptr) {
+	if (_garbage_count < sizeof(_garbage_dump)/sizeof(*_garbage_dump))
+		_garbage_dump[_garbage_count++] = ptr;
+	else {
+		_garbage_dump2 = realloc(_garbage_dump2, (_garbage_count2+1)*sizeof(*_garbage_dump2));
+		if (_garbage_dump2 == NULL)
+			abort();
+		_garbage_dump2[_garbage_count2++] = ptr;
+	}
+}
+
 int nlua_setvar_int(const char *name, const long value)
 {
 	if (name == NULL)
@@ -135,12 +170,12 @@ char* nlua_getvar_safe(const char *const name, char** buf)
 
 char* nlua_getvar(const char *const name)
 {
-	static char* result = NULL;
-	
-	if (result)
-		free(result);	/* XXX this is really bad behavior. I need to strdup, though, so... */
-	
-	return nlua_getvar_safe(name, &result);
+	char* result = NULL;
+
+	nlua_getvar_safe(name, &result);
+	if (result != NULL)
+		_garbage_add(result);
+	return(result);
 }
 
 int nlua_script_parse(const char *script)
@@ -163,12 +198,9 @@ int nlua_script_parse(const char *script)
 
 char* nlua_expand(const char *script)
 {
-	static char *last = NULL;
+	char *last;
 	const char* result;
-	
-	if (last)
-		free(last);
-	
+
 	_getmaintable();
 	lua_pushstring(lua, "__expandString");
 	lua_gettable(lua, -2);
@@ -176,6 +208,7 @@ char* nlua_expand(const char *script)
 	lua_pcall(lua, 1, 1, 0);		/* Feed the error message to the caller if there is one */
 	result = lua_tostring(lua, -1);
 	last = strdup(result);
+	_garbage_add(last);
 	lua_pop(lua, 2);
 	return last;
 }
@@ -188,10 +221,8 @@ void nlua_listvars_start()
 
 char* nlua_listvars_next()
 {
-	static char* last = NULL;
-	
-	if (last)
-		free(last);
+	char* last;
+
 	if (lua_next(lua, -2) == 0)
 	{
 		lua_pushnil(lua);	/* dummy for nlua_listvars_stop */
@@ -201,6 +232,7 @@ char* nlua_listvars_next()
 	lua_pop(lua, 1);
 
 	last = strdup(lua_tostring(lua, -1));
+	_garbage_add(last);
 	return last;
 }
 
@@ -349,6 +381,7 @@ int nlua_luacmd(char *cmd, char *arg, conn_t *conn)
 	}
 	lua_pushstring(lua, lcmd);					// commands lcmd
 	free(lcmd);
+	lcmd = NULL;
 	lua_gettable(lua, -2);						// commands command
 	lua_remove(lua, -2);						// command
 	if (!lua_isfunction(lua, -1))
