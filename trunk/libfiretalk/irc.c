@@ -66,25 +66,15 @@ typedef struct irc_whois_t {
 		idle;
 } irc_whois_t;
 
+ZERO_CTOR(irc_whois_t);
+TYPE_NEW(irc_whois_t);
 static inline void irc_whois_t_dtor(irc_whois_t *this) {
 	free(this->nickname);
 	free(this->info);
 	memset(this, 0, sizeof(*this));
 }
-
-static inline void irc_whois_t_delete(irc_whois_t *this) {
-	irc_whois_t_dtor(this);
-	free(this);
-}
-
-static inline void irc_whois_t_list_delete(irc_whois_t *head) {
-	if (head != NULL) {
-		irc_whois_t *next = head->next;
-
-		irc_whois_t_delete(head);
-		irc_whois_t_list_delete(next);
-	}
-}
+TYPE_DELETE(irc_whois_t);
+LIST_DELETE(irc_whois_t);
 
 typedef struct firetalk_driver_connection_t {
 	char	*nickname,
@@ -93,21 +83,19 @@ typedef struct firetalk_driver_connection_t {
 	irc_whois_t *whois_head;
 	int	 passchange;	/* whether we are currently changing our pass */
 	unsigned char
-		 usesilence:1,	/* are we on a network that understands SILENCE */
+		 nosilence:1,	/* are we on a network that understands SILENCE */
 		 identified:1;	/* are we we identified */
 } irc_conn_t;
 
+ZERO_CTOR(irc_conn_t);
+TYPE_NEW(irc_conn_t);
 static inline void irc_conn_t_dtor(irc_conn_t *this) {
 	free(this->nickname);
 	free(this->password);
 	irc_whois_t_list_delete(this->whois_head);
 	memset(this, 0, sizeof(*this));
 }
-
-static inline void irc_conn_t_delete(irc_conn_t *this) {
-	irc_conn_t_dtor(this);
-	free(this);
-}
+TYPE_DELETE(irc_conn_t);
 
 #if 0
 static const char *const irc_normalize_user_nick(const char *const name) {
@@ -561,7 +549,6 @@ static int irc_internal_disconnect(irc_conn_t *c, const fte_t error) {
 #endif
 
 	irc_conn_t_dtor(c);
-	c->usesilence = 1;
 
 	firetalk_callback_disconnect(c, error);
 
@@ -722,10 +709,8 @@ static fte_t irc_disconnected(irc_conn_t *c, const fte_t reason) {
 static irc_conn_t *irc_create_handle(void) {
 	irc_conn_t *c;
 
-	c = calloc(1, sizeof(*c));
-	if (c == NULL)
+	if ((c = irc_conn_t_new()) == NULL)
 		abort();
-	c->usesilence = 1;
 
 	return(c);
 }
@@ -944,13 +929,12 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 					c->identified = 0;
 					/* nickserv seems to be asking us to identify ourselves, and we have a password */
 					if (!c->password) {
-						c->password = calloc(1, 128);
-						if (c->password == NULL)
+						if ((c->password = malloc(128)) == NULL)
 							abort();
-						firetalk_callback_needpass(c,c->password,128);
+						firetalk_callback_needpass(c, c->password, 128);
 					}
-					if ((c->password != NULL) && irc_send_printf(c,"PRIVMSG NickServ :IDENTIFY %s",c->password) != 0) {
-						irc_internal_disconnect(c,FE_PACKET);
+					if ((c->password != NULL) && irc_send_printf(c, "PRIVMSG NickServ :IDENTIFY %s", c->password) != 0) {
+						irc_internal_disconnect(c, FE_PACKET);
 						return(FE_PACKET);
 					}
 				} else if ((strstr(args[3],"Password changed") != NULL) && (c->passchange != 0)) {
@@ -1095,7 +1079,7 @@ static fte_t irc_got_data_parse(irc_conn_t *c, char **args) {
 				break;
 			case 421: /* ERR_UNKNOWNCOMMAND */
 				if (strcmp(args[3], "SILENCE") == 0)
-					c->usesilence = 0;
+					c->nosilence = 1;
 				goto unhandled;
 				break;
 			case 433: /* ERR_NICKNAMEINUSE */
@@ -1448,15 +1432,15 @@ static fte_t irc_im_remove_buddy(irc_conn_t *c, const char *const name, const ch
 }
 
 static fte_t irc_im_add_deny(irc_conn_t *c, const char *const nickname) {
-	if (c->usesilence == 1)
-		return(irc_send_printf(c,"SILENCE +%s!*@*",nickname));
+	if (!c->nosilence)
+		return(irc_send_printf(c, "SILENCE +%s!*@*", nickname));
 	else
 		return(FE_SUCCESS);
 }
 
 static fte_t irc_im_remove_deny(irc_conn_t *c, const char *const nickname) {
-	if (c->usesilence == 1)
-		return(irc_send_printf(c,"SILENCE -%s!*@*",nickname));
+	if (!c->nosilence)
+		return(irc_send_printf(c, "SILENCE -%s!*@*", nickname));
 	else
 		return(FE_SUCCESS);
 }
@@ -1472,14 +1456,11 @@ static fte_t irc_set_privacy(irc_conn_t *c, const char *const mode) {
 static fte_t irc_get_info(irc_conn_t *c, const char *const nickname) {
 	irc_whois_t *iter;
 
-	iter = calloc(1, sizeof(*iter));
-	if (iter == NULL)
+	if ((iter = irc_whois_t_new()) == NULL)
 		abort();
 	iter->next = c->whois_head;
 	c->whois_head = iter;
-	iter->nickname = strdup(nickname);
-	if (iter->nickname == NULL)
-		abort();
+	STRREPLACE(iter->nickname, nickname);
 	return(irc_send_printf(c, "WHOIS %s", nickname));
 }
 

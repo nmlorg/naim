@@ -1,5 +1,4 @@
-/* 
-** Copyright 2006 Daniel Reed <n@ml.org>
+/* Copyright 2006 Daniel Reed <n@ml.org>
 */
 #include <string.h>
 #include <stdio.h>
@@ -23,10 +22,10 @@
 #include "firetalk-int.h"
 #include "firetalk.h"
 
-static int _sock_canary = 0;
-#define SOCK_CANARY	(&_sock_canary)
-static int _buffer_canary = 0;
-#define BUFFER_CANARY	(&_buffer_canary)
+int	firetalk_sock_canary = 0;
+#define SOCK_CANARY	(&firetalk_sock_canary)
+int	firetalk_buffer_canary = 0;
+#define BUFFER_CANARY	(&firetalk_buffer_canary)
 
 fte_t	firetalk_sock_resolve4(const char *const host, struct in_addr *inet4_ip) {
 	struct hostent *he;
@@ -291,11 +290,6 @@ fte_t	firetalk_buffer_alloc(firetalk_buffer_t *buffer, uint16_t size) {
 	buffer->buffer = ptr;
 	buffer->size = size;
 	return(FE_SUCCESS);
-}
-
-void	firetalk_buffer_free(firetalk_buffer_t *buffer) {
-	FREESTR(buffer->buffer);
-	buffer->pos = buffer->size = 0;
 }
 
 void	firetalk_enqueue(firetalk_queue_t *queue, const char *const key, void *data) {
