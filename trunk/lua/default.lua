@@ -493,6 +493,8 @@ naim.commands.names = {
 			table.insert(t, (info.admin and "@" or "") .. member .. string.rep("&nbsp;", maxlen-mlen))
 		end
 
+		table.sort(t)
+
 		local p = "Users in group " .. tostring(window) .. ":"
 
 		window:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, " "))
@@ -607,7 +609,7 @@ naim.hooks.add('proto_chat_modeset', function(conn, chat, by, mode, arg)
 	local window = conn.windows[string.lower(chat)]
 
 	if window and group.synched then
-		window:event2("event", by, "set", "mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
+		window:event2("event", by, "set", "<font color=\"#FF00FF\">" .. string.lower(mode) .. (arg and " " .. arg or "") .. "</font>")
 	end
 end, 100)
 
@@ -616,7 +618,7 @@ naim.hooks.add('proto_chat_modeunset', function(conn, chat, by, mode, arg)
 	local window = conn.windows[string.lower(chat)]
 
 	if window and group.synched then
-		window:event2("event", by, "unset", "mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
+		window:event2("event", by, "unset", "<font color=\"#FF00FF\">" .. string.lower(mode) .. (arg and " " .. arg or "") .. "</font>")
 	end
 end, 100)
 
