@@ -29,7 +29,7 @@ void	updateidletime(void) {
 	bupdate();
 }
 
-static int events_idleaway(void *unused, time_t now, double nowf) {
+static int events_idleaway(void *userdata, time_t now, double nowf) {
 	long	idletime = script_getvar_int("idletime");
 	int	autoaway;
 
@@ -59,7 +59,7 @@ static int events_idleaway(void *unused, time_t now, double nowf) {
 	return(HOOK_CONTINUE);
 }
 
-static int events_autoreconnect(void *unused, time_t now, double nowf) {
+static int events_autoreconnect(void *userdata, time_t now, double nowf) {
 	conn_t	*conn = curconn;
 
 	do {
@@ -72,7 +72,7 @@ static int events_autoreconnect(void *unused, time_t now, double nowf) {
 	return(HOOK_CONTINUE);
 }
 
-static int events_lagcheck(void *unused, time_t now, double nowf) {
+static int events_lagcheck(void *userdata, time_t now, double nowf) {
 	int	lagcheck = script_getvar_int("lagcheck");
 	conn_t	*conn = curconn;
 
@@ -88,7 +88,7 @@ static int events_lagcheck(void *unused, time_t now, double nowf) {
 	return(HOOK_CONTINUE);
 }
 
-static int events_winlistmaint(void *unused, time_t now, double nowf) {
+static int events_winlistmaint(void *userdata, time_t now, double nowf) {
 	int	tprint, logtprint, dailycol, regularcol;
 	conn_t	*conn;
 	struct tm *tmptr;
@@ -182,7 +182,7 @@ static int events_winlistmaint(void *unused, time_t now, double nowf) {
 }
 
 #ifdef ENABLE_DNSUPDATE
-static int events_dnsupdate(void *unused, time_t now, double nowf) {
+static int events_dnsupdate(void *userdata, time_t now, double nowf) {
 	int	updatecheck = script_getvar_int("updatecheck");
 
 	if ((updatecheck > 0) && (((now-startuptime)/60)%updatecheck == 0)) {
@@ -224,11 +224,11 @@ static int events_dnsupdate(void *unused, time_t now, double nowf) {
 void	events_hook_init(void) {
 	void	*mod = NULL;
 
-	HOOK_ADD(periodic, mod, events_idleaway, 100);
-	HOOK_ADD(periodic, mod, events_autoreconnect, 100);
-	HOOK_ADD(periodic, mod, events_lagcheck, 100);
-	HOOK_ADD(periodic, mod, events_winlistmaint, 100);
+	HOOK_ADD(periodic, mod, events_idleaway, 100, NULL);
+	HOOK_ADD(periodic, mod, events_autoreconnect, 100, NULL);
+	HOOK_ADD(periodic, mod, events_lagcheck, 100, NULL);
+	HOOK_ADD(periodic, mod, events_winlistmaint, 100, NULL);
 #ifdef ENABLE_DNSUPDATE
-	HOOK_ADD(periodic, mod, events_dnsupdate, 100);
+	HOOK_ADD(periodic, mod, events_dnsupdate, 100, NULL);
 #endif
 }

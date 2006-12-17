@@ -29,44 +29,6 @@ extern conn_t *curconn;
 
 extern void (*script_client_cmdhandler)(const char *);
 
-static void _loadfunctions();
-static void _getmaintable();
-static void _getvarstable();
-static void _getconnstable();
-
-#define _hook_recvfrom_add(luacmd, weight)	do { \
-		void	*mod = NULL; \
-		\
-		HOOK_ADD(recvfrom, mod, nlua_recvfrom, weight); \
-	}
-
-void nlua_init()
-{
-	lua = luaL_newstate();
-	
-	/* XXX: Do we need to set a panic function here? */
-	lua_gc(lua, LUA_GCSTOP, 0);	/* Paul says we should stop the garbage collector while we bring in libraries. */
-		luaL_openlibs(lua);
-		_loadfunctions();		/* this creates global "naim" for default.lua */
-	lua_gc(lua, LUA_GCRESTART, 0);
-	
-	if (luaL_loadstring(lua, default_lua) != 0)
-	{
-		printf("default.lua load error: %s\n", lua_tostring(lua, -1));
-		abort();
-	}
-	if (lua_pcall(lua, 0, 0, 0) != 0)
-	{
-		printf("default.lua run error: %s\n", lua_tostring(lua, -1));
-		abort();
-	}
-}
-
-void nlua_shutdown()
-{
-	lua_close(lua);
-}
-
 static void _getmaintable()
 {
 	lua_getglobal(lua, "naim");
@@ -462,4 +424,57 @@ static const struct luaL_Reg naimlib [] = {
 static void _loadfunctions()
 {
 	luaL_register(lua, "naim", naimlib);
+}
+
+typedef struct {
+	char	*script;
+} _client_hook_t;
+
+static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+	const char *script = ((_client_hook_t *)userdata)->script;
+
+	nlua_script_parse(script);
+
+	return(HOOK_CONTINUE);
+}
+
+static void _client_hook_recvfrom(const char *script, const int weight) {
+	void	*mod = NULL;
+	_client_hook_t *hook;
+
+	if ((hook = calloc(1, sizeof(*hook))) == NULL)
+		abort();
+	if ((hook->script = strdup(script)) == NULL)
+		abort();
+	HOOK_ADD(recvfrom, mod, _nlua_recvfrom, weight, hook);
+}
+
+void nlua_init()
+{
+	lua = luaL_newstate();
+	
+	/* XXX: Do we need to set a panic function here? */
+	lua_gc(lua, LUA_GCSTOP, 0);	/* Paul says we should stop the garbage collector while we bring in libraries. */
+		luaL_openlibs(lua);
+		_loadfunctions();		/* this creates global "naim" for default.lua */
+	lua_gc(lua, LUA_GCRESTART, 0);
+	
+	if (luaL_loadstring(lua, default_lua) != 0)
+	{
+		printf("default.lua load error: %s\n", lua_tostring(lua, -1));
+		abort();
+	}
+	if (lua_pcall(lua, 0, 0, 0) != 0)
+	{
+		printf("default.lua run error: %s\n", lua_tostring(lua, -1));
+		abort();
+	}
+
+//	_client_hook_recvfrom("naim.conio(\"echo test 1\")", 100);
+//	_client_hook_recvfrom("naim.conio(\"echo test 2\")", 100);
+}
+
+void nlua_shutdown()
+{
+	lua_close(lua);
 }
