@@ -62,35 +62,36 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 @CYGWIN_TRUE@libnaim_core_la_DEPENDENCIES = ../lua/libnlua.la
 am__libnaim_core_la_SOURCES_DIST = alias.c atomizer.c buddy.c cmdar.c \
-	commands.c conio.c echof.c events.c fireio.c hamster.c \
-	hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c rodents.c \
-	set.c win.c
+	commands.c conio.c echof.c events.c firebind.c fireio.c \
+	hamster.c hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c \
+	rodents.c set.c win.c
 am__objects_1 = libnaim_core_la-alias.lo libnaim_core_la-atomizer.lo \
 	libnaim_core_la-buddy.lo libnaim_core_la-cmdar.lo \
 	libnaim_core_la-commands.lo libnaim_core_la-conio.lo \
 	libnaim_core_la-echof.lo libnaim_core_la-events.lo \
-	libnaim_core_la-fireio.lo libnaim_core_la-hamster.lo \
-	libnaim_core_la-hwprintf.lo libnaim_core_la-linux_vsprintf.lo \
-	libnaim_core_la-main.lo libnaim_core_la-rc.lo \
-	libnaim_core_la-rodents.lo libnaim_core_la-set.lo \
-	libnaim_core_la-win.lo
+	libnaim_core_la-firebind.lo libnaim_core_la-fireio.lo \
+	libnaim_core_la-hamster.lo libnaim_core_la-hwprintf.lo \
+	libnaim_core_la-linux_vsprintf.lo libnaim_core_la-main.lo \
+	libnaim_core_la-rc.lo libnaim_core_la-rodents.lo \
+	libnaim_core_la-set.lo libnaim_core_la-win.lo
 @CYGWIN_TRUE@am_libnaim_core_la_OBJECTS = $(am__objects_1)
 libnaim_core_la_OBJECTS = $(am_libnaim_core_la_OBJECTS)
 @CYGWIN_TRUE@am_libnaim_core_la_rpath = -rpath $(libdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__naim_SOURCES_DIST = alias.c atomizer.c buddy.c cmdar.c commands.c \
-	conio.c echof.c events.c fireio.c hamster.c hwprintf.c \
-	linux_vsprintf.c main.c naim-int.h rc.c rodents.c set.c win.c \
-	main_stub.c
+	conio.c echof.c events.c firebind.c fireio.c hamster.c \
+	hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c rodents.c \
+	set.c win.c main_stub.c
 am__objects_2 = naim-alias.$(OBJEXT) naim-atomizer.$(OBJEXT) \
 	naim-buddy.$(OBJEXT) naim-cmdar.$(OBJEXT) \
 	naim-commands.$(OBJEXT) naim-conio.$(OBJEXT) \
 	naim-echof.$(OBJEXT) naim-events.$(OBJEXT) \
-	naim-fireio.$(OBJEXT) naim-hamster.$(OBJEXT) \
-	naim-hwprintf.$(OBJEXT) naim-linux_vsprintf.$(OBJEXT) \
-	naim-main.$(OBJEXT) naim-rc.$(OBJEXT) naim-rodents.$(OBJEXT) \
-	naim-set.$(OBJEXT) naim-win.$(OBJEXT)
+	naim-firebind.$(OBJEXT) naim-fireio.$(OBJEXT) \
+	naim-hamster.$(OBJEXT) naim-hwprintf.$(OBJEXT) \
+	naim-linux_vsprintf.$(OBJEXT) naim-main.$(OBJEXT) \
+	naim-rc.$(OBJEXT) naim-rodents.$(OBJEXT) naim-set.$(OBJEXT) \
+	naim-win.$(OBJEXT)
 @CYGWIN_FALSE@am__objects_3 = $(am__objects_2)
 @CYGWIN_TRUE@am__objects_3 = naim-main_stub.$(OBJEXT)
 am_naim_OBJECTS = $(am__objects_3)
@@ -258,6 +259,7 @@ NAIM_CORE = \
 	conio.c \
 	echof.c \
 	events.c \
+	firebind.c \
 	fireio.c \
 	hamster.c \
 	hwprintf.c \
@@ -461,6 +463,9 @@ libnaim_core_la-echof.lo: echof.c
 libnaim_core_la-events.lo: events.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-events.lo `test -f 'events.c' || echo '$(srcdir)/'`events.c
 
+libnaim_core_la-firebind.lo: firebind.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-firebind.lo `test -f 'firebind.c' || echo '$(srcdir)/'`firebind.c
+
 libnaim_core_la-fireio.lo: fireio.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-fireio.lo `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
 
@@ -535,6 +540,12 @@ naim-events.o: events.c
 
 naim-events.obj: events.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
+
+naim-firebind.o: firebind.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-firebind.o `test -f 'firebind.c' || echo '$(srcdir)/'`firebind.c
+
+naim-firebind.obj: firebind.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-firebind.obj `if test -f 'firebind.c'; then $(CYGPATH_W) 'firebind.c'; else $(CYGPATH_W) '$(srcdir)/firebind.c'; fi`
 
 naim-fireio.o: fireio.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-fireio.o `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c

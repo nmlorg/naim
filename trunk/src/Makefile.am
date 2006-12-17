@@ -32,6 +32,7 @@ NAIM_CORE = \
 	conio.c \
 	echof.c \
 	events.c \
+	firebind.c \
 	fireio.c \
 	hamster.c \
 	hwprintf.c \

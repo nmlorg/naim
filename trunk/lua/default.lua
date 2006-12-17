@@ -37,20 +37,24 @@ naim.variables = {}
 naim.connections = {}
 setmetatable(naim.connections, naim.internal.rometatable("connections"))
 
-function naim.internal.expandstring(s)
+function naim.internal.varsub(s, t)
 	s = string.gsub(s, "$%((.*)%)",
-		function (n)
-			return loadstring("return "..n)()
+		function(n)
+			return(loadstring("return " .. n)())
 		end)
 	s = string.gsub(s, "$\{([a-zA-Z0-9:_]+)\}",
-		function (n)
-			return tostring(naim.variables[n])
+		function(n)
+			return(t[n])
 		end)
 	s = string.gsub(s, "$([a-zA-Z0-9:_]+)",
-		function (n)
-			return tostring(naim.variables[n])
+		function(n)
+			return(t[n])
 		end)
-	return s
+	return(s)
+end
+
+function naim.internal.expandstring(s)
+	return(naim.internal.varsub(s, naim.variables))
 end
 
 function naim.internal.newconn(winname, handle)
