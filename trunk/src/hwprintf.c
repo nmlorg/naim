@@ -37,7 +37,6 @@ static void h_zero(h_t *h, win_t *win) {
 		max = h->addch.len = nw_getcol(win);
 		if (max >= sizeof(h->addch.buf))
 			max = sizeof(h->addch.buf)-1;
-//		memset(h->addch.buf, 0, sizeof(h->addch.buf));
 		nw_getline(h->win, h->addch.buf, sizeof(h->addch.buf));
 		assert(strlen(h->addch.buf) == h->addch.len);
 		h->addch.lastwhite = -1;
@@ -61,6 +60,13 @@ static void h_zero(h_t *h, win_t *win) {
 	h->white = h->inbold = h->initalic = h->inunderline = 0;
 }
 
+static void nw_decode_addch(win_t *win, unsigned char c) {
+	if (c == '\1')
+		c = ' ';
+
+	nw_addch(win, c);
+}
+
 static void nw_wrap_addch(h_t *h, unsigned char c) {
 	if (h->addch.len >= (faimconf.wstatus.widthx-1)) {
 		int	i;
@@ -68,29 +74,27 @@ static void nw_wrap_addch(h_t *h, unsigned char c) {
 		if ((h->addch.lastwhite > -1) && (h->addch.lastwhite > h->addch.firstwhite) && (h->addch.lastwhite > h->addch.secondwhite)) {
 			for (i = h->addch.len; i > h->addch.lastwhite; i--)
 				nw_addstr(h->win, "\b \b");
-			nw_addch(h->win, '\n');
+			nw_decode_addch(h->win, '\n');
 			for (i = 0; i <= h->addch.secondwhite; i++)
-				nw_addch(h->win, ' ');
+				nw_decode_addch(h->win, ' ');
 			for (i = h->addch.lastwhite+1; i < h->addch.len; i++)
-				nw_addch(h->win, h->addch.buf[i]);
+				nw_decode_addch(h->win, h->addch.buf[i]);
 			h->addch.len -= h->addch.lastwhite-1;
 		} else {
 			for (i = 0; i <= (h->addch.secondwhite+1); i++)
-				nw_addch(h->win, ' ');
+				nw_decode_addch(h->win, ' ');
 			h->addch.len = 0;
 		}
 
 		h->addch.len += h->addch.secondwhite+1;
 		h->addch.lastwhite = -1;
-//		memset(h->addch.buf, 0, sizeof(h->addch.buf));
 	}
 
-	nw_addch(h->win, c);
+	nw_decode_addch(h->win, c);
 
 	if (c == '\n') {
 		h->addch.lastwhite = h->addch.firstwhite = h->addch.secondwhite = -1;
 		h->addch.len = 0;
-//		memset(h->addch.buf, 0, sizeof(h->addch.buf));
 	} else if (c == '\b') {
 		if (h->addch.len > 0)
 			h->addch.len--;
@@ -99,7 +103,7 @@ static void nw_wrap_addch(h_t *h, unsigned char c) {
 		if (h->addch.secondwhite == h->addch.len)
 			h->addch.secondwhite = -1;
 	} else {
-		if (isspace(c)) {
+		if (isspace(c) || (c == '\1')) {
 			if (h->addch.firstwhite == -1)
 				h->addch.firstwhite = h->addch.len;
 			else if (h->addch.secondwhite == -1)
@@ -114,7 +118,7 @@ static void nw_wrap_addch(h_t *h, unsigned char c) {
 /* this is a terrible way of doing this */
 static void nw_wrap_addstr(h_t *h, const unsigned char *str) {
 	if (str == NULL)
-		nw_addch(h->win, '.');
+		nw_decode_addch(h->win, '.');
 	else {
 		int	i;
 
@@ -535,7 +539,7 @@ static unsigned long parsehtml_amp(h_t *h, unsigned char *text) {
 		else
 			nw_wrap_addstr(h, keyname(c));
 	} else if CHECKAMP("NBSP") {
-		nw_wrap_addch(h, ' ');
+		nw_wrap_addch(h, '\1');
 	} else if CHECKAMP("AMP") {
 		nw_wrap_addch(h, '&');
 	} else if CHECKAMP("LT") {

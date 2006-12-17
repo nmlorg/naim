@@ -29,8 +29,8 @@ static int _nlua_hook(void *userdata, const char *signature, ...) {
 			lua_pushstring(lua, va_arg(msg, const char *));
 			break;
 		  case HOOK_T_LSTRINGc: {
-				uint32_t len = va_arg(msg, uint32_t);
 				const char *str = va_arg(msg, const char *);
+				uint32_t len = va_arg(msg, uint32_t);
 
 				lua_pushlstring(lua, str, len);
 				break;
@@ -49,8 +49,8 @@ static int _nlua_hook(void *userdata, const char *signature, ...) {
 				break;
 			}
 		  case HOOK_T_WRLSTRINGc: {
-				uint32_t *len = va_arg(msg, uint32_t *);
 				const char **str = va_arg(msg, const char **);
+				uint32_t *len = va_arg(msg, uint32_t *);
 
 				lua_pushlstring(lua, *str, *len);
 				recoverable++;

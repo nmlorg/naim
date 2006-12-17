@@ -258,7 +258,7 @@ static void naim_recvfrom(conn_t *const conn,
 
 	memmove(message, _message, len);
 	message[len] = 0;
-	HOOK_CALL(proto_recvfrom, HOOK_T_CONN HOOK_T_WRSTRING HOOK_T_WRSTRING HOOK_T_WRSTRING HOOK_T_WRUINT32 HOOK_T_WRUINT32,
+	HOOK_CALL(proto_recvfrom, HOOK_T_CONN HOOK_T_WRSTRING HOOK_T_WRSTRING HOOK_T_WRLSTRING HOOK_T_WRUINT32,
 		conn, &name, &dest, &message, &len, &flags);
 	free(name);
 	free(dest);

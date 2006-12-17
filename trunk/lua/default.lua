@@ -458,6 +458,10 @@ naim.commands.on = {
 
 
 
+naim.hooks.add('proto_buddy_coming', function(conn, who)
+	
+end, 100)
+
 naim.hooks.add('proto_user_nickchanged', function(conn, who, newnick)
 	naim.internal.changebuddy(conn, who, newnick)
 
@@ -512,7 +516,7 @@ naim.hooks.add('proto_chat_synched', function(conn, chat)
 
 		local p = "Users in group " .. chat .. ":"
 
-		window:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, "&nbsp;"))
+		window:echo(p .. string.rep("&nbsp;", (maxlen+1)-math.fmod(p:len(), maxlen+1)) .. table.concat(t, " "))
 	end
 end, 100)
 
