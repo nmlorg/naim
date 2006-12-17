@@ -33,7 +33,7 @@ libnlua_la_SOURCES = \
 	util.c \
 	variables.c
 libnlua_la_LIBADD = liblua.la
-libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src -I${INCLTDL}
+libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src ${INCLTDL}
 
 noinst_PROGRAMS = luac
 luac_SOURCES = \
