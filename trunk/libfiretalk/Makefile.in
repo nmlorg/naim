@@ -269,6 +269,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+.c.o:
+	$(COMPILE) -c -o $@ $<
+
 .c.obj:
 	$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
@@ -545,10 +548,6 @@ uninstall-am: uninstall-includeHEADERS uninstall-info-am
 	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am uninstall-includeHEADERS uninstall-info-am
 
-
-.c.o: $<
-	@echo $(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
-	@$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

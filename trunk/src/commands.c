@@ -18,7 +18,7 @@
 # include <netdb.h>
 #endif
 
-#ifndef CONIOCPP
+#ifndef UACPP
 # define COMMANDS_C
 # include "conio_cmds.h"
 #endif
@@ -85,9 +85,9 @@ static const char *backlist[] = {
 
 
 
-CONIOFUNC(jump) {
-CONIODESC(Go to the specified window or the next 'active' one)
-CONIOAOPT(window,winname)
+UAFUNC(jump) {
+UADESC(Go to the specified window or the next 'active' one)
+UAAOPT(window,winname)
 	buddywin_t	*bwin = NULL;
 	conn_t	*c = conn;
 
@@ -142,12 +142,12 @@ CONIOAOPT(window,winname)
 	}
 }
 
-CONIOFUNC(msg) {
-CONIOALIA(m)
-CONIOALIA(im)
-CONIODESC(Send a message; as in /msg naimhelp naim is cool!)
-CONIOAREQ(window,name)
-CONIOAREQ(string,message)
+UAFUNC(msg) {
+UAALIA(m)
+UAALIA(im)
+UADESC(Send a message; as in /msg naimhelp naim is cool!)
+UAAREQ(window,name)
+UAAREQ(string,message)
 	buddywin_t *bwin;
 	struct tm *tmptr;
 
@@ -199,13 +199,13 @@ CONIOAREQ(string,message)
 	naim_send_im(conn, args[0], args[1], 0);
 }
 
-CONIOFUNC(addbuddy) {
-CONIOALIA(add)
-CONIOALIA(friend)
-CONIODESC(Add someone to your buddy list or change their group membership)
-CONIOAREQ(account,account)
-CONIOAOPT(string,group)
-CONIOAOPT(string,realname)
+UAFUNC(addbuddy) {
+UAALIA(add)
+UAALIA(friend)
+UADESC(Add someone to your buddy list or change their group membership)
+UAAREQ(account,account)
+UAAOPT(string,group)
+UAAOPT(string,realname)
 	const char *group = "Buddy", *name = NULL;
 	fte_t	ret;
 
@@ -266,9 +266,9 @@ static void do_delconn(conn_t *conn) {
 	free(conn);
 }
 
-CONIOFUNC(exit) {
-CONIOALIA(quit)
-CONIODESC(Disconnect and exit naim)
+UAFUNC(exit) {
+UAALIA(quit)
+UADESC(Disconnect and exit naim)
 	conn_t	*c;
 
 	if (script_getvar_int("autosave"))
@@ -286,9 +286,9 @@ CONIODESC(Disconnect and exit naim)
 	stayconnected = 0;
 }
 
-CONIOFUNC(save) {
-CONIODESC(Write current settings to ~/.naimrc to be loaded at startup)
-CONIOAOPT(string,filename)
+UAFUNC(save) {
+UADESC(Write current settings to ~/.naimrc to be loaded at startup)
+UAAOPT(string,filename)
 	conn_t	*c = conn;
 	FILE	*file;
 	int	i;
@@ -668,11 +668,11 @@ CONIOAOPT(string,filename)
 	echof(conn, NULL, "Settings saved to %s.\n", filename);
 }
 
-CONIOFUNC(connect) {
-CONIODESC(Connect to a service)
-CONIOAOPT(string,name)
-CONIOAOPT(string,server)
-CONIOAOPT(int,port)
+UAFUNC(connect) {
+UADESC(Connect to a service)
+UAAOPT(string,name)
+UAAOPT(string,server)
+UAAOPT(int,port)
 	fte_t	fte;
 
 	if (conn->online > 0) {
@@ -765,8 +765,8 @@ CONIOAOPT(int,port)
 	}
 }
 
-CONIOFUNC(jumpback) {
-CONIODESC(Go to the previous window)
+UAFUNC(jumpback) {
+UADESC(Go to the previous window)
 	conn_t	*c = conn,
 		*newestconn = NULL;
 	buddywin_t *newestbwin = NULL;
@@ -797,11 +797,11 @@ CONIODESC(Go to the previous window)
 	}
 }
 
-CONIOFUNC(info) {
-CONIOALIA(whois)
-CONIOALIA(wi)
-CONIODESC(Retrieve a user profile)
-CONIOAOPT(entity,name)
+UAFUNC(info) {
+UAALIA(whois)
+UAALIA(wi)
+UADESC(Retrieve a user profile)
+UAAOPT(entity,name)
 	fte_t	ret;
 
 	if (argc == 0) {
@@ -833,28 +833,28 @@ void	naim_eval(const char *_str) {
 	free(str);
 }
 
-CONIOFUNC(eval) {
-CONIODESC(Evaluate a command with $-variable substitution)
-CONIOAREQ(string,script)
+UAFUNC(eval) {
+UADESC(Evaluate a command with $-variable substitution)
+UAAREQ(string,script)
 	if (args[0][0] == '/')
 		naim_eval(args[0]);
 	else
 		script_script_parse(args[0]);
 }
 
-CONIOFUNC(say) {
-CONIODESC(Send a message to the current window; as in /say I am happy)
-CONIOAREQ(string,message)
-CONIOWHER(NOTSTATUS)
+UAFUNC(say) {
+UADESC(Send a message to the current window; as in /say I am happy)
+UAAREQ(string,message)
+UAWHER(NOTSTATUS)
 	const char *newargs[2] = { conn->curbwin->winname, args[0] };
 
 	ua_msg(conn, 2, newargs);
 }
 
-CONIOFUNC(me) {
-CONIODESC(Send an 'action' message to the current window; as in /me is happy)
-CONIOAREQ(string,message)
-CONIOWHER(NOTSTATUS)
+UAFUNC(me) {
+UADESC(Send an 'action' message to the current window; as in /me is happy)
+UAAREQ(string,message)
+UAWHER(NOTSTATUS)
 	WINTIME(&(conn->curbwin->nwin), IMWIN);
 	hwprintf(&(conn->curbwin->nwin), C(IMWIN,SELF), "* <B>%s</B>", conn->sn);
 	hwprintf(&(conn->curbwin->nwin), C(IMWIN,TEXT), "%s%s<br>", (strncmp(args[0], "'s ", 3) == 0)?"":" ", args[0]);
@@ -879,10 +879,10 @@ static void do_open(conn_t *conn, buddylist_t *blist, const int added) {
 	bupdate();
 }
 
-CONIOFUNC(open) {
-CONIOALIA(window)
-CONIODESC(Open a query window for an existing or new buddy by account)
-CONIOAREQ(account,name)
+UAFUNC(open) {
+UAALIA(window)
+UADESC(Open a query window for an existing or new buddy by account)
+UAAREQ(account,name)
 	buddylist_t *blist;
 	int	added;
 
@@ -901,9 +901,9 @@ CONIOAREQ(account,name)
 	do_open(conn, blist, added);
 }
 
-CONIOFUNC(openbuddy) {
-CONIODESC(Open a query window for an existing buddy by account or friendly name)
-CONIOAREQ(buddy,name)
+UAFUNC(openbuddy) {
+UADESC(Open a query window for an existing buddy by account or friendly name)
+UAAREQ(buddy,name)
 	buddylist_t *blist;
 
 	if (bgetanywin(conn, args[0]) != NULL) {
@@ -920,12 +920,12 @@ CONIOAREQ(buddy,name)
 	do_open(conn, blist, 0);
 }
 
-CONIOFUNC(close) {
-CONIOALIA(endwin)
-CONIOALIA(part)
-CONIODESC(Close a query window or leave a discussion)
-CONIOAOPT(window,winname)
-CONIOWHER(NOTSTATUS)
+UAFUNC(close) {
+UAALIA(endwin)
+UAALIA(part)
+UADESC(Close a query window or leave a discussion)
+UAAOPT(window,winname)
+UAWHER(NOTSTATUS)
 	buddywin_t	*bwin;
 
 	if (argc == 1) {
@@ -941,8 +941,8 @@ CONIOWHER(NOTSTATUS)
 	bwin = NULL;
 }
 
-CONIOFUNC(closeall) {
-CONIODESC(Close stale windows for offline buddies)
+UAFUNC(closeall) {
+UADESC(Close stale windows for offline buddies)
 	int	i, l;
 	buddywin_t	*bwin;
 
@@ -969,11 +969,11 @@ CONIODESC(Close stale windows for offline buddies)
 	}
 }
 
-CONIOFUNC(ctcp) {
-CONIODESC(Send Client To Client Protocol request to someone)
-CONIOAREQ(window,name)
-CONIOAOPT(string,requestname)
-CONIOAOPT(string,message)
+UAFUNC(ctcp) {
+UADESC(Send Client To Client Protocol request to someone)
+UAAREQ(window,name)
+UAAOPT(string,requestname)
+UAAOPT(string,message)
 	if (argc == 1)
 		firetalk_subcode_send_request(conn->conn, args[0],
 			"VERSION", NULL);
@@ -985,8 +985,8 @@ CONIOAOPT(string,message)
 			args[1], args[2]);
 }
 
-CONIOFUNC(clear) {
-CONIODESC(Temporarily blank the scrollback for the current window)
+UAFUNC(clear) {
+UADESC(Temporarily blank the scrollback for the current window)
 	win_t	*win;
 	int	i;
 
@@ -1001,8 +1001,8 @@ CONIODESC(Temporarily blank the scrollback for the current window)
 		nw_printf(win, 0, 0, "\n");
 }
 
-CONIOFUNC(clearall) {
-CONIODESC(Perform a /clear on all open windows)
+UAFUNC(clearall) {
+UADESC(Perform a /clear on all open windows)
 	conn_t	*c = conn;
 
 	do {
@@ -1020,15 +1020,15 @@ CONIODESC(Perform a /clear on all open windows)
 	} while ((c = c->next) != conn);
 }
 
-CONIOFUNC(load) {
-CONIODESC(Load a command file (such as .naimrc))
-CONIOAREQ(filename,filename)
+UAFUNC(load) {
+UADESC(Load a command file (such as .naimrc))
+UAAREQ(filename,filename)
 	naim_read_config(args[0]);
 }
 
-CONIOFUNC(away) {
-CONIODESC(Set or unset away status)
-CONIOAOPT(string,message)
+UAFUNC(away) {
+UADESC(Set or unset away status)
+UAAOPT(string,message)
 	if (argc == 0) {
 		if (awaytime > 0)
 			unsetaway();
@@ -1146,10 +1146,10 @@ static int do_buddylist(conn_t *conn, const int showon, const int showoff) {
 	return(0);
 }
 
-CONIOFUNC(names) {
-CONIOALIA(buddylist)
-CONIODESC(Display buddy list or members of a chat)
-CONIOAOPT(chat,chat)
+UAFUNC(names) {
+UAALIA(buddylist)
+UADESC(Display buddy list or members of a chat)
+UAAOPT(chat,chat)
 	const char *chat;
 	buddywin_t *bwin;
 
@@ -1193,10 +1193,10 @@ CONIOAOPT(chat,chat)
 	}
 }
 
-CONIOFUNC(join) {
-CONIODESC(Participate in a chat)
-CONIOAREQ(string,chat)
-CONIOAOPT(string,key)
+UAFUNC(join) {
+UADESC(Participate in a chat)
+UAAREQ(string,chat)
+UAAOPT(string,key)
 	buddywin_t	*cwin;
 
 	if (((cwin = bgetwin(conn, firetalk_chat_normalize(conn->conn, args[0]), CHAT)) == NULL) || (cwin->e.chat->offline != 0)) {
@@ -1222,10 +1222,10 @@ CONIOAOPT(string,key)
 	}
 }
 
-CONIOFUNC(namebuddy) {
-CONIODESC(Change the real name for a buddy)
-CONIOAREQ(account,name)
-CONIOAOPT(string,realname)
+UAFUNC(namebuddy) {
+UADESC(Change the real name for a buddy)
+UAAREQ(account,name)
+UAAOPT(string,realname)
 	if (argc == 1)
 		ua_addbuddy(conn, 1, args);
 	else {
@@ -1236,10 +1236,10 @@ CONIOAOPT(string,realname)
 	}
 }
 
-CONIOFUNC(groupbuddy) {
-CONIODESC(Change the group membership for a buddy)
-CONIOAREQ(account,account)
-CONIOAOPT(string,group)
+UAFUNC(groupbuddy) {
+UADESC(Change the group membership for a buddy)
+UAAREQ(account,account)
+UAAOPT(string,group)
 	if (argc == 1)
 		ua_addbuddy(conn, 1, args);
 	else {
@@ -1250,11 +1250,11 @@ CONIOAOPT(string,group)
 	}
 }
 
-CONIOFUNC(tagbuddy) {
-CONIOALIA(tag)
-CONIODESC(Mark a buddy with a reminder message)
-CONIOAREQ(account,name)
-CONIOAOPT(string,note)
+UAFUNC(tagbuddy) {
+UAALIA(tag)
+UADESC(Mark a buddy with a reminder message)
+UAAREQ(account,name)
+UAAOPT(string,note)
 	buddylist_t *blist = rgetlist(conn, args[0]);
 
 	if (blist == NULL) {
@@ -1276,9 +1276,9 @@ CONIOAOPT(string,note)
 			user_name(NULL, 0, conn, blist));
 }
 
-CONIOFUNC(delbuddy) {
-CONIODESC(Remove someone from your buddy list)
-CONIOAOPT(account,name)
+UAFUNC(delbuddy) {
+UADESC(Remove someone from your buddy list)
+UAAOPT(account,name)
 	buddylist_t *blist;
 	const char *name;
 
@@ -1317,30 +1317,30 @@ CONIOAOPT(account,name)
 	}
 }
 
-CONIOFUNC(op) {
-CONIODESC(Give operator privilege)
-CONIOAREQ(cmember,name)
-CONIOWHER(INCHAT)
+UAFUNC(op) {
+UADESC(Give operator privilege)
+UAAREQ(cmember,name)
+UAWHER(INCHAT)
 	fte_t	ret;
 
 	if ((ret = firetalk_chat_op(conn->conn, conn->curbwin->winname, args[0])) != FE_SUCCESS)
 		echof(conn, "OP", "Unable to op %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
-CONIOFUNC(deop) {
-CONIODESC(Remove operator privilege)
-CONIOAREQ(cmember,name)
-CONIOWHER(INCHAT)
+UAFUNC(deop) {
+UADESC(Remove operator privilege)
+UAAREQ(cmember,name)
+UAWHER(INCHAT)
 	fte_t	ret;
 
 	if ((ret = firetalk_chat_deop(conn->conn, conn->curbwin->winname, args[0])) != FE_SUCCESS)
 		echof(conn, "DEOP", "Unable to deop %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
-CONIOFUNC(topic) {
-CONIODESC(View or change current chat topic)
-CONIOAOPT(string,topic)
-CONIOWHER(INCHAT)
+UAFUNC(topic) {
+UADESC(View or change current chat topic)
+UAAOPT(string,topic)
+UAWHER(INCHAT)
 	if (argc == 0) {
 		if (conn->curbwin->blurb == NULL)
 			echof(conn, NULL, "No topic set.\n");
@@ -1356,22 +1356,22 @@ CONIOWHER(INCHAT)
 	}
 }
 
-CONIOFUNC(kick) {
-CONIODESC(Temporarily remove someone from a chat)
-CONIOAREQ(cmember,name)
-CONIOAOPT(string,reason)
-CONIOWHER(INCHAT)
+UAFUNC(kick) {
+UADESC(Temporarily remove someone from a chat)
+UAAREQ(cmember,name)
+UAAOPT(string,reason)
+UAWHER(INCHAT)
 	fte_t	ret;
 
 	if ((ret = firetalk_chat_kick(conn->conn, conn->curbwin->winname, args[0], (argc == 2)?args[1]:conn->sn)) != FE_SUCCESS)
 		echof(conn, "KICK", "Unable to kick %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
-CONIOFUNC(invite) {
-CONIODESC(Invite someone to a chat)
-CONIOAREQ(account,name)
-CONIOAOPT(string,chat)
-CONIOWHER(INCHAT)
+UAFUNC(invite) {
+UADESC(Invite someone to a chat)
+UAAREQ(account,name)
+UAAOPT(string,chat)
+UAWHER(INCHAT)
 	fte_t	ret;
 
 	if ((ret = firetalk_chat_invite(conn->conn, conn->curbwin->winname, args[0],
@@ -1379,20 +1379,20 @@ CONIOWHER(INCHAT)
 		echof(conn, "INVITE", "Unable to invite %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
-CONIOFUNC(help) {
-CONIOALIA(about)
-CONIODESC(Display topical help on using naim)
-CONIOAOPT(string,topic)
+UAFUNC(help) {
+UAALIA(about)
+UADESC(Display topical help on using naim)
+UAAOPT(string,topic)
 	if (argc == 0)
 		help_printhelp(NULL);
 	else
 		help_printhelp(args[0]);
 }
 
-CONIOFUNC(unblock) {
-CONIOALIA(unignore)
-CONIODESC(Remove someone from the ignore list)
-CONIOAREQ(idiot,name)
+UAFUNC(unblock) {
+UAALIA(unignore)
+UADESC(Remove someone from the ignore list)
+UAAREQ(idiot,name)
 	echof(conn, NULL, "No longer blocking <font color=\"#00FFFF\">%s</font>.\n", args[0]);
 	if (conn->online > 0)
 		if (firetalk_im_remove_deny(conn->conn, args[0]) != FE_SUCCESS)
@@ -1401,20 +1401,20 @@ CONIOAREQ(idiot,name)
 	rdelidiot(conn, args[0]);
 }
 
-CONIOFUNC(block) {
-CONIODESC(Server-enforced /ignore)
-CONIOAREQ(account,name)
-CONIOAOPT(string,reason)
+UAFUNC(block) {
+UADESC(Server-enforced /ignore)
+UAAREQ(account,name)
+UAAOPT(string,reason)
 	fte_t	ret;
 
 	if ((ret = firetalk_im_add_deny(conn->conn, args[0])) != FE_SUCCESS)
 		echof(conn, "BLOCK", "Unable to block %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
-CONIOFUNC(ignore) {
-CONIODESC(Ignore all private/public messages)
-CONIOAOPT(account,name)
-CONIOAOPT(string,reason)
+UAFUNC(ignore) {
+UADESC(Ignore all private/public messages)
+UAAOPT(account,name)
+UAAOPT(string,reason)
 	if (argc == 0) {
 		ignorelist_t
 			*idiotar = conn->idiotar;
@@ -1449,10 +1449,10 @@ CONIOAOPT(string,reason)
 }
 
 //extern void	(*ua_chains)();
-CONIOFUNC(chains) {
-CONIOALIA(tables)
-CONIODESC(Manipulate data control tables)
-CONIOAOPT(string,chain)
+UAFUNC(chains) {
+UAALIA(tables)
+UADESC(Manipulate data control tables)
+UAAOPT(string,chain)
 	char	buf[1024];
 	chain_t	*chain;
 	lt_dlhandle self;
@@ -1509,11 +1509,11 @@ CONIOAOPT(string,chain)
 	}
 }
 
-CONIOFUNC(filter) {
-CONIODESC(Manipulate content filters)
-CONIOAOPT(string,table)
-CONIOAOPT(string,target)
-CONIOAOPT(string,action)
+UAFUNC(filter) {
+UADESC(Manipulate content filters)
+UAAOPT(string,table)
+UAAOPT(string,target)
+UAAOPT(string,action)
 	if (argc == 0) {
 		echof(conn, NULL, "Current filter tables: REPLACE.\n");
 		return;
@@ -1640,9 +1640,9 @@ static void ua_filter_defaults(void) {
 	}
 }
 
-CONIOFUNC(warn) {
-CONIODESC(Send a warning about someone)
-CONIOAREQ(account,name)
+UAFUNC(warn) {
+UADESC(Send a warning about someone)
+UAAREQ(account,name)
 	fte_t	ret;
 
 	if ((ret = firetalk_im_evil(conn->conn, args[0])) == FE_SUCCESS)
@@ -1651,9 +1651,9 @@ CONIOAREQ(account,name)
 		echof(conn, "WARN", "Unable to warn %s: %s.\n", args[0], firetalk_strerror(ret));
 }
 
-CONIOFUNC(nick) {
-CONIODESC(Change or reformat your name)
-CONIOAREQ(string,name)
+UAFUNC(nick) {
+UADESC(Change or reformat your name)
+UAAREQ(string,name)
 	if (conn->online > 0) {
 		fte_t	ret;
 
@@ -1663,15 +1663,15 @@ CONIOAREQ(string,name)
 		echof(conn, "NICK", "Try <font color=\"#00FF00\">/connect %s</font>.\n", args[0]);
 }
 
-CONIOFUNC(echo) {
-CONIODESC(Display something on the screen with $-variable expansion)
-CONIOAREQ(string,script)
+UAFUNC(echo) {
+UADESC(Display something on the screen with $-variable expansion)
+UAAREQ(string,script)
 	echof(conn, NULL, "%s\n", script_expand(args[0]));
 }
 
-CONIOFUNC(readprofile) {
-CONIODESC(Read your profile from disk)
-CONIOAREQ(filename,filename)
+UAFUNC(readprofile) {
+UADESC(Read your profile from disk)
+UAAREQ(filename,filename)
 	const char *filename = args[0];
 	struct stat statbuf;
 	size_t	len;
@@ -1715,10 +1715,10 @@ CONIOAREQ(filename,filename)
 		naim_set_info(conn, conn->profile);
 }
 
-CONIOFUNC(accept) {
-CONIODESC(EXPERIMENTAL Accept a file transfer request in the current window)
-CONIOAREQ(window,filename)
-CONIOWHER(NOTSTATUS)
+UAFUNC(accept) {
+UADESC(EXPERIMENTAL Accept a file transfer request in the current window)
+UAAREQ(window,filename)
+UAWHER(NOTSTATUS)
 	if (conn->curbwin->et != TRANSFER) {
 		echof(conn, "ACCEPT", "You must be in a file transfer window.\n");
 		return;
@@ -1728,10 +1728,10 @@ CONIOWHER(NOTSTATUS)
 	STRREPLACE(conn->curbwin->e.transfer->local, args[0]);
 }
 
-CONIOFUNC(offer) {
-CONIODESC(EXPERIMENTAL Offer a file transfer request to someone)
-CONIOAREQ(account,name)
-CONIOAREQ(filename,filename)
+UAFUNC(offer) {
+UADESC(EXPERIMENTAL Offer a file transfer request to someone)
+UAAREQ(account,name)
+UAAREQ(filename,filename)
 	const char
 		*from = args[0],
 		*filename = args[1];
@@ -1751,11 +1751,11 @@ CONIOAREQ(filename,filename)
 			from, filename);
 }
 
-CONIOFUNC(setcol) {
-CONIODESC(View or change display colors)
-CONIOAOPT(string,eventname)
-CONIOAOPT(string,colorname)
-CONIOAOPT(string,colormodifier)
+UAFUNC(setcol) {
+UADESC(View or change display colors)
+UAAOPT(string,eventname)
+UAAOPT(string,colorname)
+UAAOPT(string,colormodifier)
 	int	i, col;
 
 	if (argc == 0) {
@@ -1850,9 +1850,9 @@ CONIOAOPT(string,colormodifier)
 	}
 }
 
-CONIOFUNC(setpriv) {
-CONIODESC(Change your privacy mode)
-CONIOAREQ(string,mode)
+UAFUNC(setpriv) {
+UADESC(Change your privacy mode)
+UAAREQ(string,mode)
 	fte_t	ret;
 
 	if ((ret = firetalk_set_privacy(conn->conn, args[0])) == FE_SUCCESS)
@@ -1861,10 +1861,10 @@ CONIOAREQ(string,mode)
 		echof(conn, "SETPRIV", "Privacy mode not changed: %s.\n", firetalk_strerror(ret));
 }
 
-CONIOFUNC(bind) {
-CONIODESC(View or change key bindings)
-CONIOAOPT(string,keyname)
-CONIOAOPT(string,script)
+UAFUNC(bind) {
+UADESC(View or change key bindings)
+UAAOPT(string,keyname)
+UAAOPT(string,script)
 	if (argc == 0)
 		conio_bind_list();
 	else if (argc == 1)
@@ -1873,19 +1873,19 @@ CONIOAOPT(string,script)
 		conio_bind_doset(conn, args[0], args[1]);
 }
 
-CONIOFUNC(alias) {
-CONIODESC(Create a new command alias)
-CONIOAREQ(string,commandname)
-CONIOAREQ(string,script)
+UAFUNC(alias) {
+UADESC(Create a new command alias)
+UAAREQ(string,commandname)
+UAAREQ(string,script)
 	alias_makealias(args[0], args[1]);
 	echof(conn, NULL, "Aliased <font color=\"#00FF00\">/%s</font> to: %s\n", args[0], args[1]);
 }
 
-CONIOFUNC(set) {
-CONIODESC(View or change the value of a configuration or session variable; see /help settings)
-CONIOAOPT(varname,varname)
-CONIOAOPT(string,value)
-CONIOAOPT(string,dummy)
+UAFUNC(set) {
+UADESC(View or change the value of a configuration or session variable; see /help settings)
+UAAOPT(varname,varname)
+UAAOPT(string,value)
+UAAOPT(string,dummy)
 	if (argc == 0)
 		set_setvar(NULL, NULL);
 	else if (argc == 1)
@@ -1906,10 +1906,10 @@ static void ua_listprotocols(conn_t *conn, const char *prefix) {
 		echof(conn, prefix, "&nbsp; %s\n", str);
 }
 
-CONIOFUNC(newconn) {
-CONIODESC(Open a new connection window)
-CONIOAOPT(string,label)
-CONIOAOPT(string,protocol)
+UAFUNC(newconn) {
+UADESC(Open a new connection window)
+UAAOPT(string,label)
+UAAOPT(string,protocol)
 	int	i, proto;
 	conn_t	*newconn = curconn;
 	const char *protostr;
@@ -1991,9 +1991,9 @@ CONIOAOPT(string,protocol)
 	script_hook_newconn(newconn);
 }
 
-CONIOFUNC(delconn) {
-CONIODESC(Close a connection window)
-CONIOAOPT(string,label)
+UAFUNC(delconn) {
+UADESC(Close a connection window)
+UAAOPT(string,label)
 	if (curconn->next == curconn) {
 		echof(conn, "DELCONN", "You must always have at least one connection open at all times.\n");
 		return;
@@ -2019,10 +2019,10 @@ CONIOAOPT(string,label)
 	do_delconn(conn);
 }
 
-CONIOFUNC(server) {
-CONIODESC(Connect to a service)
-CONIOAOPT(string,server)
-CONIOAOPT(int,port)
+UAFUNC(server) {
+UADESC(Connect to a service)
+UAAOPT(string,server)
+UAAOPT(int,port)
 	const char	*na[3];
 
 	if (argc == 0) {
@@ -2047,8 +2047,8 @@ CONIOAOPT(int,port)
 	ua_connect(conn, argc+1, na);
 }
 
-CONIOFUNC(disconnect) {
-CONIODESC(Disconnect from a server)
+UAFUNC(disconnect) {
+UADESC(Disconnect from a server)
 	if (conn->online <= 0)
 		echof(conn, "DISCONNECT", "You aren't connected.\n");
 	else if (firetalk_disconnect(conn->conn) == FE_SUCCESS) {
@@ -2058,9 +2058,9 @@ CONIODESC(Disconnect from a server)
 	conn->online = 0;
 }
 
-CONIOFUNC(winlist) {
-CONIODESC(Switch the window list window between always visible or always hidden or auto-hidden)
-CONIOAOPT(string,visibility)
+UAFUNC(winlist) {
+UADESC(Switch the window list window between always visible or always hidden or auto-hidden)
+UAAOPT(string,visibility)
 	if (argc == 0) {
 		if (changetime == -1)
 			echof(conn, NULL, "Window list window is always hidden (possible values are HIDDEN, VISIBLE, or AUTO).\n");
@@ -2157,9 +2157,9 @@ static int exec_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd
 	return(HOOK_CONTINUE);
 }
 
-CONIOFUNC(exec) {
-CONIODESC(Execute a shell command; as in /exec -o uname -a)
-CONIOAREQ(string,command)
+UAFUNC(exec) {
+UADESC(Execute a shell command; as in /exec -o uname -a)
+UAAREQ(string,command)
 	int	sayit = (strncmp(args[0], "-o ", 3) == 0),
 		pi[2];
 	pid_t	pid;
@@ -2205,8 +2205,8 @@ CONIOAREQ(string,command)
 #endif
 
 #ifdef ALLOW_DETACH
-CONIOFUNC(detach) {
-CONIODESC(Disconnect from the current session)
+UAFUNC(detach) {
+UADESC(Disconnect from the current session)
 	if (sty == NULL)
 		echof(conn, "DETACH", "You can only <font color=\"#00FF00\">/detach</font> when naim is run under screen.\n");
 	else {
@@ -2257,8 +2257,8 @@ static int modlist_helper(lt_dlhandle mod, lt_ptr data) {
 	return(0);
 }
 
-CONIOFUNC(dlsym) {
-CONIOAREQ(string,symbol)
+UAFUNC(dlsym) {
+UAAREQ(string,symbol)
 	lt_dlhandle mod;
 	lt_ptr	ptr;
 
@@ -2275,8 +2275,8 @@ CONIOAREQ(string,symbol)
 	lt_dlclose(mod);
 }
 
-CONIOFUNC(modlist) {
-CONIODESC(Search for and list all potential and resident naim modules)
+UAFUNC(modlist) {
+UADESC(Search for and list all potential and resident naim modules)
 	echof(conn, NULL, "Modules found in the default search path:\n");
 	lt_dlforeachfile(NULL, modlist_filehelper, conn);
 	echof(conn, NULL, "Additional modules can be loaded using their explicit paths, as in <font color=\"#00FF00\">/modload %s/mods/mymod.la</font>.\n",
@@ -2286,10 +2286,10 @@ CONIODESC(Search for and list all potential and resident naim modules)
 	echof(conn, NULL, "See <font color=\"#00FF00\">/help modload</font> for more information.\n");
 }
 
-CONIOFUNC(modload) {
-CONIODESC(Load and initialize a dynamic module)
-CONIOAREQ(filename,module)
-CONIOAOPT(string,options)
+UAFUNC(modload) {
+UADESC(Load and initialize a dynamic module)
+UAAREQ(filename,module)
+UAAOPT(string,options)
 	lt_dlhandle mod;
 	const lt_dlinfo
 		*dlinfo;
@@ -2336,9 +2336,9 @@ CONIOAOPT(string,options)
 			dlinfo->name, args[0], lt_dlerror());
 }
 
-CONIOFUNC(modunload) {
-CONIODESC(Deinitialize and unload a resident module)
-CONIOAREQ(string,module)
+UAFUNC(modunload) {
+UADESC(Deinitialize and unload a resident module)
+UAAREQ(string,module)
 	lt_dlhandle mod;
 
 	for (mod = lt_dlhandle_next(NULL); mod != NULL; mod = lt_dlhandle_next(mod)) {
@@ -2367,9 +2367,9 @@ CONIOAREQ(string,module)
 	echof(conn, "MODUNLOAD", "No module named %s loaded.\n", args[0]);
 }
 
-CONIOFUNC(resize) {
-CONIODESC(Resize all windows)
-CONIOAOPT(int,height)
+UAFUNC(resize) {
+UADESC(Resize all windows)
+UAAOPT(int,height)
 	char	buf[20];
 	int	scrollback;
 
@@ -2395,9 +2395,9 @@ CONIOAOPT(int,height)
 }
 
 //extern void	(*ua_status)();
-CONIOFUNC(status) {
-CONIODESC(Connection status report)
-CONIOAOPT(string,connection)
+UAFUNC(status) {
+UADESC(Connection status report)
+UAAOPT(string,connection)
 	buddywin_t	*bwin;
 	conn_t	*c;
 	int	discussions = 0,

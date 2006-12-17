@@ -1,7 +1,11 @@
+BUILT_SOURCES = \
+	default_lua.h naim_commands.h
+
 DISTCLEANFILES = \
-	default_lua.h
+	${BUILT_SOURCES}
 
 EXTRA_DIST = \
+	bindcmds.sh \
 	cmpllua.sh \
 	default.lua \
 	examples/eliza.lua \
@@ -17,28 +21,19 @@ liblua_la_SOURCES = \
 	lua511/ldo.h lua511/llex.h lua511/lobject.h lua511/lstate.h lua511/ltm.h lua511/lualib.h lua511/lzio.h lua511/lcode.h \
 	lua511/lfunc.h lua511/llimits.h lua511/lopcodes.h lua511/lstring.h lua511/lua.h lua511/lundump.h
 liblua_la_LIBADD = -lm
+
 libnlua_la_SOURCES = \
-	moon.c moon_conn.c moon_strings.c moon-int.h
+	commands.c conn.c moon.c strings.c moon-int.h
 libnlua_la_LIBADD = liblua.la
+libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk
 
 noinst_PROGRAMS = lua
 lua_SOURCES = \
 	lua511/lua.c
 lua_LDADD = liblua.la
 
-INCLUDES = -I${srcdir}/lua511
-
 default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
 
-moon.lo: ${srcdir}/moon.c default_lua.h
-	@echo $(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
-	@$(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
-
-moon_conn.lo: ${srcdir}/moon_conn.c
-	@echo $(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon_conn.c' || echo '$(srcdir)/'`moon_conn.c
-	@$(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon_conn.c' || echo '$(srcdir)/'`moon_conn.c
-
-moon_strings.lo: ${srcdir}/moon_strings.c
-	@echo $(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon_strings.c' || echo '$(srcdir)/'`moon_strings.c
-	@$(LTCOMPILE) -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -c -o $@ `test -f 'moon_strings.c' || echo '$(srcdir)/'`moon_strings.c
+naim_commands.h: ${top_srcdir}/src/commands.c
+	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS} -I${srcdir}/lua511 -I${top_srcdir}/src -I${top_srcdir}/include -I${top_srcdir}/libfiretalk" ${srcdir}/bindcmds.sh > naim_commands.h

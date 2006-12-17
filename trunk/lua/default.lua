@@ -56,10 +56,11 @@ naim.connections = {}
 
 setmetatable(naim.connections, naim.internal.rometatable("connections"))
 
-function naim.internal.newConn(winname, handle)
+function naim.internal.newconn(winname, handle)
 	setmetatable(naim.connections, {})
 	naim.connections[winname] = {
 		handle = handle,
+		name = winname,
 		windows = {},
 		buddies = {},
 	}
@@ -69,7 +70,7 @@ function naim.internal.newConn(winname, handle)
 	setmetatable(naim.connections, naim.internal.rometatable("connections"))
 end
 
-function naim.internal.delConn(winname)
+function naim.internal.delconn(winname)
 	setmetatable(naim.connections, {})
 	naim.connections[winname] = nil
 	setmetatable(naim.connections, naim.internal.rometatable("connections"))

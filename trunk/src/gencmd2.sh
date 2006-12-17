@@ -2,8 +2,8 @@
 
 echo 'Automatically generated list of commands for naim.'
 echo '#include "commands.c"' \
-	| ${CPP} -DCONIOCPP -dD - \
-	| sed 's/^CONIO\(....\)(\(.*\)).*$/\1,\2/g' \
+	| ${CPP} -DUACPP -dD - \
+	| sed 's/^UA\(....\)(\(.*\)).*$/\1,\2/g' \
 	| ${AWK} -F ',' '{
 		if ((inalia == 1) && ($1 != "ALIA")) {
 			inalia = 0;

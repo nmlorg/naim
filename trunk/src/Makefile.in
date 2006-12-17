@@ -83,14 +83,17 @@ am__naim_SOURCES_DIST = alias.c atomizer.c buddy.c commands.c conio.c \
 	echof.c events.c fireio.c hamster.c help.h help.c helpcmd.c \
 	hwprintf.c linux_vsprintf.c main.c naim-int.h rc.c rodents.c \
 	set.c win.c main_stub.c
-am__objects_2 = alias.$(OBJEXT) atomizer.$(OBJEXT) buddy.$(OBJEXT) \
-	commands.$(OBJEXT) conio.$(OBJEXT) echof.$(OBJEXT) \
-	events.$(OBJEXT) fireio.$(OBJEXT) hamster.$(OBJEXT) \
-	help.$(OBJEXT) helpcmd.$(OBJEXT) hwprintf.$(OBJEXT) \
-	linux_vsprintf.$(OBJEXT) main.$(OBJEXT) rc.$(OBJEXT) \
-	rodents.$(OBJEXT) set.$(OBJEXT) win.$(OBJEXT)
+am__objects_2 = naim-alias.$(OBJEXT) naim-atomizer.$(OBJEXT) \
+	naim-buddy.$(OBJEXT) naim-commands.$(OBJEXT) \
+	naim-conio.$(OBJEXT) naim-echof.$(OBJEXT) \
+	naim-events.$(OBJEXT) naim-fireio.$(OBJEXT) \
+	naim-hamster.$(OBJEXT) naim-help.$(OBJEXT) \
+	naim-helpcmd.$(OBJEXT) naim-hwprintf.$(OBJEXT) \
+	naim-linux_vsprintf.$(OBJEXT) naim-main.$(OBJEXT) \
+	naim-rc.$(OBJEXT) naim-rodents.$(OBJEXT) naim-set.$(OBJEXT) \
+	naim-win.$(OBJEXT)
 @CYGWIN_FALSE@am__objects_3 = $(am__objects_2)
-@CYGWIN_TRUE@am__objects_3 = main_stub.$(OBJEXT)
+@CYGWIN_TRUE@am__objects_3 = naim-main_stub.$(OBJEXT)
 am_naim_OBJECTS = $(am__objects_3)
 naim_OBJECTS = $(am_naim_OBJECTS)
 @CYGWIN_FALSE@am__DEPENDENCIES_1 = ../libfiretalk/libfiretalk.a \
@@ -228,10 +231,13 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 nodist_pkgdoc_DATA = commands.txt 
 pkgdoc_DATA = keyboard.txt
-DISTCLEANFILES = \
+BUILT_SOURCES = \
 	conio_keys.h \
 	conio_cmds.h \
 	commands.txt
+
+DISTCLEANFILES = \
+	${BUILT_SOURCES}
 
 EXTRA_DIST = \
 	${pkgdoc_DATA} \
@@ -277,6 +283,7 @@ NAIM_CORE = \
 @CYGWIN_TRUE@lib_LTLIBRARIES = libnaim_core.la
 @CYGWIN_TRUE@libnaim_core_la_SOURCES = ${NAIM_CORE}
 @CYGWIN_TRUE@libnaim_core_la_CFLAGS = ${AM_CFLAGS} -DDLSEARCHPATH='"${pkgmoddir}"'
+@CYGWIN_TRUE@libnaim_core_la_CPPFLAGS = -DDLSEARCHPATH='"${pkgmoddir}"'
 @CYGWIN_TRUE@libnaim_core_la_LIBADD = \
 @CYGWIN_TRUE@	@LIBLTDL@ ../lua/libnlua.la \
 @CYGWIN_TRUE@	@CURSESLIB@ @NETLIB@
@@ -284,11 +291,12 @@ NAIM_CORE = \
 @CYGWIN_TRUE@libnaim_core_la_LDFLAGS = -export-dynamic -no-undefined \
 @CYGWIN_TRUE@	-Wl,--whole-archive -Wl,../libfiretalk/libfiretalk.a -Wl,--no-whole-archive
 
+@CYGWIN_FALSE@naim_CPPFLAGS = -DDLSEARCHPATH='"${pkgmoddir}"'
 naim_SOURCES = ${NAIM_SOURCES}
 naim_LDADD = ${NAIM_LDADD}
 naim_LDFLAGS = -dlopen self -export-dynamic -no-undefined
 INCLUDES = -I${top_srcdir}/include -I${top_srcdir}/libfiretalk ${INCLTDL}
-all: config.h
+all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
@@ -422,47 +430,182 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+.c.o:
+	$(COMPILE) -c -o $@ $<
+
 .c.obj:
 	$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
+.c.lo:
+	$(LTCOMPILE) -c -o $@ $<
+
 libnaim_core_la-alias.lo: alias.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-alias.lo `test -f 'alias.c' || echo '$(srcdir)/'`alias.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-alias.lo `test -f 'alias.c' || echo '$(srcdir)/'`alias.c
 
 libnaim_core_la-atomizer.lo: atomizer.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-atomizer.lo `test -f 'atomizer.c' || echo '$(srcdir)/'`atomizer.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-atomizer.lo `test -f 'atomizer.c' || echo '$(srcdir)/'`atomizer.c
 
 libnaim_core_la-buddy.lo: buddy.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-buddy.lo `test -f 'buddy.c' || echo '$(srcdir)/'`buddy.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-buddy.lo `test -f 'buddy.c' || echo '$(srcdir)/'`buddy.c
+
+libnaim_core_la-commands.lo: commands.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-commands.lo `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
+
+libnaim_core_la-conio.lo: conio.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-conio.lo `test -f 'conio.c' || echo '$(srcdir)/'`conio.c
 
 libnaim_core_la-echof.lo: echof.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-echof.lo `test -f 'echof.c' || echo '$(srcdir)/'`echof.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-echof.lo `test -f 'echof.c' || echo '$(srcdir)/'`echof.c
 
 libnaim_core_la-events.lo: events.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-events.lo `test -f 'events.c' || echo '$(srcdir)/'`events.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-events.lo `test -f 'events.c' || echo '$(srcdir)/'`events.c
+
+libnaim_core_la-fireio.lo: fireio.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-fireio.lo `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
 
 libnaim_core_la-hamster.lo: hamster.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-hamster.lo `test -f 'hamster.c' || echo '$(srcdir)/'`hamster.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-hamster.lo `test -f 'hamster.c' || echo '$(srcdir)/'`hamster.c
 
 libnaim_core_la-help.lo: help.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-help.lo `test -f 'help.c' || echo '$(srcdir)/'`help.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-help.lo `test -f 'help.c' || echo '$(srcdir)/'`help.c
+
+libnaim_core_la-helpcmd.lo: helpcmd.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-helpcmd.lo `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
 
 libnaim_core_la-hwprintf.lo: hwprintf.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-hwprintf.lo `test -f 'hwprintf.c' || echo '$(srcdir)/'`hwprintf.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-hwprintf.lo `test -f 'hwprintf.c' || echo '$(srcdir)/'`hwprintf.c
 
 libnaim_core_la-linux_vsprintf.lo: linux_vsprintf.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-linux_vsprintf.lo `test -f 'linux_vsprintf.c' || echo '$(srcdir)/'`linux_vsprintf.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-linux_vsprintf.lo `test -f 'linux_vsprintf.c' || echo '$(srcdir)/'`linux_vsprintf.c
+
+libnaim_core_la-main.lo: main.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-main.lo `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
 libnaim_core_la-rc.lo: rc.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-rc.lo `test -f 'rc.c' || echo '$(srcdir)/'`rc.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-rc.lo `test -f 'rc.c' || echo '$(srcdir)/'`rc.c
 
 libnaim_core_la-rodents.lo: rodents.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-rodents.lo `test -f 'rodents.c' || echo '$(srcdir)/'`rodents.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-rodents.lo `test -f 'rodents.c' || echo '$(srcdir)/'`rodents.c
 
 libnaim_core_la-set.lo: set.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-set.lo `test -f 'set.c' || echo '$(srcdir)/'`set.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-set.lo `test -f 'set.c' || echo '$(srcdir)/'`set.c
 
 libnaim_core_la-win.lo: win.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-win.lo `test -f 'win.c' || echo '$(srcdir)/'`win.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnaim_core_la_CPPFLAGS) $(CPPFLAGS) $(libnaim_core_la_CFLAGS) $(CFLAGS) -c -o libnaim_core_la-win.lo `test -f 'win.c' || echo '$(srcdir)/'`win.c
+
+naim-alias.o: alias.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-alias.o `test -f 'alias.c' || echo '$(srcdir)/'`alias.c
+
+naim-alias.obj: alias.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-alias.obj `if test -f 'alias.c'; then $(CYGPATH_W) 'alias.c'; else $(CYGPATH_W) '$(srcdir)/alias.c'; fi`
+
+naim-atomizer.o: atomizer.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-atomizer.o `test -f 'atomizer.c' || echo '$(srcdir)/'`atomizer.c
+
+naim-atomizer.obj: atomizer.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-atomizer.obj `if test -f 'atomizer.c'; then $(CYGPATH_W) 'atomizer.c'; else $(CYGPATH_W) '$(srcdir)/atomizer.c'; fi`
+
+naim-buddy.o: buddy.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-buddy.o `test -f 'buddy.c' || echo '$(srcdir)/'`buddy.c
+
+naim-buddy.obj: buddy.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-buddy.obj `if test -f 'buddy.c'; then $(CYGPATH_W) 'buddy.c'; else $(CYGPATH_W) '$(srcdir)/buddy.c'; fi`
+
+naim-commands.o: commands.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-commands.o `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
+
+naim-commands.obj: commands.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-commands.obj `if test -f 'commands.c'; then $(CYGPATH_W) 'commands.c'; else $(CYGPATH_W) '$(srcdir)/commands.c'; fi`
+
+naim-conio.o: conio.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-conio.o `test -f 'conio.c' || echo '$(srcdir)/'`conio.c
+
+naim-conio.obj: conio.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-conio.obj `if test -f 'conio.c'; then $(CYGPATH_W) 'conio.c'; else $(CYGPATH_W) '$(srcdir)/conio.c'; fi`
+
+naim-echof.o: echof.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-echof.o `test -f 'echof.c' || echo '$(srcdir)/'`echof.c
+
+naim-echof.obj: echof.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-echof.obj `if test -f 'echof.c'; then $(CYGPATH_W) 'echof.c'; else $(CYGPATH_W) '$(srcdir)/echof.c'; fi`
+
+naim-events.o: events.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c
+
+naim-events.obj: events.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
+
+naim-fireio.o: fireio.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-fireio.o `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
+
+naim-fireio.obj: fireio.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-fireio.obj `if test -f 'fireio.c'; then $(CYGPATH_W) 'fireio.c'; else $(CYGPATH_W) '$(srcdir)/fireio.c'; fi`
+
+naim-hamster.o: hamster.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-hamster.o `test -f 'hamster.c' || echo '$(srcdir)/'`hamster.c
+
+naim-hamster.obj: hamster.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-hamster.obj `if test -f 'hamster.c'; then $(CYGPATH_W) 'hamster.c'; else $(CYGPATH_W) '$(srcdir)/hamster.c'; fi`
+
+naim-help.o: help.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-help.o `test -f 'help.c' || echo '$(srcdir)/'`help.c
+
+naim-help.obj: help.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-help.obj `if test -f 'help.c'; then $(CYGPATH_W) 'help.c'; else $(CYGPATH_W) '$(srcdir)/help.c'; fi`
+
+naim-helpcmd.o: helpcmd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-helpcmd.o `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
+
+naim-helpcmd.obj: helpcmd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-helpcmd.obj `if test -f 'helpcmd.c'; then $(CYGPATH_W) 'helpcmd.c'; else $(CYGPATH_W) '$(srcdir)/helpcmd.c'; fi`
+
+naim-hwprintf.o: hwprintf.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-hwprintf.o `test -f 'hwprintf.c' || echo '$(srcdir)/'`hwprintf.c
+
+naim-hwprintf.obj: hwprintf.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-hwprintf.obj `if test -f 'hwprintf.c'; then $(CYGPATH_W) 'hwprintf.c'; else $(CYGPATH_W) '$(srcdir)/hwprintf.c'; fi`
+
+naim-linux_vsprintf.o: linux_vsprintf.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-linux_vsprintf.o `test -f 'linux_vsprintf.c' || echo '$(srcdir)/'`linux_vsprintf.c
+
+naim-linux_vsprintf.obj: linux_vsprintf.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-linux_vsprintf.obj `if test -f 'linux_vsprintf.c'; then $(CYGPATH_W) 'linux_vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/linux_vsprintf.c'; fi`
+
+naim-main.o: main.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+
+naim-main.obj: main.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+
+naim-rc.o: rc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-rc.o `test -f 'rc.c' || echo '$(srcdir)/'`rc.c
+
+naim-rc.obj: rc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-rc.obj `if test -f 'rc.c'; then $(CYGPATH_W) 'rc.c'; else $(CYGPATH_W) '$(srcdir)/rc.c'; fi`
+
+naim-rodents.o: rodents.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-rodents.o `test -f 'rodents.c' || echo '$(srcdir)/'`rodents.c
+
+naim-rodents.obj: rodents.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-rodents.obj `if test -f 'rodents.c'; then $(CYGPATH_W) 'rodents.c'; else $(CYGPATH_W) '$(srcdir)/rodents.c'; fi`
+
+naim-set.o: set.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-set.o `test -f 'set.c' || echo '$(srcdir)/'`set.c
+
+naim-set.obj: set.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-set.obj `if test -f 'set.c'; then $(CYGPATH_W) 'set.c'; else $(CYGPATH_W) '$(srcdir)/set.c'; fi`
+
+naim-win.o: win.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-win.o `test -f 'win.c' || echo '$(srcdir)/'`win.c
+
+naim-win.obj: win.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-win.obj `if test -f 'win.c'; then $(CYGPATH_W) 'win.c'; else $(CYGPATH_W) '$(srcdir)/win.c'; fi`
+
+naim-main_stub.o: main_stub.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-main_stub.o `test -f 'main_stub.c' || echo '$(srcdir)/'`main_stub.c
+
+naim-main_stub.obj: main_stub.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(naim_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o naim-main_stub.obj `if test -f 'main_stub.c'; then $(CYGPATH_W) 'main_stub.c'; else $(CYGPATH_W) '$(srcdir)/main_stub.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -584,7 +727,8 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(DATA) config.h
 install-binPROGRAMS: install-libLTLIBRARIES
 
@@ -616,6 +760,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
@@ -684,7 +829,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
 	uninstall-nodist_pkgdocDATA uninstall-pkgdocDATA
 
 
-conio_keys.h: ${srcdir}/conio.c
+conio_keys.h: ${srcdir}/conio.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" SRCDIR=${srcdir} ${srcdir}/genkeys.sh > conio_keys.h
 
 conio_cmds.h: ${srcdir}/commands.c config.h
@@ -692,48 +837,6 @@ conio_cmds.h: ${srcdir}/commands.c config.h
 
 commands.txt: ${srcdir}/commands.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/gencmd2.sh > commands.txt
-
-commands.o: ${srcdir}/commands.c conio_cmds.h commands.txt
-	@echo $(COMPILE) -c `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
-	@$(COMPILE) -c `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
-libnaim_core_la-commands.lo: ${srcdir}/commands.c conio_cmds.h commands.txt
-	@echo $(LTCOMPILE) -c -o $@ `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
-	@$(LTCOMPILE) -c -o $@ `test -f 'commands.c' || echo '$(srcdir)/'`commands.c
-
-conio.o: ${srcdir}/conio.c conio_keys.h conio_cmds.h commands.txt
-	@echo $(COMPILE) -c `test -f 'conio.c' || echo '$(srcdir)/'`conio.c
-	@$(COMPILE) -c `test -f 'conio.c' || echo '$(srcdir)/'`conio.c
-libnaim_core_la-conio.lo: ${srcdir}/conio.c conio_keys.h conio_cmds.h commands.txt
-	@echo $(LTCOMPILE) -c -o $@ `test -f 'conio.c' || echo '$(srcdir)/'`conio.c
-	@$(LTCOMPILE) -c -o $@ `test -f 'conio.c' || echo '$(srcdir)/'`conio.c
-
-fireio.o: ${srcdir}/fireio.c conio_cmds.h
-	@echo $(COMPILE) -c `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
-	@$(COMPILE) -c `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
-libnaim_core_la-fireio.lo: ${srcdir}/fireio.c conio_cmds.h
-	@echo $(LTCOMPILE) -c -o $@ `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
-	@$(LTCOMPILE) -c -o $@ `test -f 'fireio.c' || echo '$(srcdir)/'`fireio.c
-
-helpcmd.o: ${srcdir}/helpcmd.c conio_cmds.h
-	@echo $(COMPILE) -c `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
-	@$(COMPILE) -c `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
-libnaim_core_la-helpcmd.lo: ${srcdir}/helpcmd.c conio_cmds.h
-	@echo $(LTCOMPILE) -c -o $@ `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
-	@$(LTCOMPILE) -c -o $@ `test -f 'helpcmd.c' || echo '$(srcdir)/'`helpcmd.c
-
-main.o: ${srcdir}/main.c
-	@echo $(COMPILE) -DDLSEARCHPATH='"${pkgmoddir}"' -c `test -f 'main.c' || echo '$(srcdir)/'`main.c
-	@$(COMPILE) -DDLSEARCHPATH='"${pkgmoddir}"' -c `test -f 'main.c' || echo '$(srcdir)/'`main.c
-libnaim_core_la-main.lo: ${srcdir}/main.c
-	@echo $(LTCOMPILE) -DDLSEARCHPATH='"${pkgmoddir}"' -c -o $@ `test -f 'main.c' || echo '$(srcdir)/'`main.c
-	@$(LTCOMPILE) -DDLSEARCHPATH='"${pkgmoddir}"' -c -o $@ `test -f 'main.c' || echo '$(srcdir)/'`main.c
-
-.c.o: $<
-	@echo $(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
-	@$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
-.c.lo: $<
-	@echo $(LTCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
-	@$(LTCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
 
 help.h: ${top_srcdir}/doc/naim.hlp
 	AWK="${AWK}" "${srcdir}/cmplhlp2.sh" < ${top_srcdir}/doc/naim.hlp > help.h

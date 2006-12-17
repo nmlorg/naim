@@ -59,7 +59,7 @@ static int naimcats(lua_State *L) {
 	return(1);
 }
 
-static const struct luaL_Reg naimlib [] = {
+static const struct luaL_Reg naimlib[] = {
 	{"debug", l_debug},
 	{"curconn", l_curconn},
 	{"conio", l_conio},
@@ -67,14 +67,14 @@ static const struct luaL_Reg naimlib [] = {
 	{NULL, NULL} /* sentinel */
 };
 
-static const struct luaL_reg naiminternallib[] = {
+static const struct luaL_reg naim_internallib[] = {
 	/* reserved for further use */
 	{NULL, NULL} /* sentinel */
 };
 
-extern const struct luaL_reg naimprototypeconnlib[];
-extern const struct luaL_reg naimprototypewindows[];
-extern const struct luaL_reg naimprototypebuddies[];
+extern const struct luaL_reg naim_prototypes_connectionslib[];
+extern const struct luaL_reg naim_prototypes_windowslib[];
+extern const struct luaL_reg naim_prototypes_buddieslib[];
 
 static int _nlua_recvfrom(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	int ref = (int)userdata;
@@ -141,7 +141,7 @@ static int l_hooks_recvfrom_del(lua_State *L) {
 	return 0;
 }
 
-static const struct luaL_reg naimhooksrecvfromlib[] = {
+static const struct luaL_reg naim_hooks_recvfromlib[] = {
 	{"add", l_hooks_recvfrom_add},
 	{"del", l_hooks_recvfrom_del},
 	{NULL, NULL} /* sentinel */
@@ -150,11 +150,11 @@ static const struct luaL_reg naimhooksrecvfromlib[] = {
 static void _loadfunctions()
 {
 	luaL_register(lua, "naim", naimlib);
-	luaL_register(lua, "naim.internal", naiminternallib);
-	luaL_register(lua, "naim.prototypes.connections", naimprototypeconnlib);
-	luaL_register(lua, "naim.prototypes.windows", naimprototypewindows);
-	luaL_register(lua, "naim.prototypes.buddies", naimprototypebuddies);
-	luaL_register(lua, "naim.hooks.recvfrom", naimhooksrecvfromlib);
+	luaL_register(lua, "naim.internal", naim_internallib);
+	luaL_register(lua, "naim.prototypes.connections", naim_prototypes_connectionslib);
+	luaL_register(lua, "naim.prototypes.windows", naim_prototypes_windowslib);
+	luaL_register(lua, "naim.prototypes.buddies", naim_prototypes_buddieslib);
+	luaL_register(lua, "naim.hooks.recvfrom", naim_hooks_recvfromlib);
 	lua_register(lua, "cats", naimcats);
 }
 
