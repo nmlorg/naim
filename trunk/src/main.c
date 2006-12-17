@@ -265,6 +265,12 @@ int	main_stub(int argc, char **args) {
 	gotkey(0);	// initialize gotkey() buffer
 	updateidletime();
 
+	commands_hook_init();
+	conio_hook_init();
+	events_hook_init();
+	fireio_hook_init();
+	hamster_hook_init();
+
 #ifdef HAVE_BACKTRACE
 	signal(SIGSEGV, naim_segfault);
 #endif
@@ -378,11 +384,6 @@ int	main_stub(int argc, char **args) {
 	doupdate();
 
 	stayconnected = 1;
-
-	conio_hook_init();
-	events_hook_init();
-	fireio_hook_init();
-	hamster_hook_init();
 
 	while (stayconnected) {
 		fd_set	rfd, wfd, efd;
