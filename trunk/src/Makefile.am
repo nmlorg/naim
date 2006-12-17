@@ -20,6 +20,7 @@ bin_PROGRAMS = naim
 
 NAIM_CORE = \
 	alias.c \
+	atomizer.c \
 	buddy.c \
 	conio.c \
 	echof.c \
@@ -40,12 +41,6 @@ NAIM_CORE = \
 	set.c \
 	win.c
 
-if LUA
-LUALIB = ../lua/liblua.la
-else
-LUALIB =
-endif
-
 if CYGWIN
 NAIM_SOURCES = main_stub.c
 NAIM_LDADD = libnaim_core.la
@@ -54,16 +49,16 @@ lib_LTLIBRARIES = libnaim_core.la
 libnaim_core_la_SOURCES = ${NAIM_CORE}
 libnaim_core_la_CFLAGS = ${AM_CFLAGS} -DDLSEARCHPATH='"${pkgmoddir}"'
 libnaim_core_la_LIBADD = \
-	@LIBLTDL@ ${LUALIB} \
+	@LIBLTDL@ ../lua/liblua.la \
 	@CURSESLIB@ @NETLIB@
 libnaim_core_la_LDFLAGS = -export-dynamic -no-undefined \
-	-Wl,--whole-archive -Wl,../libfiretalk/libfiretalk.a -Wl,../secs/libsecs.a -Wl,--no-whole-archive
+	-Wl,--whole-archive -Wl,../libfiretalk/libfiretalk.a -Wl,--no-whole-archive
 else
 NAIM_SOURCES = ${NAIM_CORE}
 NAIM_LDADD = \
 	../libfiretalk/libfiretalk.a \
 	@LIBLTDL@ \
-	../secs/libsecs.a ${LUALIB} \
+	../lua/liblua.la \
 	@CURSESLIB@ @NETLIB@
 endif
 

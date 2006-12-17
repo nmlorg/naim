@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL INCLTDL LIBLTDL INSTALL_LTDL_TRUE INSTALL_LTDL_FALSE CONVENIENCE_LTDL_TRUE CONVENIENCE_LTDL_FALSE LIBADD_DL pkgmoddir pkgincludedir pkgtarball LUA_TRUE LUA_FALSE cygwindocdir pkgdocdir CYGWIN_TRUE CYGWIN_FALSE INSTALLCYGWINDOC_TRUE INSTALLCYGWINDOC_FALSE NETLIB CURSESLIB LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL INCLTDL LIBLTDL INSTALL_LTDL_TRUE INSTALL_LTDL_FALSE CONVENIENCE_LTDL_TRUE CONVENIENCE_LTDL_FALSE LIBADD_DL pkgmoddir pkgincludedir pkgtarball cygwindocdir pkgdocdir CYGWIN_TRUE CYGWIN_FALSE INSTALLCYGWINDOC_TRUE INSTALLCYGWINDOC_FALSE NETLIB CURSESLIB LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1040,7 +1040,6 @@ Optional Features:
   --enable-profile        add profiling to CFLAGS and search for profilable
                           ncurses
   --enable-detach         enable /detach command
-  --enable-lua            Compile experimental Lua scripting support
   --enable-forceascii     enable the $forceascii setting to force alternate
                           line drawing characters
   --disable-dnsupdate     DO NOT allow naim to check for newer versions of
@@ -4867,7 +4866,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4870 "configure"' > conftest.$ac_ext
+  echo '#line 4869 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6126,7 +6125,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6129:" \
+echo "$as_me:6128:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7189,11 +7188,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7192: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7191: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7196: \$? = $ac_status" >&5
+   echo "$as_me:7195: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7457,11 +7456,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7460: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7459: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7464: \$? = $ac_status" >&5
+   echo "$as_me:7463: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7561,11 +7560,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7564: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7563: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7568: \$? = $ac_status" >&5
+   echo "$as_me:7567: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9906,7 +9905,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9909 "configure"
+#line 9908 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10006,7 +10005,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10009 "configure"
+#line 10008 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12346,11 +12345,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12349: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12348: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12353: \$? = $ac_status" >&5
+   echo "$as_me:12352: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12450,11 +12449,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12453: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12452: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12457: \$? = $ac_status" >&5
+   echo "$as_me:12456: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14020,11 +14019,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14023: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14022: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14027: \$? = $ac_status" >&5
+   echo "$as_me:14026: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14124,11 +14123,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14127: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14126: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14131: \$? = $ac_status" >&5
+   echo "$as_me:14130: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16327,11 +16326,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16330: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16329: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16334: \$? = $ac_status" >&5
+   echo "$as_me:16333: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16595,11 +16594,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16598: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16597: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16602: \$? = $ac_status" >&5
+   echo "$as_me:16601: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16699,11 +16698,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16702: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16701: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16706: \$? = $ac_status" >&5
+   echo "$as_me:16705: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20695,7 +20694,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 20698 "configure"
+#line 20697 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -23120,62 +23119,28 @@ echo "${ECHO_T}no, re-run ./configure with --enable-detach" >&6
 
 fi;
 
-	echo "$as_me:$LINENO: checking whether to enable experimental Lua scripting support" >&5
-echo $ECHO_N "checking whether to enable experimental Lua scripting support... $ECHO_C" >&6
-	# Check whether --enable-lua or --disable-lua was given.
-if test "${enable_lua+set}" = set; then
-  enableval="$enable_lua"
-
-			if test "x${enable_lua}" = xyes; then
-				echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
 
 cat >>confdefs.h <<\_ACEOF
 #define ENABLE_LUA 1
 _ACEOF
 
-
-
-if true; then
-  LUA_TRUE=
-  LUA_FALSE='#'
-else
-  LUA_TRUE='#'
-  LUA_FALSE=
-fi
-
-			else
-				echo "$as_me:$LINENO: result: no, you explicitly disabled it" >&5
-echo "${ECHO_T}no, you explicitly disabled it" >&6
-
-
-if false; then
-  LUA_TRUE=
-  LUA_FALSE='#'
-else
-  LUA_TRUE='#'
-  LUA_FALSE=
-fi
-
-			fi
-
-else
-
-			echo "$as_me:$LINENO: result: no, re-run ./configure with --enable-lua" >&5
-echo "${ECHO_T}no, re-run ./configure with --enable-lua" >&6
-
-
-if false; then
-  LUA_TRUE=
-  LUA_FALSE='#'
-else
-  LUA_TRUE='#'
-  LUA_FALSE=
-fi
-
-
-
-fi;
+#	AC_MSG_CHECKING(whether to enable experimental Lua scripting support)
+#	AC_ARG_ENABLE(lua,
+#		AC_HELP_STRING([--enable-lua], [Compile experimental Lua scripting support]),
+#		[
+#			if test "x${enable_lua}" = xyes; then
+#				AC_MSG_RESULT([yes])
+#				AM_CONDITIONAL(LUA, true)
+#				AC_DEFINE(ENABLE_LUA, 1, [Define to enable experimental Lua scripting support])
+#			else
+#				AC_MSG_RESULT([no, you explicitly disabled it])
+#				AM_CONDITIONAL(LUA, false)
+#			fi
+#		], [
+#			AC_MSG_RESULT([no, re-run ./configure with --enable-lua])
+#			AM_CONDITIONAL(LUA, false)
+#		]
+#	)
 
 	# Check whether --enable-forceascii or --disable-forceascii was given.
 if test "${enable_forceascii+set}" = set; then
@@ -26335,7 +26300,7 @@ echo ""
 test "$infodir" != '${prefix}/info' || infodir='${datadir}/info'
 test "$mandir" != '${prefix}/man' || mandir='${datadir}/man'
 
-                                                                      ac_config_files="$ac_config_files Makefile libfiretalk/Makefile libltdl/Makefile lua/Makefile secs/Makefile src/Makefile CYGWIN-PATCHES/Makefile"
+                                                            ac_config_files="$ac_config_files Makefile libfiretalk/Makefile libltdl/Makefile lua/Makefile src/Makefile CYGWIN-PATCHES/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -26439,27 +26404,6 @@ if test -z "${CONVENIENCE_LTDL_TRUE}" && test -z "${CONVENIENCE_LTDL_FALSE}"; th
   { { echo "$as_me:$LINENO: error: conditional \"CONVENIENCE_LTDL\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"CONVENIENCE_LTDL\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${LUA_TRUE}" && test -z "${LUA_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"LUA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"LUA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${LUA_TRUE}" && test -z "${LUA_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"LUA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"LUA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${LUA_TRUE}" && test -z "${LUA_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"LUA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"LUA\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -26922,7 +26866,6 @@ do
   "libfiretalk/Makefile" ) CONFIG_FILES="$CONFIG_FILES libfiretalk/Makefile" ;;
   "libltdl/Makefile" ) CONFIG_FILES="$CONFIG_FILES libltdl/Makefile" ;;
   "lua/Makefile" ) CONFIG_FILES="$CONFIG_FILES lua/Makefile" ;;
-  "secs/Makefile" ) CONFIG_FILES="$CONFIG_FILES secs/Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "CYGWIN-PATCHES/Makefile" ) CONFIG_FILES="$CONFIG_FILES CYGWIN-PATCHES/Makefile" ;;
   "src/config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS src/config.h" ;;
@@ -27079,8 +27022,6 @@ s,@LIBADD_DL@,$LIBADD_DL,;t t
 s,@pkgmoddir@,$pkgmoddir,;t t
 s,@pkgincludedir@,$pkgincludedir,;t t
 s,@pkgtarball@,$pkgtarball,;t t
-s,@LUA_TRUE@,$LUA_TRUE,;t t
-s,@LUA_FALSE@,$LUA_FALSE,;t t
 s,@cygwindocdir@,$cygwindocdir,;t t
 s,@pkgdocdir@,$pkgdocdir,;t t
 s,@CYGWIN_TRUE@,$CYGWIN_TRUE,;t t
