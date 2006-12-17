@@ -370,8 +370,12 @@ nFIRE_HANDLER(naim_buddy_typing) {
 	typing = va_arg(msg, int);
 	va_end(msg);
 
-	if ((blist = rgetlist(conn, who)) != NULL)
-		blist->typing = typing;
+	if ((blist = rgetlist(conn, who)) != NULL) {
+		if (typing)
+			blist->typing = now;
+		else
+			blist->typing = 0;
+	}
 }
 
 nFIRE_HANDLER(naim_buddy_away) {

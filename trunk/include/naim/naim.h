@@ -127,8 +127,8 @@ typedef struct buddylist_t {
 		*caps;
 	struct buddylist_t *next;
 	long	warnval;
-	int	peer,
-		typing;
+	int	peer;
+	time_t	typing;
 	unsigned long offline:1,
 		isaway:1,
 		isidle:1;	// is the buddy idle for more than some threshhold?

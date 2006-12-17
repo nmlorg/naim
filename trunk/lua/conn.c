@@ -69,15 +69,13 @@ NLUA_STRING_GET(conn_t, winname);
 NLUA_STRING_GET(conn_t, server);
 NLUA_STRING_GET(conn_t, profile);
 
-static int l_conn_status_echo(lua_State *L) {
+static int _nlua_conn_t_status_echo(lua_State *L) {
 	/* lua_pushlightuserdata(L, void *p) */
 	conn_t	*conn = _get_conn_t(L, 1);
 	const char *s = lua_tostring(L, 2);
 
-	if (!conn) {
-		lua_pushstring(L, "conn was nil");
-		return lua_error(L);
-	}
+	if (conn == NULL)
+		return(luaL_error(L, "conn was nil"));
 	status_echof(conn, "%s", s);
 	return(0);
 }
@@ -90,17 +88,13 @@ static int _nlua_conn_t_ ## name(lua_State *L) { \
 	int	argc; \
 	const char *error; \
 	\
-	if ((conn = _get_conn_t(L, 1)) == NULL) { \
-		lua_pushstring(L, "No connection object; use naim.connections[CONN]:" #name " instead of naim.connections[CONN]." #name "."); \
-		return(lua_error(L)); \
-	} \
+	if ((conn = _get_conn_t(L, 1)) == NULL) \
+		return(luaL_error(L, "No connection object; use naim.connections[CONN]:" #name " instead of naim.connections[CONN]." #name ".")); \
 	argc = _lua2conio(L, 2, args, UA_MAXPARMS); \
 	if ((error = ua_valid(#name, conn, argc)) == NULL) \
 		ua_ ## name(conn, argc, args); \
-	else { \
-		lua_pushstring(L, error); \
-		return(lua_error(L)); \
-	} \
+	else \
+		return(luaL_error(L, "%s", error)); \
 	return(0); \
 }
 
@@ -135,7 +129,7 @@ const struct luaL_reg naim_prototypes_connectionslib[] = {
 	{ "get_winname",	_nlua_conn_t_get_winname },
 	{ "get_server",		_nlua_conn_t_get_server },
 	{ "get_profile",	_nlua_conn_t_get_profile },
-	{ "status_echo",	l_conn_status_echo },
+	{ "status_echo",	_nlua_conn_t_status_echo },
 #define NN(x) { #x, _nlua_conn_t_ ## x },
 CONN_COMMANDS
 #undef NN
@@ -184,18 +178,14 @@ static int _nlua_buddywin_t_ ## name(lua_State *L) { \
 	int	argc; \
 	const char *error; \
 	\
-	if ((bwin = _get_buddywin_t(L, 1)) == NULL) { \
-		lua_pushstring(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:" #name " instead of naim.connections[CONN].buddies[BUDDY]." #name "."); \
-		return(lua_error(L)); \
-	} \
+	if ((bwin = _get_buddywin_t(L, 1)) == NULL) \
+		return(luaL_error(L, "No buddywin object; use naim.connections[CONN].buddies[BUDDY]:" #name " instead of naim.connections[CONN].buddies[BUDDY]." #name ".")); \
 	args[0] = bwin->winname; \
 	argc = _lua2conio(L, 2, args+1, UA_MAXPARMS-1)+1; \
 	if ((error = ua_valid(#name, bwin->conn, argc)) == NULL) \
 		ua_ ## name(bwin->conn, argc, args); \
-	else { \
-		lua_pushstring(L, error); \
-		return(lua_error(L)); \
-	} \
+	else \
+		return(luaL_error(L, "%s", error)); \
 	return(0); \
 }
 

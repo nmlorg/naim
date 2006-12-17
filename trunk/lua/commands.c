@@ -46,24 +46,18 @@ static int _nlua_command_ ## name(lua_State *L) { \
 	int	argc; \
 	const char *error; \
 	\
-	if ((conn = _get_conn_t(L, 1)) == NULL) { \
-		lua_pushstring(L, "No connection object; use naim.connections[CONN]:" #name " instead of naim.connections[CONN]." #name "."); \
-		return(lua_error(L)); \
-	} \
+	if ((conn = _get_conn_t(L, 1)) == NULL) \
+		return(luaL_error(L, "No connection object; use naim.connections[CONN]:" #name " instead of naim.connections[CONN]." #name ".")); \
 	if (lua_istable(L, 2)) \
 		argc = _table2conio(L, 2, args, UA_MAXPARMS); \
 	else if (lua_isstring(L, 2) || lua_isnumber(L, 2) || lua_isnil(L, 2)) \
 		argc = _lua2conio(L, 2, args, UA_MAXPARMS); \
-	else {\
-		lua_pushstring(L, "Invalid argument passed to " #name "."); \
-		return(lua_error(L)); \
-	} \
+	else \
+		return(luaL_error(L, "Invalid argument passed to " #name ".")); \
 	if ((error = ua_valid(#name, conn, argc)) == NULL) \
 		ua_ ## name(conn, argc, args); \
-	else { \
-		lua_pushstring(L, error); \
-		return(lua_error(L)); \
-	} \
+	else \
+		return(luaL_error(L, "%s", error)); \
 	return(0); \
 }
 
@@ -86,6 +80,8 @@ void	naim_commandsreg(lua_State *L) {
 	luaL_findtable(L, LUA_GLOBALSINDEX, "naim.commands", cmdc);	// { naim.commands }
 
 	for (i = 0; i < cmdc; i++) {
+		int	j;
+
 		assert(strcmp(cmdar[i].c, naim_commandslib[i].name) == 0);
 
 		lua_pushstring(L, cmdar[i].c);				// { CMD, naim.commands }
@@ -103,6 +99,14 @@ void	naim_commandsreg(lua_State *L) {
 		lua_pushstring(L, "desc");				// { "desc", { "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
 		lua_pushstring(L, cmdar[i].desc);			// { DESC, "desc", { "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
 		lua_settable(L, -3);					// { { "desc" = DESC, "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_pushstring(L, "args");				// { "args", ... }
+		lua_newtable(L);					// { {}, "args", ... }
+		for (j = 0; j < cmdar[i].maxarg; j++) {
+			lua_pushnumber(L, j+1);
+			lua_pushstring(L, cmdar[i].args[j].name);
+			lua_settable(L, -3);
+		}
+		lua_settable(L, -3);
 
 		lua_settable(L, -3);					// { naim.commands }
 	}

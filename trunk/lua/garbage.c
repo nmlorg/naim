@@ -1,13 +1,10 @@
 /*  _ __   __ _ ___ __  __
 ** | '_ \ / _` |_ _|  \/  | naim
 ** | | | | | | || || |\/| | Copyright 1998-2006 Daniel Reed <n@ml.org>
-** | | | | |_| || || |  | | moon.c Copyright 2006 Joshua Wise <joshua@joshuawise.com>
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 
 #include "moon-int.h"
-
-extern conn_t *curconn;
 
 static void *_garbage_dump[100] = { 0 }, **_garbage_dump2 = NULL;
 static int _garbage_count = 0, _garbage_count2 = 0;
@@ -33,7 +30,7 @@ void	nlua_clean_garbage(void) {
 	}
 }
 
-static void _garbage_add(void *ptr) {
+void	_garbage_add(void *ptr) {
 	if (_garbage_count < sizeof(_garbage_dump)/sizeof(*_garbage_dump))
 		_garbage_dump[_garbage_count++] = ptr;
 	else {
@@ -42,195 +39,4 @@ static void _garbage_add(void *ptr) {
 			abort();
 		_garbage_dump2[_garbage_count2++] = ptr;
 	}
-}
-
-int nlua_setvar_int(const char *name, const long value)
-{
-	if (name == NULL)
-		return(0);
-	
-	_getsubtable("variables");
-	lua_pushstring(lua, name);
-	lua_pushnumber(lua, value);
-	lua_settable(lua, -3);
-	lua_pop(lua, 1);
-	return(1);
-}
-
-int nlua_setvar(const char *const name, const char *const value)
-{
-	if ((name == NULL) || (value == NULL))
-		return(0);
-	
-	_getsubtable("variables");
-	lua_pushstring(lua, name);
-	lua_pushstring(lua, value);
-	lua_settable(lua, -3);
-	lua_pop(lua, 1);
-	return(1);
-}
-
-long nlua_getvar_int(const char *const name)
-{
-	long result;
-	
-	assert(name != NULL);
-	
-	_getsubtable("variables");
-	lua_pushstring(lua, name);
-	lua_gettable(lua, -2);
-	if (lua_isnumber(lua, -1))
-		result = (long)lua_tonumber(lua, -1);
-	else
-		result = 0;
-	lua_pop(lua, 2);
-	return result;
-	
-}
-
-char* nlua_getvar_safe(const char *const name, char** buf)
-{
-	assert(name != NULL);
-	
-	_getsubtable("variables");
-	lua_pushstring(lua, name);
-	lua_gettable(lua, -2);
-
-	if (lua_isstring(lua, -1))		/* Remember that LUA is loosely typed, so a Number would actually give us a string representation! */
-		*buf = strdup(lua_tostring(lua, -1));
-	else
-		*buf = NULL;
-	lua_pop(lua, 2);
-	
-	return *buf;
-}
-
-char* nlua_getvar(const char *const name)
-{
-	char* result = NULL;
-	
-	nlua_getvar_safe(name, &result);
-	if (result != NULL)
-		_garbage_add(result);
-	return(result);
-}
-
-int nlua_script_parse(const char *script)
-{
-	if (luaL_loadstring(lua, script) != 0)
-	{
-		status_echof(curconn, "Parse error: \"%s\"", lua_tostring(lua, -1));
-		lua_pop(lua, 1);		/* Error message that we don't care about. */
-		return(0);
-	}
-	
-	if (lua_pcall(lua, 0, 0, 0) != 0)
-	{
-		status_echof(curconn, "Lua function returned an error: \"%s\"", lua_tostring(lua, -1));
-		lua_pop(lua, 1);
-	}
-
-	return(1);
-}
-
-char* nlua_expand(const char *script)
-{
-	char* result;
-	
-	_getsubtable("internal");
-	_getitem("expandString");
-	lua_pushstring(lua, script);
-	lua_pcall(lua, 1, 1, 0);		/* Feed the error message to the caller if there is one */
-	result = strdup(lua_tostring(lua, -1));
-	if (result != NULL)
-		_garbage_add(result);
-	lua_pop(lua, 1);
-	return(result);
-}
-
-void nlua_listvars_start()
-{
-	_getsubtable("variables");
-	lua_pushnil(lua);
-}
-
-char* nlua_listvars_next()
-{
-	char* result = NULL;
-	
-	if (lua_next(lua, -2) == 0)
-	{
-		lua_pushnil(lua);	/* dummy for nlua_listvars_stop -- avoid exploding the stack */
-		return NULL;
-	}
-	lua_pop(lua, 1);
-
-	result = strdup(lua_tostring(lua, -1));
-	if (result != NULL)
-		_garbage_add(result);
-	return(result);
-}
-
-void nlua_listvars_stop()
-{
-	lua_pop(lua, 2);
-}
-
-int	nlua_luacmd(conn_t *conn, char *cmd, char *arg) {
-	char	*lcmd;
-
-	_getmaintable();			// { naim }
-	_getitem("call");			// { naim.call }
-	if (!lua_isfunction(lua, -1)) {
-		static int complained = 0;
-
-		lua_pop(lua, 1);		// {}
-		if (!complained && (conn != NULL)) {
-			complained++;
-			status_echof(conn, "naim.call is no longer a function. This is a bug in a user script.");
-		}
-		return(0);
-	}
-
-	_getmaintable();			// { naim, naim.call }
-	_getitem("commands");			// { naim.commands, naim.call }
-	if (!lua_istable(lua, -1)) {
-		static int complained = 0;
-
-		lua_pop(lua, 2);		// {}
-		if (!complained && (conn != NULL)) {
-			complained++;
-			status_echof(conn, "naim's Lua commands table went away. This is a bug in a user script. I'll continue for now, but Lua commands will no longer work. Sorry.");
-		}
-		return(0);
-	}
-	lcmd = strdup(cmd);
-	{
-		char	*p;
-
-		for (p = lcmd; *p; p++)
-			*p = tolower(*p);
-	}
-	lua_pushstring(lua, lcmd);		// { CMD, naim.commands, naim.call }
-	free(lcmd);
-	lua_gettable(lua, -2);			// { naim.commands[CMD], naim.commands, naim.call }
-	lua_remove(lua, -2);			// { naim.commands[CMD], naim.call }
-	if (lua_isnil(lua, -1)) {
-		lua_pop(lua, 2);		// {}
-		return(0);
-	}
-	if (!lua_istable(lua, -1)) {
-		lua_pop(lua, 2);		// {}
-		if (conn != NULL)
-			status_echof(conn, "naim.commands.%s is not a function table. This is a bug in a user script.", cmd);
-		return(0);
-	}
-	_push_conn_t(lua, conn);		// { CONN, naim.commands[CMD], naim.call }
-	lua_pushstring(lua, arg);		// { ARG, CONN, naim.commands[CMD], naim.call }
-	if (lua_pcall(lua, 3, 0, 0) != 0) {	// {}
-		if (conn != NULL)
-			status_echof(conn, "Lua function \"%s\" returned an error: \"%s\"", cmd, lua_tostring(lua, -1));
-		return(0);
-	}
-	return(1);
 }

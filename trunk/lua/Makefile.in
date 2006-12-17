@@ -64,7 +64,8 @@ am_liblua_la_OBJECTS = lua511/lapi.lo lua511/lcode.lo lua511/ldebug.lo \
 liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
 libnlua_la_DEPENDENCIES = liblua.la
 am_libnlua_la_OBJECTS = libnlua_la-commands.lo libnlua_la-conn.lo \
-	libnlua_la-moon.lo libnlua_la-strings.lo
+	libnlua_la-garbage.lo libnlua_la-moon.lo libnlua_la-script.lo \
+	libnlua_la-util.lo libnlua_la-variables.lo
 libnlua_la_OBJECTS = $(am_libnlua_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_lua_OBJECTS = lua511/lua.$(OBJEXT)
@@ -218,7 +219,14 @@ liblua_la_SOURCES = \
 
 liblua_la_LIBADD = -lm
 libnlua_la_SOURCES = \
-	commands.c conn.c moon.c moon-int.h strings.c
+	commands.c \
+	conn.c \
+	garbage.c \
+	moon.c \
+	moon-int.h \
+	script.c \
+	util.c \
+	variables.c
 
 libnlua_la_LIBADD = liblua.la
 libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
@@ -396,11 +404,20 @@ libnlua_la-commands.lo: commands.c
 libnlua_la-conn.lo: conn.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-conn.lo `test -f 'conn.c' || echo '$(srcdir)/'`conn.c
 
+libnlua_la-garbage.lo: garbage.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-garbage.lo `test -f 'garbage.c' || echo '$(srcdir)/'`garbage.c
+
 libnlua_la-moon.lo: moon.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-moon.lo `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
 
-libnlua_la-strings.lo: strings.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-strings.lo `test -f 'strings.c' || echo '$(srcdir)/'`strings.c
+libnlua_la-script.lo: script.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-script.lo `test -f 'script.c' || echo '$(srcdir)/'`script.c
+
+libnlua_la-util.lo: util.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-util.lo `test -f 'util.c' || echo '$(srcdir)/'`util.c
+
+libnlua_la-variables.lo: variables.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-variables.lo `test -f 'variables.c' || echo '$(srcdir)/'`variables.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
