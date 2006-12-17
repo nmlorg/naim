@@ -65,7 +65,7 @@ liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
 libnlua_la_DEPENDENCIES = liblua.la
 am_libnlua_la_OBJECTS = libnlua_la-commands.lo libnlua_la-conn.lo \
 	libnlua_la-garbage.lo libnlua_la-hooks.lo libnlua_la-moon.lo \
-	libnlua_la-script.lo libnlua_la-util.lo \
+	libnlua_la-pd.lo libnlua_la-script.lo libnlua_la-util.lo \
 	libnlua_la-variables.lo
 libnlua_la_OBJECTS = $(am_libnlua_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
@@ -231,6 +231,7 @@ libnlua_la_SOURCES = \
 	hooks.c \
 	moon.c \
 	moon-int.h \
+	pd.c \
 	script.c \
 	util.c \
 	variables.c
@@ -422,6 +423,9 @@ libnlua_la-hooks.lo: hooks.c
 
 libnlua_la-moon.lo: moon.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-moon.lo `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
+
+libnlua_la-pd.lo: pd.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-pd.lo `test -f 'pd.c' || echo '$(srcdir)/'`pd.c
 
 libnlua_la-script.lo: script.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-script.lo `test -f 'script.c' || echo '$(srcdir)/'`script.c

@@ -3,7 +3,10 @@
 ** | | | | | | || || |\/| | Copyright 1998-2006 Daniel Reed <n@ml.org>
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
+
+#include <assert.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include "moon-int.h"
 
 #if 0

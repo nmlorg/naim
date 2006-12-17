@@ -7,7 +7,6 @@
 
 #include <naim/naim.h>
 #include <naim/modutil.h>
-#include "naim-int.h"
 
 #include "lua.h"
 #include "lualib.h"
