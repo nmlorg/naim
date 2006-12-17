@@ -34,6 +34,8 @@ end
 
 naim.variables = {}
 
+naim.sockets = {}
+
 naim.connections = {}
 setmetatable(naim.connections, naim.internal.rometatable("connections"))
 
@@ -64,6 +66,7 @@ function naim.internal.newconn(winname, handle)
 		name = winname,
 		windows = {},
 		buddies = {},
+		groups = {},
 	}
 	setmetatable(naim.connections[winname], naim.internal.rwmetatable(naim.prototypes.connections))
 	setmetatable(naim.connections[winname].windows, naim.internal.rometatable("windows"))
@@ -212,20 +215,19 @@ naim.commands.help = {
 		if #arg == 0 then
 			arg[1] = "topics"
 		end
-		--naim.echo("Help on " .. tostring(arg[1]) .. ":")
 
 		local function helpcmd(cmd, t)
 			local str
 			local i
 
-			str = "Usage: /" .. cmd
+			str = "<font color=\"#FF00FF\">Usage</font>: <font color=\"#00FF00\">/" .. cmd .. "</font>"
 			i = 0
 			while (i < t.min) do
-				str = str .. " <" .. t.args[i+1] .. ">"
+				str = str .. " <font color=\"#00FF00\">&lt;" .. t.args[i+1] .. "&gt;</font>"
 				i = i + 1
 			end
 			while (i < t.max) do
-				str = str .. " [<" .. t.args[i+1] .. ">"
+				str = str .. " [<font color=\"#FFFF00\">&lt;" .. t.args[i+1] .. "&gt;</font>"
 				i = i + 1
 			end
 			i = t.min
@@ -233,46 +235,56 @@ naim.commands.help = {
 				str = str .. "]"
 				i = i + 1
 			end
-			naim.echo(str)
+			naim.curwin():x_hprint(str .. "<br>")
 			if t.desc ~= nil then
-				naim.echo(t.desc)
+				naim.curwin():x_hprint("<b>" .. t.desc .. "</b><br>")
 			end
 		end
 
 		found = true
 		if arg[1] == "keys" then
-			naim.echo("Current key bindings can be viewed at any time with /bind:")
+			naim.echo("Current key bindings can be viewed at any time with <font color=\"#00FF00\">/bind</font>:")
 			naim.call(naim.commands.bind)
-			naim.echo("Key names beginning with ^ are entered by holding down the Ctrl key while pressing the listed key: ^N is Ctrl+N.")
-			naim.echo("Key names beginning with M- are entered by holding down the Alt key while pressing the key, or by pressing Esc first, then typing the key: M-a is Alt+A.")
-			naim.echo("IC is Ins and DC is Del on the numeric keypad. NPAGE and PPAGE are PgDn and PgUp.")
-			naim.echo("Type /bind <keyname> \"<script>\" to change a key binding.")
+			naim.curwin():x_hprint("Key names beginning with ^ are entered by holding down the Ctrl key while pressing the listed key: ^N is Ctrl+N.<br>")
+			naim.curwin():x_hprint("Key names beginning with M- are entered by holding down the Alt key while pressing the key, or by pressing Esc first, then typing the key: M-a is Alt+A.<br>")
+			naim.curwin():x_hprint("IC is Ins and DC is Del on the numeric keypad. NPAGE and PPAGE are PgDn and PgUp.<br>")
+			naim.curwin():x_hprint("Type <font color=\"#00FF00\">/bind &lt;keyname&gt; \"&lt;script&gt;\"</font> to change a key binding.<br>")
 		elseif arg[1] == "settings" or arg[1] == "variables" then
-			naim.echo("Current configuration settings can be viewed at any time with /set:")
+			naim.echo("Current configuration settings can be viewed at any time with <font color=\"#00FF00\">/set</font>:")
 			naim.call(naim.commands.set)
-			naim.echo("Type /set <varname> \"<new value>\" to change a configuration variable.")
+			naim.curwin():x_hprint("Type <font color=\"#00FF00\">/set &lt;varname&gt; \"&lt;new value&gt;\"</font> to change a configuration variable.<br>")
 		elseif arg[1] == "commands" then
+			naim.echo("Help on " .. tostring(arg[1]) .. ":")
 			for cmd,t in pairs(naim.commands) do
 				helpcmd(cmd, t)
-				naim.echo("")
+				naim.curwin():x_hprint("<br>")
 			end
 		else
 			found = false
 		end
 
 		if naim.commands[arg[1]] ~= nil then
+			if not found then
+				naim.echo("Help on " .. tostring(arg[1]) .. ":")
+				found = true
+			end
 			helpcmd(arg[1], naim.commands[arg[1]])
-			found = true
 		end
 
 		if type(naim.help[arg[1]]) == "string" then
-			naim.echo(naim.help[arg[1]])
-			found = true
-		elseif type(naim.help[arg[1]]) == "table" then
-			for i,v in ipairs(naim.help[arg[1]]) do
-				naim.echo(v)
+			if not found then
+				naim.echo("Help on " .. tostring(arg[1]) .. ":")
+				found = true
 			end
-			found = true
+			naim.curwin():x_hprint(naim.help[arg[1]] .. "<br>")
+		elseif type(naim.help[arg[1]]) == "table" then
+			if not found then
+				naim.echo("Help on " .. tostring(arg[1]) .. ":")
+				found = true
+			end
+			for i,v in ipairs(naim.help[arg[1]]) do
+				naim.curwin():x_hprint(v .. "<br>")
+			end
 		end
 
 		if not found then
@@ -282,3 +294,44 @@ naim.commands.help = {
 		end
 	end,
 }
+
+naim.hooks.add('proto_chat_joined', function(conn, chat)
+	conn.groups[chat] = {
+		members = {},
+	}
+end, 100)
+
+naim.hooks.add('proto_chat_left', function(conn, chat)
+	conn.groups[chat] = nil
+end, 100)
+
+naim.hooks.add('proto_chat_kicked', function(conn, chat)
+	conn.groups[chat] = nil
+end, 100)
+
+naim.hooks.add('proto_chat_user_joined', function(conn, chat, who, extra)
+	conn.groups[chat].members[who] = {}
+end, 100)
+
+naim.hooks.add('proto_chat_user_left', function(conn, chat, who, reason)
+	conn.groups[chat].members[who] = nil
+end, 100)
+
+naim.hooks.add('proto_chat_user_kicked', function(conn, chat, who, reason)
+	conn.groups[chat].members[who] = nil
+end, 100)
+
+naim.hooks.add('proto_chat_user_nickchanged', function(conn, chat, who, newnick)
+	conn.groups[chat].members[newnick] = conn.groups[chat].members[who]
+	conn.groups[chat].members[who] = nil
+end, 100)
+
+naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
+	for k,v in pairs(naim.sockets) do
+	end
+end, 100)
+
+naim.hooks.add('postselect', function(rfd, wfd, efd)
+	for k,v in pairs(naim.sockets) do
+	end
+end, 100)

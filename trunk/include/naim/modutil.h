@@ -25,22 +25,13 @@ typedef struct {
 } chain_t;
 
 static inline chain_t *_hook_findchain(const char *name) {
-	lt_dlhandle self;
+	extern lt_dlhandle dl_self;
 	chain_t	*hook;
 	char	buf[100];
 
-	if (strncmp(name, "chain_", sizeof("chain_")-1) != 0) {
-		snprintf(buf, sizeof(buf), "chain_%s", name);
-		name = buf;
-	}
+	snprintf(buf, sizeof(buf), "chain_%s", name);
 
-#ifdef DLOPEN_SELF_LIBNAIM_CORE
-	self = lt_dlopen("cygnaim_core-0.dll");
-#else
-	self = lt_dlopen(NULL);
-#endif
-	hook = lt_dlsym(self, name);
-	lt_dlclose(self);
+	hook = lt_dlsym(dl_self, buf);
 	return(hook);
 }
 

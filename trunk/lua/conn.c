@@ -79,6 +79,19 @@ NLUA_STRING_GET(conn_t, winname);
 NLUA_STRING_GET(conn_t, server);
 NLUA_STRING_GET(conn_t, profile);
 
+#if 0
+static int _nlua_conn_t_curwin(lua_State *L) {
+	conn_t	*conn = _get_conn_t(L, 1);
+
+	if (conn == NULL)
+		return(luaL_error(L, "conn was nil"));
+	if (conn->curbwin != NULL)
+		_get_global_ent(L, "naim.connections", conn->winname, "windows", conn->curbwin->winname);
+	else
+		lua_push
+}
+#endif
+
 static int _nlua_conn_t_status_echo(lua_State *L) {
 	/* lua_pushlightuserdata(L, void *p) */
 	conn_t	*conn = _get_conn_t(L, 1);
@@ -150,6 +163,7 @@ const struct luaL_reg naim_prototypes_connectionslib[] = {
 	{ "get_winname",	_nlua_conn_t_get_winname },
 	{ "get_server",		_nlua_conn_t_get_server },
 	{ "get_profile",	_nlua_conn_t_get_profile },
+//	{ "curwin",		_nlua_conn_t_curwin },
 	{ "status_echo",	_nlua_conn_t_status_echo },
 	{ "x_hprint",		_nlua_conn_t_x_hprint },
 #define NN(x) { #x, _nlua_conn_t_ ## x },

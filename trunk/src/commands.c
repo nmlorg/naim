@@ -29,6 +29,7 @@ extern int	stayconnected;
 extern time_t	now, awaytime;
 extern double	nowf, changetime;
 extern const char *home, *sty;
+extern lt_dlhandle dl_self;
 
 extern int scrollbackoff G_GNUC_INTERNAL,
 	needpass G_GNUC_INTERNAL,
@@ -1454,7 +1455,6 @@ UADESC(Manipulate data control tables)
 UAAOPT(string,chain)
 	char	buf[1024];
 	chain_t	*chain;
-	lt_dlhandle self;
 	int	i;
 
 	if (argc == 0) {
@@ -1474,23 +1474,16 @@ UAAOPT(string,chain)
 		echof(conn, NULL, "See <font color=\"#00FF00\">/help chains</font> for more information.\n");
 		return;
 	}
-#ifdef DLOPEN_SELF_LIBNAIM_CORE
-	self = lt_dlopen("cygnaim_core-0.dll");
-#else
-	self = lt_dlopen(NULL);
-#endif
-	if (self == NULL) {
-		echof(conn, "TABLES", "Unable to perform self-symbol lookup: %s.\n", lt_dlerror());
+	if (dl_self == NULL) {
+		echof(conn, "TABLES", "Unable to perform self-symbol lookup.\n");
 		return;
 	}
 	snprintf(buf, sizeof(buf), "chain_%s", args[0]);
-	if ((chain = lt_dlsym(self, buf)) == NULL) {
+	if ((chain = lt_dlsym(dl_self, buf)) == NULL) {
 		echof(conn, "TABLES", "Unable to find chain %s (%s): %s.\n", 
 			args[0], buf, lt_dlerror());
-		lt_dlclose(self);
 		return;
 	}
-	lt_dlclose(self);
 
 	if (chain->count == 0)
 		echof(conn, NULL, "No handler registered for chain %s.\n", args[0]);
@@ -2283,20 +2276,13 @@ static int modlist_helper(lt_dlhandle mod, lt_ptr data) {
 
 UAFUNC(dlsym) {
 UAAREQ(string,symbol)
-	lt_dlhandle mod;
 	lt_ptr	ptr;
 
-#ifdef DLOPEN_SELF_LIBNAIM_CORE
-	mod = lt_dlopen("cygnaim_core-0.dll");
-#else
-	mod = lt_dlopen(NULL);
-#endif
-	ptr = lt_dlsym(mod, args[0]);
+	ptr = lt_dlsym(dl_self, args[0]);
 	if (ptr != NULL)
 		echof(conn, NULL, "Symbol %s found at %#p.\n", args[0], ptr);
 	else
 		echof(conn, "DLSYM", "Symbol %s not found.\n", args[0]);
-	lt_dlclose(mod);
 }
 
 UAFUNC(modlist) {
@@ -2364,8 +2350,7 @@ UAAREQ(string,module)
 	lt_dlhandle mod;
 
 	for (mod = lt_dlhandle_next(NULL); mod != NULL; mod = lt_dlhandle_next(mod)) {
-		const lt_dlinfo
-			*dlinfo = lt_dlgetinfo(mod);
+		const lt_dlinfo *dlinfo = lt_dlgetinfo(mod);
 
 		if ((dlinfo->name != NULL) && (strcasecmp(args[0], dlinfo->name) == 0)) {
 			int	(*naim_exit)(lt_dlhandle mod, const char *str);

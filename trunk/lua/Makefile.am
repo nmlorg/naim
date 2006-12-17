@@ -7,7 +7,9 @@ EXTRA_DIST = \
 	cmpllua.sh \
 	default.lua \
 	examples/eliza.lua \
-	examples/i-r-elite-script.lua
+	examples/i-r-elite-script.lua \
+	examples/lseen.lua \
+	examples/printtree.lua
 
 noinst_LTLIBRARIES = liblua.la libnlua.la
 liblua_la_SOURCES = \
@@ -28,6 +30,7 @@ libnlua_la_SOURCES = \
 	moon.c \
 	moon-int.h \
 	script.c \
+	socks.c \
 	util.c \
 	variables.c
 libnlua_la_LIBADD = liblua.la
@@ -44,5 +47,5 @@ default_lua.h: ${srcdir}/default.lua
 libnlua_la-moon.${LOBJEXT}: default_lua.h
 libnlua_la-commands.${LOBJEXT}: ../src/cmdar.h
 
-../src/cmdar.h:
+../src/cmdar.h: ${top_srcdir}/src/commands.c
 	(cd ../src && make cmdar.h)
