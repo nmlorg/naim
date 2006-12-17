@@ -29,7 +29,7 @@ Lost screennames - Screennames suspended by AOL for unknown reason that used nai
 be sent to an AOL Rep for possible action / investigation.
 
 === Fun Stuff ===
-[http://naimdoc.net/index.php/IRC_quotes IRC quotes]
+[http://code.google.com/p/naim/wiki/IRCQuotes IRC quotes]
 
 http://www.frappr.com/naim
 
