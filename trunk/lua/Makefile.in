@@ -196,11 +196,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-BUILT_SOURCES = \
-	default_lua.h naim_commands.h
-
+LOBJEXT = lo
 DISTCLEANFILES = \
-	${BUILT_SOURCES}
+	default_lua.h naim_commands.h
 
 EXTRA_DIST = \
 	bindcmds.sh \
@@ -229,8 +227,7 @@ lua_SOURCES = \
 	lua511/lua.c
 
 lua_LDADD = liblua.la
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -494,12 +491,10 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
 installdirs:
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -525,7 +520,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
@@ -590,6 +584,8 @@ uninstall-am: uninstall-info-am
 
 default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
+
+libnlua_la-moon.${LOBJEXT}: default_lua.h
 
 naim_commands.h: ${top_srcdir}/src/commands.c
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS} -I${srcdir}/lua511 -I${top_srcdir}/src -I${top_srcdir}/include -I${top_srcdir}/libfiretalk" ${srcdir}/bindcmds.sh > naim_commands.h

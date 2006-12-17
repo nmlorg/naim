@@ -1,8 +1,7 @@
-BUILT_SOURCES = \
-	default_lua.h naim_commands.h
+LOBJEXT = lo
 
 DISTCLEANFILES = \
-	${BUILT_SOURCES}
+	default_lua.h naim_commands.h
 
 EXTRA_DIST = \
 	bindcmds.sh \
@@ -34,6 +33,8 @@ lua_LDADD = liblua.la
 
 default_lua.h: ${srcdir}/default.lua
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" ${srcdir}/cmpllua.sh < ${srcdir}/default.lua > default_lua.h
+
+libnlua_la-moon.${LOBJEXT}: default_lua.h
 
 naim_commands.h: ${top_srcdir}/src/commands.c
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS} -I${srcdir}/lua511 -I${top_srcdir}/src -I${top_srcdir}/include -I${top_srcdir}/libfiretalk" ${srcdir}/bindcmds.sh > naim_commands.h

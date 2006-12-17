@@ -1,12 +1,14 @@
+LOBJEXT = lo
+
 nodist_pkgdoc_DATA = commands.txt 
 pkgdoc_DATA = keyboard.txt
 
 BUILT_SOURCES = \
-	conio_keys.h \
-	conio_cmds.h \
 	commands.txt
 
 DISTCLEANFILES = \
+	conio_keys.h \
+	conio_cmds.h \
 	${BUILT_SOURCES}
 	
 EXTRA_DIST = \
@@ -72,7 +74,6 @@ naim_LDFLAGS = -dlopen self -export-dynamic -no-undefined
 
 INCLUDES = -I${top_srcdir}/include -I${top_srcdir}/libfiretalk ${INCLTDL}
 
-
 conio_keys.h: ${srcdir}/conio.c config.h
 	AWK="${AWK}" CPP="${CPP} ${CPPFLAGS} ${DEFAULT_INCLUDES} ${INCLUDES} ${DEFS}" SRCDIR=${srcdir} ${srcdir}/genkeys.sh > conio_keys.h
 
@@ -87,6 +88,17 @@ help.h: ${top_srcdir}/doc/naim.hlp
 
 help.c: ${top_srcdir}/doc/naim.hlp
 	AWK="${AWK}" "${srcdir}/cmplhelp.sh" < ${top_srcdir}/doc/naim.hlp > help.c
+
+naim-commands.${OBJEXT}: conio_cmds.h
+libnaim_la-commands.${LOBJEXT}: conio_cmds.h
+naim-conio.${OBJEXT}: conio_keys.h
+libnaim_la-conio.${LOBJEXT}: conio_keys.h
+naim-events.${OBJEXT}: conio_cmds.h
+libnaim_la-events.${LOBJEXT}: conio_cmds.h
+naim-fireio.${OBJEXT}: conio_cmds.h
+libnaim_la-fireio.${LOBJEXT}: conio_cmds.h
+naim-helpcmd.${OBJEXT}: conio_cmds.h
+libnaim_la-helpcmd.${LOBJEXT}: conio_cmds.h
 
 install: install-am install-global-symlink
 
