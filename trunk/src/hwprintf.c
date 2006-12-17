@@ -565,9 +565,9 @@ static unsigned long parsehtml(h_t *h, char *str, int backup) {
 }
 
 int	vhwprintf(win_t *win, int _pair, const unsigned char *format, va_list msg) {
-	/*static*/ unsigned char buf[20*1024];
+	/*static*/ unsigned char buf[4*1024], *str, *ptr = NULL;
 	size_t	len = 0;
-	int	pos = -1, lines = 0;
+	int	pos, lines = 0;
 	h_t	h;
 
 	assert(win != NULL);
@@ -577,13 +577,26 @@ int	vhwprintf(win_t *win, int _pair, const unsigned char *format, va_list msg) {
 
 	len = vsnprintf(buf, sizeof(buf), format, msg);
 
+	if (len >= sizeof(buf)) {
+		size_t	len2;
+
+		ptr = malloc(len+1);
+		assert(ptr != NULL);
+
+		len2 = vsnprintf(ptr, len+1, format, msg);
+		assert(len2 == len);
+
+		str = ptr;
+	} else
+		str = buf;
+
 	if (_pair > -1) {
 		if (win->logfile != NULL)
 			fprintf(win->logfile, "<font color=\"%s\">%s%s%s%s%s</font>\n",
 				parsehtml_pair_RGB(_pair, h.inbold),
 				h.initalic?"<I>":"",
 				h.inunderline?"<U>":"",
-				buf,
+				str,
 				h.inunderline?"</U>":"",
 				h.initalic?"</I>":"");
 	} else
@@ -600,39 +613,37 @@ int	vhwprintf(win_t *win, int _pair, const unsigned char *format, va_list msg) {
 
 	nw_attr(win, h.inbold, h.initalic, h.inunderline, 0, 0, 0);
 	nw_color(win, h.pair);
-	while (++pos < len) {
-		if ((buf[pos] == '<') || (buf[pos] == '&')) {
+	for (pos = 0; pos < len; pos++)
+		if ((str[pos] == '<') || (str[pos] == '&')) {
 			static int lastpos = 0;
 			unsigned long skiplen = 0;
 
-			if ((skiplen = parsehtml(&h, buf+pos, pos-lastpos)) == 0) {
-				nw_wrap_addch(&h, buf[pos]);
+			if ((skiplen = parsehtml(&h, str+pos, pos-lastpos)) == 0) {
+				nw_wrap_addch(&h, str[pos]);
 				continue;
 			}
 			pos += skiplen;
 			nw_attr(win, h.inbold, h.initalic, h.inunderline, 0, 0, 0);
 			nw_color(win, h.pair);
 			lastpos = pos;
-			continue;
 		} else {
-			if (buf[pos] == '\r')
+			if (str[pos] == '\r')
 				continue;
-			if (isspace(buf[pos]) || (buf[pos] == '\n')) {
+			if (isspace(str[pos]) || (str[pos] == '\n')) {
 				if (h.white == 0)
 					nw_wrap_addch(&h, ' ');
 				h.white = 1;
 				continue;
 			} else
 				h.white = 0;
-			if (naimisprint(buf[pos]))
-				nw_wrap_addch(&h, buf[pos]);
+			if (naimisprint(str[pos]))
+				nw_wrap_addch(&h, str[pos]);
 			else
-				nw_wrap_addstr(&h, keyname(buf[pos]));
-			continue;
+				nw_wrap_addstr(&h, keyname(str[pos]));
 		}
-	}
 	if (h.white == 1)
 		nw_wrap_addch(&h, '\b');
+	free(ptr);
 	return(lines);
 }
 
