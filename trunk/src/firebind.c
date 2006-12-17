@@ -12,12 +12,19 @@ extern win_t	win_input;
 extern char	**names;
 extern int	namec;
 extern namescomplete_t namescomplete;
+extern time_t	now;
+extern double	nowf;
+extern int	awayc;
+extern awayar_t *awayar;
 
 #define nFIRE_HANDLER(func) \
 static void _firebind_ ## func(struct firetalk_connection_t *sess, conn_t *conn, ...)
 
 #define nFIRE_CTCPHAND(func) \
-static void _firebind_ ## func(struct firetalk_connection_t *sess, conn_t *conn, const char *from, const char *command, const char *args)
+static void _firebind_ctcp_ ## func(struct firetalk_connection_t *sess, conn_t *conn, const char *from, const char *command, const char *args)
+
+#define nFIRE_CTCPREPHAND(func) \
+static void _firebind_ctcprep_ ## func(struct firetalk_connection_t *sess, conn_t *conn, const char *from, const char *command, const char *args)
 
 HOOK_DECLARE(proto_newnick);
 nFIRE_HANDLER(newnick) {
@@ -110,7 +117,7 @@ nFIRE_HANDLER(buddy_eviled) {
 	HOOK_CALL(proto_buddy_eviled, conn, who, warnval);
 }
 
-HOOK_DECLARE(proto_buddy_caps);
+HOOK_DECLARE(proto_buddy_capschanged);
 nFIRE_HANDLER(buddy_caps) {
 	va_list	msg;
 	const char *who, *caps;
@@ -120,7 +127,7 @@ nFIRE_HANDLER(buddy_caps) {
 	caps = va_arg(msg, const char *);
 	va_end(msg);
 
-	HOOK_CALL(proto_buddy_caps, conn, who, caps);
+	HOOK_CALL(proto_buddy_capschanged, conn, who, caps);
 }
 
 HOOK_DECLARE(proto_buddy_typing);
@@ -857,6 +864,320 @@ nFIRE_HANDLER(file_error) {
 	HOOK_CALL(proto_file_error, conn, handle, transfer, error);
 }
 
+static time_t lastctcp = 0;
+
+nFIRE_CTCPHAND(PING) {
+	if (lastctcp < now-1) {
+		firetalk_subcode_send_reply(sess, from, "PING", args);
+		lastctcp = now;
+		echof(conn, "CTCP", "<font color=\"#00FFFF\">%s</font> pinged you.\n",
+			from);
+	}
+}
+
+nFIRE_CTCPHAND(LC) {
+	if ((args == NULL) || (*args == 0))
+		return;
+
+	if (firetalk_compare_nicks(conn->conn, conn->sn, from) == FE_SUCCESS) {
+		conn->lag = nowf - atof(args);
+		bupdate();
+	}
+}
+
+nFIRE_CTCPHAND(HEXTEXT) {
+	unsigned char
+		buf[4*1024];
+	int	i;
+
+	if ((args == NULL) || (*args == 0))
+		return;
+
+	for (i = 0; (i/2 < sizeof(buf)-1) && (args[i] != 0) && (args[i+1] != 0); i += 2)
+		buf[i/2] = (hexdigit(args[i]) << 4) | hexdigit(args[i+1]);
+	buf[i/2] = 0;
+
+#if 0
+	echof(curconn, "HEXTEXT", "<-- %s %s %s", from, args, buf);
+#endif
+
+	naim_recvfrom(conn, from, NULL, buf, i/2, RF_ENCRYPTED);
+}
+
+nFIRE_CTCPREPHAND(HEXTEXT) {
+	char	buf[4*1024];
+	int	i;
+
+	if ((args == NULL) || (*args == 0))
+		return;
+
+	for (i = 0; (i/2 < sizeof(buf)-1) && (args[i] != 0) && (args[i+1] != 0); i += 2)
+		buf[i/2] = (hexdigit(args[i]) << 4) | hexdigit(args[i+1]);
+	buf[i/2] = 0;
+
+#if 0
+	echof(curconn, "HEXTEXT", "<-- %s %s %s", from, args, buf);
+#endif
+
+	naim_recvfrom(conn, from, NULL, buf, i/2, RF_ENCRYPTED | RF_AUTOMATIC);
+}
+
+nFIRE_CTCPHAND(AUTOPEER) {
+	buddylist_t *blist;
+	char	*str;
+
+	if ((args == NULL) || (*args == 0))
+		return;
+
+	if ((blist = rgetlist(conn, from)) == NULL) {
+		if (getvar_int(conn, "autopeerverbose") > 0)
+			status_echof(conn, "Received autopeer message (%s) from non-buddy %s.\n",
+				args, from);
+		if ((strcmp(args, "-AUTOPEER") != 0) && (strcmp(args, "-AUTOCRYPT") != 0)) {
+			if (getvar_int(conn, "autobuddy")) {
+				status_echof(conn, "Adding <font color=\"#00FFFF\">%s</font> to your buddy list due to autopeer.\n",
+					from);
+				blist = raddbuddy(conn, from, DEFAULT_GROUP, NULL);
+				bnewwin(conn, from, BUDDY);
+				firetalk_im_add_buddy(conn->conn, from, USER_GROUP(blist), NULL);
+			} else {
+				if (getvar_int(conn, "autopeerverbose") > 0)
+					status_echof(conn, "Declining automatic negotiation with <font color=\"#00FFFF\">%s</font> (add <font color=\"#00FFFF\">%s</font> to your buddy list).\n", 
+						from, from);
+				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOPEER");
+				return;
+			}
+		} else {
+			if (getvar_int(conn, "autopeerverbose") > 0)
+				status_echof(conn, "... ignored.\n");
+			return;
+		}
+	}
+	assert(blist != NULL);
+
+	str = strdup(args);
+	args = str;
+	while (args != NULL) {
+		char	buf[1024],
+			*sp = strchr(args, ' '),
+			*co;
+
+		if (sp != NULL)
+			*sp = 0;
+
+		if ((co = strchr(args, ':')) != NULL) {
+			*co = 0;
+			co++;
+			if (*co == 0)
+				co = NULL;
+		}
+
+		if (strcmp(args, "--") == 0)
+			break;
+		else if (strcasecmp(args, "+AUTOPEER") == 0) {
+			int	lev;
+
+			if (co != NULL)
+				lev = atoi(co);
+			else
+				lev = 1;
+
+			if (blist->peer != lev) {
+				const char
+					*autocrypt_flag,
+					*autozone_flag1,
+					*autozone_flag2;
+
+				if (getvar_int(conn, "autopeerverbose") > 0)
+					status_echof(conn, "Peer level %i automatically negotiated with %s.\n",
+						lev, from);
+
+				if ((lev > 2) && (blist->peer == 0) && (blist->crypt == NULL) && (getvar_int(conn, "autocrypt") > 0))
+					autocrypt_flag = " +AUTOCRYPT";
+				else
+					autocrypt_flag = "";
+
+				if ((lev > 2) && ((autozone_flag2 = getvar(conn, "autozone")) != NULL) && (*autozone_flag2 != 0))
+					autozone_flag1 = " +AUTOZONE:";
+				else {
+					autozone_flag1 = "";
+					autozone_flag2 = "";
+				}
+
+				snprintf(buf, sizeof(buf), "+AUTOPEER:%i%s%s%s", 4,
+					autocrypt_flag, autozone_flag1, autozone_flag2);
+
+				blist->peer = lev;
+				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", buf);
+			}
+		} else if (strcasecmp(args, "-AUTOPEER") == 0) {
+			if (getvar_int(conn, "autopeerverbose") > 0) {
+				if (blist->peer == 0)
+					status_echof(conn, "Automatic negotiation with <font color=\"#00FFFF\">%s</font> declined (you are probably not on <font color=\"#00FFFF\">%s</font>'s buddy list).\n", 
+						from, from);
+				else if (blist->peer > 0)
+					status_echof(conn, "Negotiated session with <font color=\"#00FFFF\">%s</font> terminated.\n",
+						from);
+			}
+			if (blist->crypt != NULL) {
+				free(blist->crypt);
+				blist->crypt = NULL;
+				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOCRYPT");
+			}
+			blist->peer = 0;
+		} else if (strcasecmp(args, "+AUTOCRYPT") == 0) {
+			if (!getvar_int(conn, "autocrypt"))
+				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOCRYPT");
+			else {
+				if (co == NULL) {
+					char	key[21],
+						buf[1024];
+					int	i = 0;
+
+					while (i < sizeof(key)-1) {
+						key[i] = 1 + rand()%255;
+						if (!isspace(key[i]) && (firetalk_isprint(conn->conn, key[i]) == FE_SUCCESS))
+							i++;
+					}
+					key[i] = 0;
+
+					snprintf(buf, sizeof(buf), "+AUTOCRYPT:%s", key);
+					firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", buf);
+
+					co = key;
+				}
+
+				if ((blist->crypt == NULL) || (strcmp(blist->crypt, co) != 0)) {
+					STRREPLACE(blist->crypt, co);
+					if (getvar_int(conn, "autopeerverbose") > 0)
+						status_echof(conn, "Now encrypting messages sent to <font color=\"#00FFFF\">%s</font> with XOR [%s].\n",
+							from, co);
+				}
+			}
+		} else if (strcasecmp(args, "+AUTOZONE") == 0) {
+			if (co == NULL)
+				status_echof(conn, "Received blank time zone from peer <font color=\"#00FFFF\">%s</font> <scratches head>.\n",
+					from);
+			else
+				STRREPLACE(blist->tzname, co);
+		}
+
+		if ((strcasecmp(args, "-AUTOCRYPT") == 0) || (strcasecmp(args, "-AUTOPEER") == 0)) {
+			if (blist->crypt != NULL) {
+				free(blist->crypt);
+				blist->crypt = NULL;
+				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOCRYPT");
+				if (getvar_int(conn, "autopeerverbose") > 0)
+					status_echof(conn, "No longer encrypting messages sent to %s.\n",
+						from);
+			}
+		}
+
+		if (sp != NULL) {
+			args = sp+1;
+			while (isspace(*args))
+				args++;
+			if (*args == 0)
+				args = NULL;
+		} else
+			args = NULL;
+	}
+	free(str);
+}
+
+nFIRE_CTCPHAND(default) {
+	if (getvar_int(conn, "ctcpverbose") > 0) {
+		if (args == NULL)
+			echof(conn, "CTCP", "Unknown CTCP %s from <font color=\"#00FFFF\">%s</font>.\n",
+				command, from);
+		else
+			echof(conn, "CTCP", "Unknown CTCP %s from <font color=\"#00FFFF\">%s</font>: %s.\n",
+				command, from, args);
+	}
+}
+
+nFIRE_CTCPREPHAND(VERSION) {
+	char	*str = strdup(args), *ver, *env;
+	int	i, show = 1;
+
+	for (i = 0; i < awayc; i++)
+		if (firetalk_compare_nicks(conn->conn, from, awayar[i].name) == FE_SUCCESS) {
+			show = 0;
+			break;
+		}
+
+	if (((ver = strchr(str, ':')) != NULL)
+	 && ((env = strchr(ver+1, ':')) != NULL)
+	 && (strchr(env+1, ':') == NULL)) {
+		*ver++ = 0;
+		*env++ = 0;
+		if (show)
+			echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> is running %s version %s (%s).\n",
+				from, str, ver, env);
+	} else if (show)
+		echof(conn, NULL, "CTCP VERSION reply from <font color=\"#00FFFF\">%s</font>: %s.\n",
+			from, args);
+	free(str);
+}
+
+nFIRE_CTCPREPHAND(AWAY) {
+	int	time;
+	const char *rest;
+	buddywin_t *bwin;
+
+	if ((args == NULL) || (*args == 0))
+		return;
+
+	time = atoi(args);
+
+	if (((time > 0) || (strncmp(args, "0 ", 2) == 0))
+		&& ((rest = strchr(args, ' ')) != NULL)) {
+		rest++;
+		if (*rest == ':')
+			rest++;
+	} else {
+		time = -1;
+		rest = args;
+	}
+
+	if ((bwin = bgetwin(conn, from, BUDDY)) != NULL)
+		STRREPLACE(bwin->blurb, rest);
+
+	if (awayc > 0) {
+		int	i;
+
+		assert(awayar != NULL);
+
+		for (i = 0; i < awayc; i++)
+			if (firetalk_compare_nicks(conn->conn, from, awayar[i].name) == FE_SUCCESS) {
+				if (bwin == NULL)
+					status_echof(conn, "<font color=\"#00FFFF\">%s</font> is now away: %s.\n",
+						from, rest);
+				else
+					window_echof(bwin, "<font color=\"#00FFFF\">%s</font> is now away: %s.\n",
+						user_name(NULL, 0, conn, bwin->e.buddy), rest);
+				awayar[i].gotaway = 1;
+				return;
+			}
+	}
+
+	if (time >= 0)
+		echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> has been away for %s: %s.\n",
+			from, dtime(time*60), rest);
+	else
+		echof(conn, NULL, "CTCP AWAY reply from <font color=\"#00FFFF\">%s</font>: %s.\n",
+			from, rest);
+}
+
+nFIRE_CTCPREPHAND(default) {
+	if (args == NULL)
+		echof(conn, NULL, "CTCP %s reply from <font color=\"#00FFFF\">%s</font>.\n",
+			command, from);
+	else
+		echof(conn, NULL, "CTCP %s reply from <font color=\"#00FFFF\">%s</font>: %s.\n",
+			command, from, args);
+}
+
 conn_t	*naim_newconn(int proto) {
 	conn_t	*conn = calloc(1, sizeof(conn_t));
 
@@ -924,8 +1245,6 @@ conn_t	*naim_newconn(int proto) {
 
 		firetalk_register_callback(conn->conn, FC_NEEDPASS,			_firebind_needpass);
 
-#if 0
-		firetalk_subcode_register_request_callback(conn->conn, "VERSION",	_firebind_ctcp_VERSION);
 		firetalk_subcode_register_request_callback(conn->conn, "PING",		_firebind_ctcp_PING);
 		firetalk_subcode_register_request_callback(conn->conn, "LC",		_firebind_ctcp_LC);
 		firetalk_subcode_register_request_callback(conn->conn, "HEXTEXT",	_firebind_ctcp_HEXTEXT);
@@ -936,7 +1255,6 @@ conn_t	*naim_newconn(int proto) {
 		firetalk_subcode_register_reply_callback(conn->conn, "VERSION",		_firebind_ctcprep_VERSION);
 		firetalk_subcode_register_reply_callback(conn->conn, "AWAY",		_firebind_ctcprep_AWAY);
 		firetalk_subcode_register_reply_callback(conn->conn, NULL,		_firebind_ctcprep_default);
-#endif
 	}
 
 	return(conn);
