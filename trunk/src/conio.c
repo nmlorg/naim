@@ -81,6 +81,7 @@ static const char
 	"BUDDY_OFFLINE",
 	"BUDDY_QUEUED",
 	"BUDDY_TAGGED",
+	"BUDDY_FAKEAWAY",
 };
 
 static const char
@@ -395,12 +396,12 @@ CONIOAREQ(string,message)
 CONIOFUNC(addbuddy) {
 CONIOALIA(add)
 CONIOALIA(friend)
-CONIOALIA(groupbuddy)
 CONIODESC(Add someone to your buddy list or change their group membership)
 CONIOAREQ(account,account)
 CONIOAOPT(string,group)
 CONIOAOPT(string,realname)
 	const char *group = "Buddy", *name = NULL;
+	fte_t	ret;
 
 	switch (argc) {
 	  default:
@@ -411,12 +412,8 @@ CONIOAOPT(string,realname)
 		break;
 	}
 
-	{
-		fte_t	ret;
-
-		if ((ret = firetalk_im_add_buddy(conn->conn, args[0], group, name)) != FE_SUCCESS)
-			echof(conn, "ADDBUDDY", "Unable to add buddy: %s.\n", firetalk_strerror(ret));
-	}
+	if ((ret = firetalk_im_add_buddy(conn->conn, args[0], group, name)) != FE_SUCCESS)
+		echof(conn, "ADDBUDDY", "Unable to add buddy: %s.\n", firetalk_strerror(ret));
 }
 
 static void do_delconn(conn_t *conn) {
@@ -1463,11 +1460,23 @@ CONIOAOPT(string,realname)
 	if (argc == 1)
 		conio_addbuddy(conn, 1, args);
 	else {
-		const char	*_args[3];
+		buddylist_t *blist = rgetlist(conn, args[0]);
+		const char *_args[] = { args[0], (blist == NULL)?"Buddy":USER_GROUP(blist), args[1] };
 
-		_args[0] = args[0];
-		_args[1] = "Buddy";
-		_args[2] = args[1];
+		conio_addbuddy(conn, 3, _args);
+	}
+}
+
+CONIOFUNC(groupbuddy) {
+CONIODESC(Change the group membership for a buddy)
+CONIOAREQ(account,account)
+CONIOAOPT(string,group)
+	if (argc == 1)
+		conio_addbuddy(conn, 1, args);
+	else {
+		buddylist_t *blist = rgetlist(conn, args[0]);
+		const char *_args[] = { args[0], args[1], (blist == NULL)?NULL:USER_NAME(blist) };
+
 		conio_addbuddy(conn, 3, _args);
 	}
 }

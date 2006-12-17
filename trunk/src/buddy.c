@@ -434,8 +434,10 @@ void	bupdate(void) {
 							col = CI(WINLIST,BUDDY_TAGGED);
 						else if (bwin->e.buddy->offline)
 							col = C(WINLIST,BUDDY_OFFLINE);
-						else if (bwin->e.buddy->isaway)
+						else if (bwin->e.buddy->isaway && bwin->e.buddy->isidle)
 							col = C(WINLIST,BUDDY_AWAY);
+						else if (bwin->e.buddy->isaway)
+							col = C(WINLIST,BUDDY_FAKEAWAY);
 						else if (bwin->e.buddy->isidle)
 							col = C(WINLIST,BUDDY_IDLE);
 						else
@@ -978,14 +980,9 @@ void	bgoing(conn_t *conn, const char *buddy) {
 			echof(conn, NULL, "Strangeness while marking %s offline: no autopeer negotiated, but autocrypt set!\n",
 				buddy);
 		blist->peer = 0;
-		if (blist->crypt != NULL) {
-			free(blist->crypt);
-			blist->crypt = NULL;
-		}
-		if (blist->tzname != NULL) {
-			free(blist->tzname);
-			blist->tzname = NULL;
-		}
+		FREESTR(blist->crypt);
+		FREESTR(blist->tzname);
+		FREESTR(blist->caps);
 
 		status_echof(conn, "<font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> has just logged off :(\n", 
 			user_name(NULL, 0, conn, blist), USER_GROUP(blist));
@@ -1122,15 +1119,10 @@ static void bclearall_bwin(conn_t *conn, buddywin_t *bwin, int force) {
 }
 
 static void bclearall_buddy(buddylist_t *buddy) {
-	if (buddy->crypt != NULL) {
-		free(buddy->crypt);
-		buddy->crypt = NULL;
-	}
-	if (buddy->tzname != NULL) {
-		free(buddy->tzname);
-		buddy->tzname = NULL;
-	}
-	buddy->peer = 0;
+	FREESTR(buddy->crypt);
+	FREESTR(buddy->tzname);
+	FREESTR(buddy->caps);
+	buddy->warnval = buddy->typing = buddy->peer = buddy->isaway = buddy->isidle = 0;
 	buddy->offline = 1;
 }
 

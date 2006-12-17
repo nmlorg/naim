@@ -316,6 +316,15 @@ nFIRE_HANDLER(naim_buddy_caps) {
 	caps = va_arg(msg, const char *);
 	va_end(msg);
 
+#ifdef DEBUG_ECHO
+	{
+		buddywin_t *bwin = bgetwin(conn, who, BUDDY);
+
+		if (bwin != NULL)
+			window_echof(bwin, "CAP[%s] = %s\n", who, caps);
+	}
+#endif
+
 	if ((blist = rgetlist(conn, who)) != NULL) {
 		int	i, j, strtolower = 1;
 
@@ -413,6 +422,13 @@ nFIRE_HANDLER(naim_buddyadded) {
 		else
 			status_echof(conn, "Added <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to your non-permanent buddy list.\n",
 				user_name(NULL, 0, conn, blist), USER_GROUP(blist));
+	} else {
+		if (strcmp(blist->_group, group) != 0)
+			status_echof(conn, "Moved <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to group <font color=\"#00FFFF\">%s</font>.\n",
+				user_name(NULL, 0, conn, blist), USER_GROUP(blist), group);
+		else
+			status_echof(conn, "Renamed <font color=\"#00FFFF\">%s</font> <font color=\"#800000\">[<B>%s</B>]</font> to <font color=\"#FF0000\">%s</font>.\n",
+				user_name(NULL, 0, conn, blist), USER_GROUP(blist), (friendly != NULL)?friendly:USER_ACCOUNT(blist));
 	}
 
 	STRREPLACE(blist->_group, group);
@@ -1606,6 +1622,7 @@ transfer_t *fnewtransfer(struct firetalk_transfer_t *handle, buddywin_t *bwin, c
 void	fremove(transfer_t *transfer) {
 	FREESTR(transfer->from);
 	FREESTR(transfer->remote);
+	FREESTR(transfer->local);
 	free(transfer);
 }
 
@@ -1687,9 +1704,9 @@ nFIRE_HANDLER(naim_file_progress) {
 	bwin->e.transfer->bytes = bytes;
 
 	if ((bwin->e.transfer->lastupdate+5) < now) {
-		window_echof(bwin, "STATUS %s/s, %lu/%lu (%.0f%%)\n",
+		window_echof(bwin, "STATUS %s/s, %lu/%lu (%i%%)\n",
 			dsize(bytes/(nowf-bwin->e.transfer->started)),
-			bytes, size, 100.0*bytes/size);
+			bytes, size, (int)(100.0*bytes/size));
 		bwin->e.transfer->lastupdate = now;
 	}
 }
