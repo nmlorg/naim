@@ -6,6 +6,7 @@
 */
 
 #include <naim/naim.h>
+#include <naim/modutil.h>
 #include "naim-int.h"
 
 #include "lua.h"
@@ -32,6 +33,12 @@ static void _loadfunctions();
 static void _getmaintable();
 static void _getvarstable();
 static void _getconnstable();
+
+#define _hook_recvfrom_add(luacmd, weight)	do { \
+		void	*mod = NULL; \
+		\
+		HOOK_ADD(recvfrom, mod, nlua_recvfrom, weight); \
+	}
 
 void nlua_init()
 {
@@ -397,7 +404,7 @@ int nlua_luacmd(char *cmd, char *arg, conn_t *conn)
 	return 1;			//
 }
 
-int l_status_echof(lua_State *L)
+static int l_status_echof(lua_State *L)
 {
 	/* lua_pushlightuserdata(L, void *p) */
 	conn_t *conn = _get_conn_t(L, 1);
@@ -412,14 +419,14 @@ int l_status_echof(lua_State *L)
 	return 0;
 }
 
-int l_debug(lua_State *L)
+static int l_debug(lua_State *L)
 {
 	const char *s = lua_tostring(L, 1);
 	status_echof(curconn, "%s", s);
 	return 0;
 }
 
-int l_conio(lua_State *L)
+static int l_conio(lua_State *L)
 {
 	/* lua_pushlightuserdata(L, void *p) */
 	const char *s = lua_tostring(L, 1);
@@ -433,7 +440,7 @@ int l_conio(lua_State *L)
 	return 0;
 }
 
-int l_curconn(lua_State *L)
+static int l_curconn(lua_State *L)
 {
 	_push_conn_t(L, curconn);
 	return 1;

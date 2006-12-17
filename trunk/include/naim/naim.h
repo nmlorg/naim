@@ -289,7 +289,7 @@ void	echof(conn_t *conn, const unsigned char *where, const unsigned char *format
 
 /* events.c */
 void	updateidletime(void) G_GNUC_INTERNAL;
-void	event_handle(time_t) G_GNUC_INTERNAL;
+void	events_hook_init(void) G_GNUC_INTERNAL;
 
 /* fireio.c */
 void	chat_flush(buddywin_t *bwin) G_GNUC_INTERNAL;

@@ -97,6 +97,7 @@ typedef struct {
 
 
 
+#if 0
 typedef struct {
 	int	fd, type, buflen;
 	char	*buf;
@@ -118,5 +119,6 @@ void	mod_fd_read_buf(int fd, void (*func)(char *, int), char *, int);
 
 void	mod_fd_connect_raw(const char *host, int port, void (*func)(int));
 void	mod_fd_write_buf(int fd, const char *buf, int buflen);
+#endif
 
 #endif /* naim_h */
