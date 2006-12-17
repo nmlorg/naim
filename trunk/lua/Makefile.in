@@ -64,8 +64,9 @@ am_liblua_la_OBJECTS = lua511/lapi.lo lua511/lcode.lo lua511/ldebug.lo \
 liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
 libnlua_la_DEPENDENCIES = liblua.la
 am_libnlua_la_OBJECTS = libnlua_la-commands.lo libnlua_la-conn.lo \
-	libnlua_la-garbage.lo libnlua_la-moon.lo libnlua_la-script.lo \
-	libnlua_la-util.lo libnlua_la-variables.lo
+	libnlua_la-garbage.lo libnlua_la-hooks.lo libnlua_la-moon.lo \
+	libnlua_la-script.lo libnlua_la-util.lo \
+	libnlua_la-variables.lo
 libnlua_la_OBJECTS = $(am_libnlua_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_lua_OBJECTS = lua511/lua.$(OBJEXT)
@@ -205,7 +206,7 @@ EXTRA_DIST = \
 	cmpllua.sh \
 	default.lua \
 	examples/eliza.lua \
-	examples/testnaim.lua
+	examples/i-r-elite-script.lua
 
 noinst_LTLIBRARIES = liblua.la libnlua.la
 liblua_la_SOURCES = \
@@ -222,6 +223,7 @@ libnlua_la_SOURCES = \
 	commands.c \
 	conn.c \
 	garbage.c \
+	hooks.c \
 	moon.c \
 	moon-int.h \
 	script.c \
@@ -406,6 +408,9 @@ libnlua_la-conn.lo: conn.c
 
 libnlua_la-garbage.lo: garbage.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-garbage.lo `test -f 'garbage.c' || echo '$(srcdir)/'`garbage.c
+
+libnlua_la-hooks.lo: hooks.c
+	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-hooks.lo `test -f 'hooks.c' || echo '$(srcdir)/'`hooks.c
 
 libnlua_la-moon.lo: moon.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-moon.lo `test -f 'moon.c' || echo '$(srcdir)/'`moon.c
