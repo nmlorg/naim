@@ -16,7 +16,6 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <arpa/inet.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -393,19 +392,7 @@ static void firetalk_im_delete_buddy(firetalk_connection_t *conn, const char *co
 		prev->next = iter->next;
 	else
 		conn->buddy_head = iter->next;
-	free(iter->nickname);
-	iter->nickname = NULL;
-	free(iter->group);
-	iter->group = NULL;
-	if (iter->friendly != NULL) {
-		free(iter->friendly);
-		iter->friendly = NULL;
-	}
-	if (iter->capabilities != NULL) {
-		free(iter->capabilities);
-		iter->capabilities = NULL;
-	}
-	free(iter);
+	firetalk_buddy_t_delete(iter);
 	iter = NULL;
 }
 
@@ -458,10 +445,7 @@ fte_t	firetalk_im_internal_remove_deny(firetalk_connection_t *conn, const char *
 				prev->next = iter->next;
 			else
 				conn->deny_head = iter->next;
-			free(iter->nickname);
-			iter->nickname = NULL;
-			free(iter);
-
+			firetalk_deny_t_delete(iter);
 			return(FE_SUCCESS);
 		}
 		prev = iter;
@@ -472,29 +456,17 @@ fte_t	firetalk_im_internal_remove_deny(firetalk_connection_t *conn, const char *
 
 fte_t	firetalk_chat_internal_remove_room(firetalk_connection_t *conn, const char *const name) {
 	firetalk_room_t *iter, *prev;
-	firetalk_member_t *memberiter, *membernext;
 
 	VERIFYCONN;
 
 	prev = NULL;
 	for (iter = conn->room_head; iter != NULL; iter = iter->next) {
 		if (firetalk_protocols[conn->protocol]->comparenicks(name, iter->name) == FE_SUCCESS) {
-			for (memberiter = iter->member_head; memberiter != NULL; memberiter = membernext) {
-				membernext = memberiter->next;
-				free(memberiter->nickname);
-				memberiter->nickname = NULL;
-				free(memberiter);
-			}
-			iter->member_head = NULL;
 			if (prev)
 				prev->next = iter->next;
 			else
 				conn->room_head = iter->next;
-			if (iter->name) {
-				free(iter->name);
-				iter->name = NULL;
-			}
-			free(iter);
+			firetalk_room_t_delete(iter);
 			return(FE_SUCCESS);
 		}
 		prev = iter;
@@ -523,11 +495,7 @@ fte_t	firetalk_chat_internal_remove_member(firetalk_connection_t *conn, const ch
 				memberprev->next = memberiter->next;
 			else
 				iter->member_head = memberiter->next;
-			if (memberiter->nickname) {
-				free(memberiter->nickname);
-				memberiter->nickname = NULL;
-			}
-			free(memberiter);
+			firetalk_member_t_delete(memberiter);
 			return(FE_SUCCESS);
 		}
 		memberprev = memberiter;
@@ -616,19 +584,12 @@ void	firetalk_callback_im_buddyonline(struct firetalk_driver_connection_t *c, co
 				assert(buddyiter->typing == 0);
 				assert(buddyiter->warnval == 0);
 				assert(buddyiter->idletime == 0);
-				if (strcmp(buddyiter->nickname, nickname) != 0) {
-					free(buddyiter->nickname);
-					buddyiter->nickname = strdup(nickname);
-					if (buddyiter->nickname == NULL)
-						abort();
-				}
+				if (strcmp(buddyiter->nickname, nickname) != 0)
+					STRREPLACE(buddyiter->nickname, nickname);
 				if (conn->callbacks[FC_IM_BUDDYONLINE] != NULL)
 					conn->callbacks[FC_IM_BUDDYONLINE](conn, conn->clientstruct, nickname);
 			} else {
-				buddyiter->away = 0;
-				buddyiter->typing = 0;
-				buddyiter->warnval = 0;
-				buddyiter->idletime = 0;
+				buddyiter->away = buddyiter->typing = buddyiter->warnval = buddyiter->idletime = 0;
 				if (conn->callbacks[FC_IM_BUDDYOFFLINE] != NULL)
 					conn->callbacks[FC_IM_BUDDYOFFLINE](conn, conn->clientstruct, nickname);
 			}
@@ -680,18 +641,8 @@ static void firetalk_im_replace_buddy(firetalk_connection_t *conn, firetalk_budd
 		/* user is in buddy list somewhere other than where the clients wants it */
 		if ((conn->sock.state != FCS_NOTCONNECTED) && iter->uploaded)
 			firetalk_protocols[conn->protocol]->im_remove_buddy(conn->handle, iter->nickname, iter->group);
-		free(iter->group);
-		iter->group = strdup(group);
-		if (iter->group == NULL)
-			abort();
-		free(iter->friendly);
-		if (friendly == NULL)
-			iter->friendly = NULL;
-		else {
-			iter->friendly = strdup(friendly);
-			if (iter->friendly == NULL)
-				abort();
-		}
+		STRREPLACE(iter->group, group);
+		STRREPLACE(iter->friendly, friendly);
 		if (conn->callbacks[FC_IM_BUDDYADDED] != NULL)
 			conn->callbacks[FC_IM_BUDDYADDED](conn, conn->clientstruct, iter->nickname, iter->group, iter->friendly);
 	}
@@ -754,8 +705,7 @@ void	firetalk_callback_capabilities(struct firetalk_driver_connection_t *c, char
 	if (((buddyiter = firetalk_im_find_buddy(conn, nickname)) == NULL) || (buddyiter->online == 0))
 		return;
 	if ((buddyiter->capabilities == NULL) || (strcmp(buddyiter->capabilities, caps) != 0)) {
-		free(buddyiter->capabilities);
-		buddyiter->capabilities = strdup(caps);
+		STRREPLACE(buddyiter->capabilities, caps);
 		if (conn->callbacks[FC_IM_CAPABILITIES] != NULL)
 			conn->callbacks[FC_IM_CAPABILITIES](conn, conn->clientstruct, nickname, caps);
 	}
@@ -796,44 +746,21 @@ void	firetalk_callback_disconnect(struct firetalk_driver_connection_t *c, const 
 	firetalk_connection_t *conn = firetalk_find_handle(c);
 	firetalk_buddy_t *buddyiter;
 	firetalk_deny_t *denyiter;
-	firetalk_room_t *roomiter, *roomnext;
 
 	if (conn->sock.state != FCS_NOTCONNECTED)
 		firetalk_sock_close(&(conn->sock));
 
-	if (conn->username != NULL) {
-		free(conn->username);
-		conn->username = NULL;
-	}
+	FREESTR(conn->username);
 
 	for (buddyiter = conn->buddy_head; buddyiter != NULL; buddyiter = buddyiter->next) {
-		if (buddyiter->capabilities != NULL) {
-			free(buddyiter->capabilities);
-			buddyiter->capabilities = NULL;
-		}
+		FREESTR(buddyiter->capabilities);
 		buddyiter->idletime = buddyiter->warnval = buddyiter->typing = buddyiter->online = buddyiter->away = buddyiter->uploaded = 0;
 	}
 
 	for (denyiter = conn->deny_head; denyiter != NULL; denyiter = denyiter->next)
 		denyiter->uploaded = 0;
 
-	for (roomiter = conn->room_head; roomiter != NULL; roomiter = roomnext) {
-		firetalk_member_t *memberiter, *membernext;
-
-		roomnext = roomiter->next;
-		roomiter->next = NULL;
-		for (memberiter = roomiter->member_head; memberiter != NULL; memberiter = membernext) {
-			membernext = memberiter->next;
-			memberiter->next = NULL;
-			free(memberiter->nickname);
-			memberiter->nickname = NULL;
-			free(memberiter);
-		}
-		roomiter->member_head = NULL;
-		free(roomiter->name);
-		roomiter->name = NULL;
-		free(roomiter);
-	}
+	firetalk_room_t_list_delete(conn->room_head);
 	conn->room_head = NULL;
 
 	if (conn->callbacks[FC_DISCONNECT])
@@ -1493,10 +1420,8 @@ fte_t	firetalk_signon(firetalk_connection_t *conn, const char *server, uint16_t 
 		conn->sock.state = FCS_NOTCONNECTED;
 	}
 
-	free(conn->username);
-	conn->username = strdup(username);
-	if (conn->username == NULL)
-		abort();
+	STRREPLACE(conn->username, username);
+
 	conn->buffer.pos = 0;
 
 	if (server == NULL)
@@ -1899,13 +1824,8 @@ fte_t	firetalk_subcode_register_request_callback(firetalk_connection_t *conn, co
 	VERIFYCONN;
 
 	if (command == NULL) {
-		if (conn->subcode_request_default != NULL) {
-			if (conn->subcode_request_default->staticresp != NULL) {
-				free(conn->subcode_request_default->staticresp);
-				conn->subcode_request_default->staticresp = NULL;
-			}
-			free(conn->subcode_request_default);
-		}
+		if (conn->subcode_request_default != NULL)
+			firetalk_subcode_callback_t_delete(conn->subcode_request_default);
 		conn->subcode_request_default = calloc(1, sizeof(*conn->subcode_request_default));
 		if (conn->subcode_request_default == NULL)
 			abort();
@@ -1930,13 +1850,8 @@ fte_t	firetalk_subcode_register_request_reply(firetalk_connection_t *conn, const
 	VERIFYCONN;
 
 	if (command == NULL) {
-		if (conn->subcode_request_default != NULL) {
-			if (conn->subcode_request_default->staticresp != NULL) {
-				free(conn->subcode_request_default->staticresp);
-				conn->subcode_request_default->staticresp = NULL;
-			}
-			free(conn->subcode_request_default);
-		}
+		if (conn->subcode_request_default != NULL)
+			firetalk_subcode_callback_t_delete(conn->subcode_request_default);
 		conn->subcode_request_default = calloc(1, sizeof(*conn->subcode_request_default));
 		if (conn->subcode_request_default == NULL)
 			abort();
@@ -1966,7 +1881,7 @@ fte_t	firetalk_subcode_register_reply_callback(firetalk_connection_t *conn, cons
 
 	if (command == NULL) {
 		if (conn->subcode_reply_default)
-			free(conn->subcode_reply_default);
+			firetalk_subcode_callback_t_delete(conn->subcode_reply_default);
 		conn->subcode_reply_default = calloc(1, sizeof(*conn->subcode_reply_default));
 		if (conn->subcode_reply_default == NULL)
 			abort();
@@ -2107,20 +2022,8 @@ fte_t	firetalk_file_cancel(firetalk_connection_t *conn, firetalk_transfer_t *fil
 				prev->next = fileiter->next;
 			else
 				conn->file_head = fileiter->next;
-			if (fileiter->who) {
-				free(fileiter->who);
-				fileiter->who = NULL;
-			}
-			if (fileiter->filename) {
-				free(fileiter->filename);
-				fileiter->filename = NULL;
-			}
-			firetalk_sock_close(&(fileiter->sock));
-			if (fileiter->filefd >= 0) {
-				close(fileiter->filefd);
-				fileiter->filefd = -1;
-			}
-			free(fileiter);
+
+			firetalk_transfer_t_delete(fileiter);
 			return(FE_SUCCESS);
 		}
 		prev = fileiter;
@@ -2364,128 +2267,7 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 			fchandlenext = fchandle->next;
 			if (fchandle->deleted) {
 				assert(fchandle->handle == NULL);
-				if (fchandle->buddy_head != NULL) {
-					firetalk_buddy_t *iter, *iternext;
 
-					for (iter = fchandle->buddy_head; iter != NULL; iter = iternext) {
-						iternext = iter->next;
-						iter->next = NULL;
-						if (iter->nickname != NULL) {
-							free(iter->nickname);
-							iter->nickname = NULL;
-						}
-						if (iter->group != NULL) {
-							free(iter->group);
-							iter->group = NULL;
-						}
-						if (iter->friendly != NULL) {
-							free(iter->friendly);
-							iter->friendly = NULL;
-						}
-						if (iter->capabilities != NULL) {
-							free(iter->capabilities);
-							iter->capabilities = NULL;
-						}
-						free(iter);
-					}
-					fchandle->buddy_head = NULL;
-				}
-				if (fchandle->deny_head != NULL) {
-					firetalk_deny_t *iter, *iternext;
-
-					for (iter = fchandle->deny_head; iter != NULL; iter = iternext) {
-						iternext = iter->next;
-						iter->next = NULL;
-						if (iter->nickname != NULL) {
-							free(iter->nickname);
-							iter->nickname = NULL;
-						}
-						free(iter);
-					}
-					fchandle->deny_head = NULL;
-				}
-				if (fchandle->room_head != NULL) {
-					firetalk_room_t *iter, *iternext;
-
-					for (iter = fchandle->room_head; iter != NULL; iter = iternext) {
-						firetalk_member_t *memberiter, *memberiternext;
-
-						for (memberiter = iter->member_head; memberiter != NULL; memberiter = memberiternext) {
-							memberiternext = memberiter->next;
-							memberiter->next = NULL;
-							if (memberiter->nickname != NULL) {
-								free(memberiter->nickname);
-								memberiter->nickname = NULL;
-							}
-							free(memberiter);
-						}
-						iter->member_head = NULL;
-						iternext = iter->next;
-						if (iter->name != NULL) {
-							free(iter->name);
-							iter->name = NULL;
-						}
-						free(iter);
-					}
-					fchandle->room_head = NULL;
-				}
-				while (fchandle->file_head != NULL)
-					firetalk_file_cancel(fchandle, fchandle->file_head);
-				if (fchandle->subcode_request_head != NULL) {
-					firetalk_subcode_callback_t *iter, *iternext;
-
-					for (iter = fchandle->subcode_request_head; iter != NULL; iter = iternext) {
-						iternext = iter->next;
-						iter->next = NULL;
-						if (iter->command != NULL) {
-							free(iter->command);
-							iter->command = NULL;
-						}
-						if (iter->staticresp != NULL) {
-							free(iter->staticresp);
-							iter->staticresp = NULL;
-						}
-						free(iter);
-					}
-					fchandle->subcode_request_head = NULL;
-				}
-				if (fchandle->subcode_request_default != NULL) {
-					if (fchandle->subcode_request_default->command != NULL) {
-						free(fchandle->subcode_request_default->command);
-						fchandle->subcode_request_default->command = NULL;
-					}
-					if (fchandle->subcode_request_default->staticresp != NULL) {
-						free(fchandle->subcode_request_default->staticresp);
-						fchandle->subcode_request_default->staticresp = NULL;
-					}
-					free(fchandle->subcode_request_default);
-					fchandle->subcode_request_default = NULL;
-				}
-				if (fchandle->subcode_reply_head != NULL) {
-					firetalk_subcode_callback_t *iter, *iternext;
-
-					for (iter = fchandle->subcode_reply_head; iter != NULL; iter = iternext) {
-						iternext = iter->next;
-						iter->next = NULL;
-						free(iter->command);
-						iter->command = NULL;
-						free(iter);
-					}
-					fchandle->subcode_reply_head = NULL;
-				}
-				if (fchandle->subcode_reply_default != NULL) {
-					if (fchandle->subcode_reply_default->command != NULL) {
-						free(fchandle->subcode_reply_default->command);
-						fchandle->subcode_reply_default->command = NULL;
-					}
-					free(fchandle->subcode_reply_default);
-					fchandle->subcode_reply_default = NULL;
-				}
-				if (fchandle->username != NULL) {
-					free(fchandle->username);
-					fchandle->username = NULL;
-				}
-				firetalk_buffer_free(&(fchandle->buffer));
 				if (fchandleprev == NULL) {
 					assert(fchandle == handle_head);
 					handle_head = fchandlenext;
@@ -2494,9 +2276,7 @@ fte_t	firetalk_select_custom(int n, fd_set *fd_read, fd_set *fd_write, fd_set *f
 					fchandleprev->next = fchandlenext;
 				}
 
-				fchandle->canary = NULL;
-				free(fchandle);
-				fchandle = NULL;
+				firetalk_connection_t_delete(fchandle);
 			} else
 				fchandleprev = fchandle;
 		}

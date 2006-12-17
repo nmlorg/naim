@@ -1,7 +1,6 @@
 /* 
 ** Copyright 2006 Daniel Reed <n@ml.org>
 */
-#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -295,8 +294,7 @@ fte_t	firetalk_buffer_alloc(firetalk_buffer_t *buffer, uint16_t size) {
 }
 
 void	firetalk_buffer_free(firetalk_buffer_t *buffer) {
-	free(buffer->buffer);
-	buffer->buffer = NULL;
+	FREESTR(buffer->buffer);
 	buffer->pos = buffer->size = 0;
 }
 
