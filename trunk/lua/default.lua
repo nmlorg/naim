@@ -14,6 +14,18 @@ function naim.prototypes.windows.event(window, e, s)
 	end
 end
 
+function naim.prototypes.windows.event2(window, e, who, s)
+	if not window.events then
+		window.events = {}
+	end
+
+	if not window.events[who] then
+		window.events[who] = { type = e }
+	end
+
+	table.insert(window.events[who], s)
+end
+
 function naim.internal.eventeval(code)
 	local functabfunc = assert(loadstring("return {" .. (code and code or "") .. "}"))
 
@@ -582,7 +594,7 @@ naim.hooks.add('proto_chat_modeset', function(conn, chat, by, mode, arg)
 	local window = conn.windows[string.lower(chat)]
 
 	if window and group.synched then
-		window:event("event", "<font color=\"#00FFFF\">" .. by .. "</font> has set mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>.")
+		window:event2("event", by, "set mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
 	end
 end, 100)
 
@@ -591,7 +603,7 @@ naim.hooks.add('proto_chat_modeunset', function(conn, chat, by, mode, arg)
 	local window = conn.windows[string.lower(chat)]
 
 	if window and group.synched then
-		window:event("event", "<font color=\"#00FFFF\">" .. by .. "</font> has unset mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>.")
+		window:event2("event", by, "unset mode <font color=\"#FF00FF\">" .. string.char(mode) .. (arg and " " .. arg or "") .. "</font>")
 	end
 end, 100)
 
@@ -652,7 +664,7 @@ naim.hooks.add('proto_chat_user_oped', function(conn, chat, who, by)
 		local window = conn.windows[string.lower(chat)]
 
 		if window then
-			window:event("attacks", "<font color=\"#00FFFF\">" .. who .. "</font> has been oped by <font color=\"#00FFFF\">" .. by .. "</font>.")
+			window:event2("attacks", by, "oped <font color=\"#00FFFF\">" .. who .. "</font>")
 		end
 	end
 end, 100)
@@ -666,7 +678,7 @@ naim.hooks.add('proto_chat_user_deoped', function(conn, chat, who, by)
 	local window = conn.windows[string.lower(chat)]
 
 	if window then
-		window:event("attacks", "<font color=\"#00FFFF\">" .. who .. "</font> has been deoped by <font color=\"#00FFFF\">" .. by .. "</font>.")
+		window:event2("attacks", by, "deoped <font color=\"#00FFFF\">" .. who .. "</font>")
 	end
 end, 100)
 
@@ -691,17 +703,43 @@ naim.hooks.add('proto_chat_topicchanged', function(conn, chat, topic, by)
 
 	if window then
 		if by and by ~= "" then
-			window:event("misc", "<font color=\"#00FFFF\">" .. by .. "</font> has changed the topic on group " .. chat .. " to </B><body>" .. topic .. "</body><B>.")
+			window:event2("misc", by, "changed the topic to </B><body>" .. topic .. "</body><B>")
 		else
 			window:event("misc", "Topic for group " .. chat .. ": </B><body>" .. topic .. "</body><B>.")
 		end
 	end
 end, 100)
 
---naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
---	for k,v in pairs(naim.sockets) do
---	end
---end, 100)
+naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
+	for connname,conn in pairs(naim.connections) do
+		for winname,window in pairs(conn.windows) do
+			if window.events then
+				for who,events in pairs(window.events) do
+					if #events > 0 then
+						local t = {}
+
+						table.insert(t, "<font color=\"#00FFFF\">" .. who .. "</font> ")
+
+						if #events == 1 then
+							table.insert(t, events[1])
+						elseif #events == 2 then
+							table.insert(t, events[1] .. " and " .. events[2])
+						else
+							local last = table.remove(events, #events)
+
+							table.insert(t, table.concat(events, ", "))
+							table.insert(t, ", and " .. last)
+						end
+
+						window:event(events.type, table.concat(t) .. ".")
+					end
+				end
+
+				window.events = nil
+			end
+		end
+	end
+end, 100)
 
 --naim.hooks.add('postselect', function(rfd, wfd, efd)
 --	for k,v in pairs(naim.sockets) do
