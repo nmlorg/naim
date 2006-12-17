@@ -1,4 +1,4 @@
-== This Wiki ==
+﻿== This Wiki ==
 This wiki is currently incomplete.  http://naimdoc.net is the original naim wiki and will
 be ported/copied/moves here in time.
 
@@ -20,10 +20,10 @@ The purpose of this wiki will be to maintain a comprehensive set of documents fo
 
 Feel free to add whatever pages you see necessary, or edit any of the current ones.
 
-New users may find the FAQ or the Quick Start guide to be helpful, while advanced
+New users may find the [http://code.google.com/p/naim/wiki/FAQ FAQ] or the Quick Start guide to be helpful, while advanced
 users may find Key Binding and Settings and Preferences to be more interesting.
 There is also a list of Commands. We also maintain a collection of interesting
-naim-related links.
+naim-related [http://code.google.com/p/naim/wiki/Links links].
 
 Lost screennames - Screennames suspended by AOL for unknown reason that used naim. To
 be sent to an AOL Rep for possible action / investigation.
