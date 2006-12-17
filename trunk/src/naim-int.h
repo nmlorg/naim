@@ -102,6 +102,11 @@ extern long int timezone;
 # define script_listvars_stop	nlua_listvars_stop
 # define script_hook_newconn	nlua_hook_newconn
 # define script_hook_delconn	nlua_hook_delconn
+# define script_hook_newwin	nlua_hook_newwin
+# define script_hook_delwin	nlua_hook_delwin
+# define script_hook_newbuddy	nlua_hook_newbuddy
+# define script_hook_changebuddy nlua_hook_changebuddy
+# define script_hook_delbuddy	nlua_hook_delbuddy
 #else
 # error No scripting engine set
 #endif
@@ -122,6 +127,11 @@ char	*script_listvars_next(void);
 void	script_listvars_stop(void);
 void	script_hook_newconn(conn_t *conn);
 void	script_hook_delconn(conn_t *conn);
+void	script_hook_newwin(conn_t *conn, buddywin_t *bwin);
+void	script_hook_delwin(conn_t *conn, buddywin_t *bwin);
+void	script_hook_newbuddy(conn_t *conn, buddylist_t *buddy);
+void	script_hook_changebuddy(conn_t *conn, buddylist_t *buddy, const char *newaccount);
+void	script_hook_delbuddy(conn_t *conn, buddylist_t *buddy);
 
 static inline char *user_name(char *buf, int buflen, conn_t *conn, buddylist_t *user) {
 	static char _buf[256];

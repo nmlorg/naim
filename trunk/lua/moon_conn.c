@@ -92,7 +92,7 @@ void nlua_hook_newconn(conn_t *conn)
 	_getsubtable("internal");
 	_getitem("newConn");
 	lua_pushnumber(lua, _newconn_id(conn));
-	if (lua_pcall(lua, 1, 0, 0))				
+	if (lua_pcall(lua, 1, 0, 0))
 		lua_pop(lua, 1);
 }
 
@@ -104,6 +104,52 @@ void nlua_hook_delconn(conn_t *conn)
 	if (lua_pcall(lua, 1, 0, 0))
 		lua_pop(lua, 1);
 	_remove_conn(conn);
+}
+
+void	nlua_hook_newwin(conn_t *conn, buddywin_t *bwin) {
+	_getsubtable("internal");
+	_getitem("newwin");
+	_push_conn_t(lua, conn);
+	lua_pushstring(lua, bwin->winname);
+	if (lua_pcall(lua, 2, 0, 0))
+		lua_pop(lua, 2);
+}
+
+void	nlua_hook_delwin(conn_t *conn, buddywin_t *bwin) {
+	_getsubtable("internal");
+	_getitem("delwin");
+	_push_conn_t(lua, conn);
+	lua_pushstring(lua, bwin->winname);
+	if (lua_pcall(lua, 2, 0, 0))
+		lua_pop(lua, 2);
+}
+
+void	nlua_hook_newbuddy(conn_t *conn, buddylist_t *buddy) {
+	_getsubtable("internal");
+	_getitem("newbuddy");
+	_push_conn_t(lua, conn);
+	lua_pushstring(lua, USER_ACCOUNT(buddy));
+	if (lua_pcall(lua, 2, 0, 0))
+		lua_pop(lua, 2);
+}
+
+void	nlua_hook_changebuddy(conn_t *conn, buddylist_t *buddy, const char *newaccount) {
+	_getsubtable("internal");
+	_getitem("changebuddy");
+	_push_conn_t(lua, conn);
+	lua_pushstring(lua, USER_ACCOUNT(buddy));
+	lua_pushstring(lua, newaccount);
+	if (lua_pcall(lua, 3, 0, 0))
+		lua_pop(lua, 3);
+}
+
+void	nlua_hook_delbuddy(conn_t *conn, buddylist_t *buddy) {
+	_getsubtable("internal");
+	_getitem("delbuddy");
+	_push_conn_t(lua, conn);
+	lua_pushstring(lua, USER_ACCOUNT(buddy));
+	if (lua_pcall(lua, 2, 0, 0))
+		lua_pop(lua, 2);
 }
 
 #define CONN_STRING_GET(accessor, varname) \

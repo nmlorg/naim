@@ -30,7 +30,9 @@ function naim.internal.newConn(id)
 
 	setmetatable(naim.connections, {})
 	naim.connections[winname] = {
-		id = id
+		id = id,
+		windows = {},
+		buddies = {},
 	}
 	local mt = {
 		__index = function(table, key)
@@ -65,6 +67,57 @@ function naim.internal.delConn(id)
 	setmetatable(naim.connections, {
 		__newindex = function (t,k,v)
 			error("only naim can update the connections table",2)
+		end
+	})
+end
+
+function naim.internal.newwin(conn, winname)
+	setmetatable(conn.windows, {})
+	conn.windows[winname] = {}
+	setmetatable(conn.windows, {
+		__newindex = function (t,k,v)
+			error("only naim can update the windows table",2)
+		end
+	})
+end
+
+function naim.internal.delwin(conn, winname)
+	setmetatable(conn.windows, {})
+	conn.windows[winname] = nil
+	setmetatable(conn.windows, {
+		__newindex = function (t,k,v)
+			error("only naim can update the windows table",2)
+		end
+	})
+end
+
+function naim.internal.newbuddy(conn, account)
+	setmetatable(conn.buddies, {})
+	conn.buddies[account] = {}
+	setmetatable(conn.buddies, {
+		__newindex = function (t,k,v)
+			error("only naim can update the buddies table",2)
+		end
+	})
+end
+
+function naim.internal.changebuddy(conn, account, newaccount)
+	setmetatable(conn.buddies, {})
+	conn.buddies[newaccount] = conn.buddies[account]
+	conn.buddies[account] = nil
+	setmetatable(conn.buddies, {
+		__newindex = function (t,k,v)
+			error("only naim can update the buddies table",2)
+		end
+	})
+end
+
+function naim.internal.delbuddy(conn, account)
+	setmetatable(conn.buddies, {})
+	conn.buddies[account] = nil
+	setmetatable(conn.buddies, {
+		__newindex = function (t,k,v)
+			error("only naim can update the buddies table",2)
 		end
 	})
 end

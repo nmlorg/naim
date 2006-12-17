@@ -632,6 +632,8 @@ void	bclose(conn_t *conn, buddywin_t *bwin, int _auto) {
 
 	verify_winlist_sanity(conn, bwin);
 
+	script_hook_delwin(conn, bwin);
+
 	switch (bwin->et) {
 	  case BUDDY:
 		if (_auto == 0) {
@@ -912,6 +914,8 @@ void	bnewwin(conn_t *conn, const char *name, et_t et) {
 			bwin->nwin.dirty = 1;
 		}
 	}
+
+	script_hook_newwin(conn, bwin);
 }
 
 void	bcoming(conn_t *conn, const char *buddy) {
@@ -922,7 +926,10 @@ void	bcoming(conn_t *conn, const char *buddy) {
 
 	blist = rgetlist(conn, buddy);
 	assert(blist != NULL);
-	STRREPLACE(blist->_account, buddy);
+	if (strcmp(blist->_account, buddy) != 0) {
+		script_hook_changebuddy(conn, blist, buddy);
+		STRREPLACE(blist->_account, buddy);
+	}
 	if ((bwin = bgetbuddywin(conn, blist)) == NULL) {
 		if (getvar_int(conn, "autoquery") != 0) {
 			bnewwin(conn, buddy, BUDDY);
