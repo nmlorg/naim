@@ -92,7 +92,11 @@ void naim_faulthandler(int sig) {
 //	wshutitdown();
 	fprintf(stderr, "\r\n");
 	fprintf(stderr, "Running " PACKAGE_STRING NAIM_SNAPSHOT " for %s.\r\n", dtime(now - startuptime));
+#ifdef HAVE_STRSIGNAL
 	fprintf(stderr, "%s; partial symbolic backtrace:\r\n", strsignal(sig));
+#else
+	fprintf(stderr, "Signal %i; partial symbolic backtrace:\r\n", sig);
+#endif
 	for (i = 0; i < len; i++)
 		fprintf(stderr, "%i: %s\r\n", i, symbols[i]);
 	fprintf(stderr, "\r\nThis information is not a replacement for running naim in gdb. If you are interested in debugging this problem, please re-run naim within gdb and reproduce the fault. When you are presented with the (gdb) prompt again, type \"backtrace\" to receive the full symbolic backtrace and mail this to Daniel Reed <n@ml.org>.\r\n\r\n");

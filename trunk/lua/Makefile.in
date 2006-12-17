@@ -65,7 +65,7 @@ liblua_la_OBJECTS = $(am_liblua_la_OBJECTS)
 libnlua_la_DEPENDENCIES = liblua.la
 am_libnlua_la_OBJECTS = libnlua_la-commands.lo libnlua_la-conn.lo \
 	libnlua_la-garbage.lo libnlua_la-hooks.lo libnlua_la-moon.lo \
-	libnlua_la-script.lo libnlua_la-socks.lo libnlua_la-util.lo \
+	libnlua_la-script.lo libnlua_la-util.lo \
 	libnlua_la-variables.lo
 libnlua_la_OBJECTS = $(am_libnlua_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
@@ -229,12 +229,11 @@ libnlua_la_SOURCES = \
 	moon.c \
 	moon-int.h \
 	script.c \
-	socks.c \
 	util.c \
 	variables.c
 
 libnlua_la_LIBADD = liblua.la
-libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src
+libnlua_la_CPPFLAGS = -I${srcdir}/lua511 -I${top_srcdir}/include -I${top_srcdir}/src -I${top_srcdir}/libfiretalk -I${top_builddir}/src -I${INCLTDL}
 luac_SOURCES = \
 	lua511/luac.c \
 	lua511/print.c
@@ -423,9 +422,6 @@ libnlua_la-moon.lo: moon.c
 
 libnlua_la-script.lo: script.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-script.lo `test -f 'script.c' || echo '$(srcdir)/'`script.c
-
-libnlua_la-socks.lo: socks.c
-	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-socks.lo `test -f 'socks.c' || echo '$(srcdir)/'`socks.c
 
 libnlua_la-util.lo: util.c
 	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnlua_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libnlua_la-util.lo `test -f 'util.c' || echo '$(srcdir)/'`util.c
