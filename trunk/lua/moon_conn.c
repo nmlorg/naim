@@ -141,6 +141,47 @@ static int l_conn_status_echo(lua_State *L)
 	return 0;
 }
 
+static int l_conn_echo(lua_State *L) {
+	conn_t *conn = _get_conn_t(L, 1);
+	const char *s = lua_tostring(L, 2);
+	
+	if (conn == NULL) {
+		lua_pushstring(L, "conn was nil");
+		return(lua_error(L));
+	}
+	echof(conn, NULL, "%s", s);
+	return(0);
+}
+
+typedef struct {
+	int	argc;
+	const char *args[CONIO_MAXPARMS];
+} _lua2conio_ret;
+
+static _lua2conio_ret *_lua2conio(lua_State *L, int first) {
+	static _lua2conio_ret ret;
+
+	for (ret.argc = 0; (ret.argc < CONIO_MAXPARMS) && (lua_type(L, ret.argc+first) != LUA_TNONE); ret.argc++)
+		ret.args[ret.argc] = lua_tostring(L, ret.argc+first);
+
+	return(&ret);
+}
+
+static int l_conn_msg(lua_State *L) {
+	extern void conio_msg(conn_t *conn, int argc, const char **args);
+	conn_t *conn = _get_conn_t(L, 1);
+	_lua2conio_ret *ret = _lua2conio(L, 2);
+	const char *error;
+
+	if ((error = conio_valid("msg", conn, ret->argc)) == NULL)
+		conio_msg(conn, ret->argc, ret->args);
+	else {
+		lua_pushstring(L, error);
+		return(lua_error(L));
+	}
+	return(0);
+}
+
 const struct luaL_reg naimprototypeconnlib[] = {
 	{"get_sn", l_conn_get_sn},
 	{"get_password", l_conn_get_password},
@@ -148,5 +189,7 @@ const struct luaL_reg naimprototypeconnlib[] = {
 	{"get_server", l_conn_get_server},
 	{"get_profile", l_conn_get_profile},
 	{"status_echo", l_conn_status_echo},
+	{"echo", l_conn_echo},
+	{"msg", l_conn_msg},
 	{NULL, NULL}
 };

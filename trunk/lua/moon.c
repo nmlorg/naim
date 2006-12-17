@@ -29,6 +29,12 @@ static int l_debug(lua_State *L)
 	return 0;
 }
 
+static int l_curconn(lua_State *L)
+{
+	_push_conn_t(L, curconn);
+	return 1;
+}
+
 static int l_conio(lua_State *L)
 {
 	/* lua_pushlightuserdata(L, void *p) */
@@ -43,16 +49,16 @@ static int l_conio(lua_State *L)
 	return 0;
 }
 
-static int l_curconn(lua_State *L)
-{
-	_push_conn_t(L, curconn);
-	return 1;
+static int l_echo(lua_State *L) {
+	echof(curconn, NULL, "%s\n", lua_tostring(L, 1));
+	return(0);
 }
 
 static const struct luaL_Reg naimlib [] = {
 	{"debug", l_debug},
 	{"curconn", l_curconn},
 	{"conio", l_conio},
+	{"echo", l_echo},
 	{NULL, NULL} /* sentinel */
 };
 
