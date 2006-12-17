@@ -929,14 +929,19 @@ void	firetalk_callback_chat_gottopic(struct firetalk_driver_connection_t *c, con
 			conn->callbacks[FC_CHAT_GOTTOPIC](conn, conn->clientstruct, room, topic, author);
 }
 
-#ifdef RAWIRCMODES
-void	firetalk_callback_chat_modechanged(struct firetalk_driver_connection_t *c, const char *const room, const char *const mode, const char *const by) {
+void	firetalk_callback_chat_modeset(struct firetalk_driver_connection_t *c, const char *const room, const char *const by, const int mode, const char *const arg) {
 	firetalk_connection_t *conn = firetalk_find_conn(c);
 
-	if (conn->callbacks[FC_CHAT_MODECHANGED])
-		conn->callbacks[FC_CHAT_MODECHANGED](conn, conn->clientstruct, room, mode, by);
+	if (conn->callbacks[FC_CHAT_MODESET])
+		conn->callbacks[FC_CHAT_MODESET](conn, conn->clientstruct, room, by, mode, arg);
 }
-#endif
+
+void	firetalk_callback_chat_modeunset(struct firetalk_driver_connection_t *c, const char *const room, const char *const by, const int mode, const char *const arg) {
+	firetalk_connection_t *conn = firetalk_find_conn(c);
+
+	if (conn->callbacks[FC_CHAT_MODEUNSET])
+		conn->callbacks[FC_CHAT_MODEUNSET](conn, conn->clientstruct, room, by, mode, arg);
+}
 
 void	firetalk_callback_chat_user_opped(struct firetalk_driver_connection_t *c, const char *const room, const char *const who, const char *const by) {
 	firetalk_connection_t *conn = firetalk_find_conn(c);

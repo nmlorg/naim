@@ -421,7 +421,7 @@ void	bupdate(void) {
 				switch (bwin->et) {
 				  case BUDDY:
 					assert(bwin->e.buddy != NULL);
-					if (bwin->e.buddy->typing)
+					if (bwin->e.buddy->typing >= now-10*60)
 						back = faimconf.f[cBUDDY_TYPING];
 					else if (bwin->e.buddy->tag != NULL)
 						back = faimconf.f[cBUDDY_TAGGED];
