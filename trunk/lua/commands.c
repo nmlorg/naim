@@ -83,27 +83,45 @@ void	naim_commandsreg(lua_State *L) {
 
 	assert(cmdc == sizeof(naim_commandslib)/sizeof(*naim_commandslib)-1);
 
-	luaL_findtable(L, LUA_GLOBALSINDEX, "naim.commands", cmdc);
+	luaL_findtable(L, LUA_GLOBALSINDEX, "naim.commands", cmdc);	// { naim.commands }
 
 	for (i = 0; i < cmdc; i++) {
 		assert(strcmp(cmdar[i].c, naim_commandslib[i].name) == 0);
 
-		lua_pushstring(L, cmdar[i].c);
-		lua_newtable(L);
+		lua_pushstring(L, cmdar[i].c);				// { CMD, naim.commands }
+		lua_newtable(L);					// { {}, CMD, naim.commands }
 
-		lua_pushstring(L, "func");
-		lua_pushcfunction(L, naim_commandslib[i].func);
-		lua_settable(L, -3);
-		lua_pushstring(L, "min");
-		lua_pushnumber(L, cmdar[i].minarg);
-		lua_settable(L, -3);
-		lua_pushstring(L, "max");
-		lua_pushnumber(L, cmdar[i].maxarg);
-		lua_settable(L, -3);
-		lua_pushstring(L, "desc");
-		lua_pushstring(L, cmdar[i].desc);
-		lua_settable(L, -3);
+		lua_pushstring(L, "func");				// { "func", {}, CMD, naim.commands }
+		lua_pushcfunction(L, naim_commandslib[i].func);		// { FUNC, "func", {}, CMD, naim.commands }
+		lua_settable(L, -3);					// { { "func" = FUNC }, CMD, naim.commands }
+		lua_pushstring(L, "min");				// { "min", { "func" = FUNC }, CMD, naim.commands }
+		lua_pushnumber(L, cmdar[i].minarg);			// { MIN, "min", { "func" = FUNC }, CMD, naim.commands }
+		lua_settable(L, -3);					// { { "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_pushstring(L, "max");				// { "max", { "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_pushnumber(L, cmdar[i].maxarg);			// { MAX, "max", { "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_settable(L, -3);					// { { "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_pushstring(L, "desc");				// { "desc", { "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_pushstring(L, cmdar[i].desc);			// { DESC, "desc", { "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
+		lua_settable(L, -3);					// { { "desc" = DESC, "max" = MAX, "func" = FUNC, "min" = MIN }, CMD, naim.commands }
 
-		lua_settable(L, -3);
+		lua_settable(L, -3);					// { naim.commands }
 	}
+
+	for (i = 0; i < cmdc; i++) {
+		int	j;
+
+		for (j = 0; cmdar[i].aliases[j] != NULL; j++) {
+			lua_pushstring(L, cmdar[i].aliases[j]);		// { ALIAS, naim.commands }
+			lua_getglobal(L, "naim");			// { naim, ALIAS, naim.commands }
+			lua_pushstring(L, "commands");			// { "commands", naim, ALIAS, naim.commands }
+			lua_gettable(L, -2);				// { naim.commands, naim, ALIAS, naim.commands }
+			lua_remove(L, -2);				// { naim.commands, ALIAS, naim.commands }
+			lua_pushstring(L, cmdar[i].c);			// { CMD, naim.commands, ALIAS, naim.commands }
+			lua_gettable(L, -2);				// { naim.commands[CMD], naim.commands, ALIAS, naim.commands }
+			lua_remove(L, -2);				// { naim.commands[CMD], ALIAS, naim.commands }
+			lua_settable(L, -3);				// { naim.commands }
+		}
+	}
+
+	lua_pop(L, 1);							// {}
 }
