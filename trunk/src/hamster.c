@@ -199,7 +199,7 @@ void	naim_send_im(conn_t *conn, const char *SN, const char *msg, const int _auto
 	if ((bwin == NULL)					// if the target is not queueable (let the protocol layer handle errors)
 		|| (	   (conn->online > 0)			// or if you are online
 			&& (bwin->e.buddy->offline == 0))) {	//  and the target is also tracked online
-		const char *pre, *post;
+		char	*pre, *post;
 
 		if ((pre = getvar(conn, "im_prefix")) != NULL)
 			pre = strdup(pre);
@@ -238,11 +238,10 @@ void	naim_send_im(conn_t *conn, const char *SN, const char *msg, const int _auto
 }
 
 void	naim_send_im_away(conn_t *conn, const char *SN, const char *msg, int force) {
-	struct tm	*tmptr;
-	buddywin_t	*bwin;
-	static time_t	lastauto = 0;
-	const char	*pre,
-			*post;
+	struct tm *tmptr;
+	buddywin_t *bwin;
+	static time_t lastauto = 0;
+	char	*pre, *post;
 
 	if (force || (lastauto < now-1))
 		lastauto = now;
