@@ -49,7 +49,7 @@ struct sockaddr_in *firetalk_sock_remotehost4(firetalk_sock_t *sock) {
 #ifdef _FC_USE_IPV6
 fte_t	firetalk_sock_resolve6(const char *const host, struct in6_addr *inet6_ip) {
 	struct addrinfo *addr = NULL;  // xxx generalize this so that we can use this with v6 and v4
-	struct addrinfo hints = {0, PF_INET6, 0, 0, 0, NULL, NULL, NULL};
+	struct addrinfo hints = { 0, PF_INET6, 0, 0, 0, NULL, NULL, NULL };
 
 	if (getaddrinfo(host, NULL, &hints, &addr) == 0) {
 		struct addrinfo *cur;
@@ -106,7 +106,7 @@ fte_t	firetalk_sock_connect(firetalk_sock_t *sock) {
 		sock->fd = socket(PF_INET6, SOCK_STREAM, 0);
 		if ((sock->fd != -1) && (fcntl(sock->fd, F_SETFL, O_NONBLOCK) == 0)) {
 			errno = 0;
-			if ((connect(sock->fd, (const struct sockaddr *)inet6_ip, sizeof(struct sockaddr_in6)) == 0) || (errno == EINPROGRESS)) {
+			if ((connect(sock->fd, (const struct sockaddr *)inet6_ip, sizeof(*inet6_ip)) == 0) || (errno == EINPROGRESS)) {
 				sock->state = FCS_WAITING_SYNACK;
 				return(FE_SUCCESS);
 			}
@@ -119,7 +119,7 @@ fte_t	firetalk_sock_connect(firetalk_sock_t *sock) {
 		sock->fd = socket(PF_INET, SOCK_STREAM, 0);
 		if ((sock->fd != -1) && (fcntl(sock->fd, F_SETFL, O_NONBLOCK) == 0)) {
 			errno = 0;
-			if ((connect(sock->fd, (const struct sockaddr *)inet4_ip, sizeof(struct sockaddr_in)) == 0) || (errno == EINPROGRESS)) {
+			if ((connect(sock->fd, (const struct sockaddr *)inet4_ip, sizeof(*inet4_ip)) == 0) || (errno == EINPROGRESS)) {
 				sock->state = FCS_WAITING_SYNACK;
 				return(FE_SUCCESS);
 			}
@@ -198,7 +198,7 @@ void	firetalk_sock_close(firetalk_sock_t *sock) {
 
 static fte_t firetalk_sock_synack(firetalk_sock_t *sock) {
 	int	i;
-	unsigned int o = sizeof(int);
+	unsigned int o = sizeof(i);
 
 	assert(sock->canary == SOCK_CANARY);
 
