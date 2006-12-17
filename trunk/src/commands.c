@@ -2565,9 +2565,7 @@ const char *ua_valid(const char *cmd, conn_t *conn, const int argc) {
 void	ua_handlecmd(const char *buf) {
 	conn_t	*c = NULL;
 	char	line[1024], *cmd, *arg, *tmp;
-	const char *args[UA_MAXPARMS], *error;
-	const cmdar_t *com;
-	int	a = 0, builtinonly = 0;
+	int	builtinonly = 0;
 
 	assert(buf != NULL);
 
@@ -2614,42 +2612,15 @@ void	ua_handlecmd(const char *buf) {
 	} else
 		c = curconn;
 
-//	builtinonly = 0;
 	if (!builtinonly) {
-		if (alias_doalias(cmd, arg) == 1)
-			return;
-
-		if (script_cmd(c, cmd, arg) == 1)
+		if (alias_doalias(cmd, arg))
 			return;
 	}
 
-#if 1
+	if (script_cmd(c, cmd, arg))
+		return;
+
 	echof(c, cmd, "Unknown command.\n");
-#else
-	if ((com = ua_find_cmd(cmd)) == NULL) {
-		echof(c, cmd, "Unknown command.\n");
-		return;
-	}
-	assert(com->maxarg <= UA_MAXPARMS);
-
-	if ((error = ua_valid_where(com, c)) != NULL) {
-		echof(c, com->c, "%s\n", error);
-		return;
-	}
-
-	for (a = 0; (a < com->maxarg) && (arg != NULL); a++) {
-		args[a] = atom(arg);
-		if (a < com->maxarg-1)
-			arg = firstwhite(arg);
-	}
-
-	if ((error = ua_valid_args(com, a)) != NULL) {
-		echof(c, com->c, "%s\n", error);
-		return;
-	}
-
-	com->func(c, a, args);
-#endif
 }
 
 void	(*script_client_cmdhandler)(const char *) = ua_handlecmd;
