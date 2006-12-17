@@ -12,13 +12,9 @@
 #include "snapshot.h"
 #include "cmdar.h"
 
-extern win_t	win_input;
 extern conn_t	*curconn;
 extern time_t	now, awaytime;
 extern double	nowf;
-extern int	namec;
-extern char	**names;
-extern namescomplete_t namescomplete;
 extern faimconf_t faimconf;
 extern char	*sty, *statusbar_text;
 
@@ -30,97 +26,20 @@ awayar_t *awayar = NULL;
 #define NAIM_VERSION_STRING	"naim:" PACKAGE_VERSION NAIM_SNAPSHOT
 static char naim_version[1024];
 
-#define nFIRE_HANDLER(func) static void func (struct firetalk_connection_t *sess, conn_t *conn, ...)
-#define nFIRE_CTCPHAND(func) static void func (struct firetalk_connection_t *sess, conn_t *conn, \
-	const char *from, const char *command, const char *args)
-
-static void do_replace(unsigned char *dest, const unsigned char *new, int wordlen, int len) {
-	int	newlen = strlen(new);
-
-	if (newlen > wordlen)
-		memmove(dest+newlen, dest+wordlen, len-newlen);
-	else if (newlen < wordlen)
-		memmove(dest+newlen, dest+wordlen, len-wordlen);
-
-	memmove(dest, new, newlen);
-}
-
-static void str_replace(const unsigned char *orig, const unsigned char *new, unsigned char *str, int strsize) {
-	int	i, l = strlen(orig);
-
-	assert(*str != 0);
-
-	for (i = 0; (str[i] != 0) && (i+l < strsize); i++) {
-		if (i > 0)
-			switch (str[i-1]) {
-				case ' ':
-				case '>':
-				case '(':
-					break;
-				default:
-					continue;
-			}
-		switch (str[i+l]) {
-			case ' ':
-			case ',':
-			case '.':
-			case '!':
-			case '?':
-			case '<':
-			case ')':
-			case 0:
-				break;
-			default:
-				continue;
-		}
-		if (strncmp(str+i, orig, l) == 0)
-			do_replace(str+i, new, l, strsize-i);
-	}
-}
-
-html_clean_t *html_cleanar = NULL;
-int	html_cleanc = 0;
-
-static const unsigned char *html_clean(const unsigned char *str) {
-	static unsigned char buf[1024*4];
-	int	i;
-
-	assert(str != NULL);
-	if (*str == 0)
-		return(str);
-	strncpy(buf, str, sizeof(buf)-1);
-	buf[sizeof(buf)-1] = 0;
-	for (i = 0; i < html_cleanc; i++)
-		str_replace(html_cleanar[i].from, html_cleanar[i].replace, buf, sizeof(buf));
-	return(buf);
-}
-
-nFIRE_HANDLER(naim_newnick) {
-	va_list	msg;
-	const char *newnick;
-
-	va_start(msg, conn);
-	newnick = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_proto_newnick(void *userdata, conn_t *conn, const char *newnick) {
 	STRREPLACE(conn->sn, newnick);
 
 	script_setvar("SN", newnick);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_nickchange) {
-	va_list	msg;
-	const char *oldnick, *newnick;
+static int fireio_proto_nickchanged(void *userdata, conn_t *conn, const char *oldnick, const char *newnick) {
 	buddywin_t *bwin;
 	buddylist_t *buddy = conn->buddyar;
 
-	va_start(msg, conn);
-	oldnick = va_arg(msg, const char *);
-	newnick = va_arg(msg, const char *);
-	va_end(msg);
-
 	if ((buddy = rgetlist(conn, oldnick)) == NULL)
-		return;
+		return(HOOK_CONTINUE);
 	if (strcmp(buddy->_account, newnick) != 0) {
 		script_hook_changebuddy(buddy, newnick);
 		STRREPLACE(buddy->_account, newnick);
@@ -132,6 +51,8 @@ nFIRE_HANDLER(naim_nickchange) {
 		STRREPLACE(bwin->winname, newnick);
 		bupdate();
 	}
+
+	return(HOOK_CONTINUE);
 }
 
 #define STANDARD_TRAILER	\
@@ -179,7 +100,7 @@ void	naim_set_info(conn_t *conn, const char *str) {
 	}
 }
 
-nFIRE_HANDLER(naim_postselect) {
+static int fireio_postselect(void *userdata, fd_set *rfd, fd_set *wfd, fd_set *efd) {
 	struct timeval tv;
 	char	buf[1024];
 
@@ -188,6 +109,8 @@ nFIRE_HANDLER(naim_postselect) {
 	nowf = tv.tv_usec/1000000. + ((double)now);
 	snprintf(buf, sizeof(buf), "%lu", now);
 	script_setvar("nowi", buf);
+
+	return(HOOK_CONTINUE);
 }
 
 void	naim_setversion(conn_t *conn) {
@@ -227,14 +150,7 @@ void	naim_setversion(conn_t *conn) {
 	firetalk_subcode_register_request_reply(conn->conn, "VERSION", naim_version);
 }
 
-nFIRE_HANDLER(naim_doinit) {
-	va_list	msg;
-	const char *screenname;
-
-	va_start(msg, conn);
-	screenname = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_doinit(void *userdata, conn_t *conn, const char *screenname) {
 	naim_setversion(conn);
 
 	STRREPLACE(conn->sn, screenname);
@@ -247,76 +163,39 @@ nFIRE_HANDLER(naim_doinit) {
 	naim_set_info(conn, conn->profile);
 
 	if (awaytime > 0)
-		firetalk_set_away(sess, script_getvar("awaymsg"), 0);
+		firetalk_set_away(conn->conn, script_getvar("awaymsg"), 0);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_setidle) {
-	va_list	msg;
-	long	*idle, idletime = script_getvar_int("idletime");
-
-	va_start(msg, conn);
-	idle = va_arg(msg, long *);
-	va_end(msg);
-
-	if ((*idle)/60 != idletime)
-		*idle = 60*idletime;
-}
-
-nFIRE_HANDLER(naim_warned) {
-	va_list	msg;
-	const char *who;
-	int	newlev;
-
-	va_start(msg, conn);
-	newlev = va_arg(msg, int);
-	who = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_warned(void *userdata, conn_t *conn, int newlev, const char *who) {
 	echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> just warned you (%i).\n",
 		who, newlev);
 	conn->warnval = newlev;
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_idle) {
-	va_list	msg;
-	const char *who;
-	long	idletime;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	idletime = va_arg(msg, long);
-	va_end(msg);
-
+static int fireio_buddy_idle(void *userdata, conn_t *conn, const char *who, long idletime) {
 	if (idletime >= 10)
 		bidle(conn, who, 1);
 	else
 		bidle(conn, who, 0);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_eviled) {
-	va_list	msg;
-	const char *who;
-	long	warnval;
+static int fireio_buddy_eviled(void *userdata, conn_t *conn, const char *who, long warnval) {
 	buddylist_t *blist;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	warnval = va_arg(msg, long);
-	va_end(msg);
 
 	if ((blist = rgetlist(conn, who)) != NULL)
 		blist->warnval = warnval;
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_caps) {
-	va_list	msg;
-	const char *who, *caps;
+static int fireio_buddy_buddy_caps(void *userdata, conn_t *conn, const char *who, const char *caps) {
 	buddylist_t *blist;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	caps = va_arg(msg, const char *);
-	va_end(msg);
 
 	if ((blist = rgetlist(conn, who)) != NULL) {
 		int	i, j, strtolower = 1;
@@ -357,18 +236,12 @@ nFIRE_HANDLER(naim_buddy_caps) {
 				blist->caps[j++] = caps[i];
 		blist->caps[j] = 0;
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_typing) {
-	va_list	msg;
-	const char *who;
-	int	typing;
+static int fireio_buddy_typing(void *userdata, conn_t *conn, const char *who, int typing) {
 	buddylist_t *blist;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	typing = va_arg(msg, int);
-	va_end(msg);
 
 	if ((blist = rgetlist(conn, who)) != NULL) {
 		if (typing)
@@ -376,40 +249,24 @@ nFIRE_HANDLER(naim_buddy_typing) {
 		else
 			blist->typing = 0;
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_away) {
-	va_list	msg;
-	const char *who;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_buddy_away(void *userdata, conn_t *conn, const char *who) {
 	baway(conn, who, 1);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_unaway) {
-	va_list	msg;
-	const char *who;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_buddy_unaway(void *userdata, conn_t *conn, const char *who) {
 	baway(conn, who, 0);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddyadded) {
-	va_list	msg;
-	const char *screenname, *group, *friendly;
+static int fireio_buddyadded(void *userdata, conn_t *conn, const char *screenname, const char *group, const char *friendly) {
 	buddylist_t *blist;
-
-	va_start(msg, conn);
-	screenname = va_arg(msg, const char *);
-	group = va_arg(msg, const char *);
-	friendly = va_arg(msg, const char *);
-	va_end(msg);
 
 	if ((blist = rgetlist(conn, screenname)) == NULL) {
 		blist = raddbuddy(conn, screenname, group, friendly);
@@ -433,17 +290,13 @@ nFIRE_HANDLER(naim_buddyadded) {
 		STRREPLACE(blist->_name, friendly);
 	else
 		FREESTR(blist->_name);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddyremoved) {
-	va_list	msg;
-	const char *screenname;
+static int fireio_buddyremoved(void *userdata, conn_t *conn, const char *screenname) {
 	buddywin_t *bwin;
 	buddylist_t *blist;
-
-	va_start(msg, conn);
-	screenname = va_arg(msg, const char *);
-	va_end(msg);
 
 	if ((bwin = bgetwin(conn, screenname, BUDDY)) != NULL) {
 		blist = bwin->e.buddy;
@@ -458,85 +311,39 @@ nFIRE_HANDLER(naim_buddyremoved) {
 			user_name(NULL, 0, conn, blist), USER_GROUP(blist));
 		rdelbuddy(conn, screenname);
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_denyadded) {
-	va_list	msg;
-	const char *screenname;
-
-	va_start(msg, conn);
-	screenname = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_denyadded(void *userdata, conn_t *conn, const char *screenname) {
 	status_echof(conn, "Added <font color=\"#00FFFF\">%s</font> to your block list.\n", screenname);
 
 	raddidiot(conn, screenname, "block");
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_denyremoved) {
-	va_list	msg;
-	const char *screenname;
-
-	va_start(msg, conn);
-	screenname = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_denyremoved(void *userdata, conn_t *conn, const char *screenname) {
 	status_echof(conn, "Removed <font color=\"#00FFFF\">%s</font> from your block list.\n", screenname);
 
 	rdelidiot(conn, screenname);
+
+	return(HOOK_CONTINUE);
 }
 
-HOOK_DECLARE(proto_user_onlineval);
-
-nFIRE_HANDLER(naim_buddy_coming) {
-	va_list	msg;
-	const char *who;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_buddy_coming(void *userdata, conn_t *conn, const char *who) {
 	bcoming(conn, who);
-	HOOK_CALL(proto_user_onlineval, sess, conn, who, NULL, NULL, 1);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_buddy_going) {
-	va_list	msg;
-	const char *who;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_buddy_going(void *userdata, conn_t *conn, const char *who) {
 	bgoing(conn, who);
-	HOOK_CALL(proto_user_onlineval, sess, conn, who, NULL, NULL, 0);
+
+	return(HOOK_CONTINUE);
 }
 
-
-
-HOOK_DECLARE(recvfrom);
-static void naim_recvfrom(conn_t *const conn,
-		const char *const _name, 
-		const char *const _dest,
-		const unsigned char *_message, int len,
-		int flags) {
- 	char	*name = NULL, *dest = NULL;
-	unsigned char *message = malloc(len+1);
-
-	if (_name != NULL)
-		name = strdup(_name);
-	if (_dest != NULL)
-		dest = strdup(_dest);
-
-	memmove(message, _message, len);
-	message[len] = 0;
-	HOOK_CALL(recvfrom, conn, &name, &dest, &message, &len, &flags);
-	free(name);
-	free(dest);
-	free(message);
-}
-
-static int recvfrom_ignorelist(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_ignorelist(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	ignorelist_t *ig;
 
 	if ((*dest != NULL) && (strcmp(*dest, ":RAW") == 0) && (getvar_int(conn, "showraw") == 0))
@@ -548,10 +355,11 @@ static int recvfrom_ignorelist(void *userdata, conn_t *conn, char **name, char *
 				firetalk_im_evil(conn->conn, *name);
 			return(HOOK_STOP);
 		}
+
 	return(HOOK_CONTINUE);
 }
 
-static int recvfrom_decrypt(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_decrypt(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if ((*dest == NULL) && !(*flags & RF_ACTION)) {
 		buddylist_t *blist = rgetlist(conn, *name);
 
@@ -564,32 +372,35 @@ static int recvfrom_decrypt(void *userdata, conn_t *conn, char **name, char **de
 					j = 0;
 			}
 			if ((*message)[i] != 0) {
-				echof(conn, "recvfrom_decrypt", "Invalid message: len=%i, i=%i, msg[i]=%i\n",
+				echof(conn, "fireio_recvfrom_decrypt", "Invalid message: len=%i, i=%i, msg[i]=%i\n",
 					*len, i, (*message)[i]);
 				return(HOOK_STOP);
 			}
 		}
 	}
+
 	return(HOOK_CONTINUE);
 }
 
-static int recvfrom_log(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_log(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (!(*flags & RF_NOLOG))
 		logim(conn, *name, *dest, *message);
+
 	return(HOOK_CONTINUE);
 }
 
-static int recvfrom_beep(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_beep(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (*dest == NULL) {
 		int	beeponim = getvar_int(conn, "beeponim");
 
 		if ((beeponim > 1) || ((awaytime == 0) && (beeponim == 1)))
 			beep();
 	}
+
 	return(HOOK_CONTINUE);
 }
 
-static int recvfrom_autobuddy(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_autobuddy(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	if (*dest == NULL) {
 		buddylist_t *blist = rgetlist(conn, *name);
 
@@ -611,10 +422,11 @@ static int recvfrom_autobuddy(void *userdata, conn_t *conn, char **name, char **
 			}
 		}
 	}
+
 	return(HOOK_CONTINUE);
 }
 
-static int recvfrom_display_user(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_display_user(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	buddylist_t *blist;
 	buddywin_t *bwin;
 
@@ -698,10 +510,11 @@ static int recvfrom_display_user(void *userdata, conn_t *conn, char **name, char
 		}
 	}
 	bupdate();
+
 	return(HOOK_CONTINUE);
 }
 
-static void recvfrom_display_chat_print(void *userdata, buddywin_t *bwin, const int flags, const int istome, const char *name, const char *prefix, const unsigned char *message) {
+static void fireio_recvfrom_display_chat_print(void *userdata, buddywin_t *bwin, const int flags, const int istome, const char *name, const char *prefix, const unsigned char *message) {
 	const char *format;
 
 	if (prefix == NULL)
@@ -727,7 +540,7 @@ void	chat_flush(buddywin_t *bwin) {
 		if (bwin->e.chat->last.reps == 1) {
 			assert(bwin->e.chat->last.lasttime != 0);
 			WINTIME_NOTNOW(&(bwin->nwin), IMWIN, bwin->e.chat->last.lasttime);
-			recvfrom_display_chat_print(NULL, bwin, bwin->e.chat->last.flags, bwin->e.chat->last.istome, bwin->e.chat->last.name, NULL, bwin->e.chat->last.line);
+			fireio_recvfrom_display_chat_print(NULL, bwin, bwin->e.chat->last.flags, bwin->e.chat->last.istome, bwin->e.chat->last.name, NULL, bwin->e.chat->last.line);
 		} else {
 			assert(bwin->e.chat->last.lasttime != 0);
 			WINTIME_NOTNOW(&(bwin->nwin), IMWIN, bwin->e.chat->last.lasttime);
@@ -739,7 +552,7 @@ void	chat_flush(buddywin_t *bwin) {
 	FREESTR(bwin->e.chat->last.name);
 }
 
-static int recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
+static int fireio_recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char **dest, unsigned char **message, int *len, int *flags) {
 	buddywin_t *bwin;
 	int	istome;
 	char	*prefix = NULL;
@@ -820,7 +633,7 @@ static int recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char
 	}
 
 	WINTIME(&(bwin->nwin), IMWIN);
-	recvfrom_display_chat_print(NULL, bwin, *flags, istome, *name, prefix, *message);
+	fireio_recvfrom_display_chat_print(NULL, bwin, *flags, istome, *name, prefix, *message);
 
 	free(bwin->e.chat->last.line);
 	bwin->e.chat->last.line = message_save;
@@ -831,112 +644,11 @@ static int recvfrom_display_chat(void *userdata, conn_t *conn, char **name, char
 	bwin->e.chat->last.istome = istome;
 
 	bupdate();
+
 	return(HOOK_CONTINUE);
 }
 
-void	fireio_hook_init(void) {
-	void	*mod = NULL;
-
-	HOOK_ADD(recvfrom, mod, recvfrom_ignorelist, 10, NULL);
-	HOOK_ADD(recvfrom, mod, recvfrom_decrypt, 20, NULL);
-	HOOK_ADD(recvfrom, mod, recvfrom_log, 50, NULL);
-	HOOK_ADD(recvfrom, mod, recvfrom_beep, 50, NULL);
-	HOOK_ADD(recvfrom, mod, recvfrom_autobuddy, 50, NULL);
-	HOOK_ADD(recvfrom, mod, recvfrom_display_user, 100, NULL);
-	HOOK_ADD(recvfrom, mod, recvfrom_display_chat, 150, NULL);
-}
-
-
-
-
-nFIRE_HANDLER(naim_im_handle) {
-	va_list	msg;
-	const char *name;
-	const unsigned char *message;
-	int	isautoreply;
-
-	va_start(msg, conn);
-	name = va_arg(msg, const char *);
-	isautoreply = va_arg(msg, int);
-	message = html_clean(va_arg(msg, const unsigned char *));
-	va_end(msg);
-
-	assert(message != NULL);
-
-	naim_recvfrom(conn, name, NULL, message, strlen(message),
-		isautoreply?RF_AUTOMATIC:RF_NONE);
-}
-
-nFIRE_HANDLER(naim_act_handle) {
-	va_list	msg;
-	const char *who;
-	const unsigned char *message;
-	int	isautoreply;
-
-	va_start(msg, conn);
-	who = va_arg(msg, const char *);
-	isautoreply = va_arg(msg, int);
-	message = va_arg(msg, const unsigned char *);
-	va_end(msg);
-
-	if (message == NULL)
-		message = "";
-
-	naim_recvfrom(conn, who, NULL, message, strlen(message),
-		isautoreply?RF_AUTOMATIC:RF_NONE | RF_ACTION);
-}
-
-nFIRE_HANDLER(naim_chat_getmessage) {
-	va_list	msg;
-	const char *room, *who;
-	const unsigned char *message;
-	int	isautoreply;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	isautoreply = va_arg(msg, int);
-	message = html_clean(va_arg(msg, const unsigned char *));
-	va_end(msg);
-
-	assert(who != NULL);
-	assert(message != NULL);
-
-	if ((conn->sn != NULL) && (firetalk_compare_nicks(conn->conn, who, conn->sn) == FE_SUCCESS))
-		return;
-
-	naim_recvfrom(conn, who, room, message, strlen(message),
-		isautoreply?RF_AUTOMATIC:RF_NONE);
-}
-
-nFIRE_HANDLER(naim_chat_act_handle) {
-	va_list	msg;
-	const char *room, *who;
-	const unsigned char *message;
-	int	isautoreply;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	isautoreply = va_arg(msg, int);
-	message = va_arg(msg, const unsigned char *);
-	va_end(msg);
-
-	if (firetalk_compare_nicks(conn->conn, who, conn->sn) == FE_SUCCESS)
-		return;
-
-	if (message == NULL)
-		message = "";
-
-	naim_recvfrom(conn, who, room, message, strlen(message),
-		isautoreply?RF_AUTOMATIC:RF_NONE | RF_ACTION);
-}
-
-void	naim_awaylog(conn_t *conn, const char *src, const char *msg) {
-	naim_recvfrom(conn, src, ":AWAYLOG", msg, strlen(msg), RF_NOLOG);
-}
-
-nFIRE_HANDLER(naim_connected) {
+static int fireio_connected(void *userdata, conn_t *conn) {
 	buddywin_t *bwin = conn->curbwin;
 
 	if (conn->online > 0) {
@@ -944,7 +656,7 @@ nFIRE_HANDLER(naim_connected) {
 			" but I'm pretty sure you've been connected since %lu."
 			" This is a bug, and your session may be unstable.\n",
 			conn->winname, now, conn->online);
-		return;
+		return(HOOK_CONTINUE);
 	}
 
 	echof(conn, NULL, "You are now connected.\n");
@@ -962,6 +674,8 @@ nFIRE_HANDLER(naim_connected) {
 				firetalk_chat_join(conn->conn, name);
 			}
 		} while ((bwin = bwin->next) != conn->curbwin);
+
+	return(HOOK_CONTINUE);
 }
 
 static const char naim_tolower_first(const char *const str) {
@@ -970,16 +684,7 @@ static const char naim_tolower_first(const char *const str) {
 	return(*str);
 }
 
-nFIRE_HANDLER(naim_connectfailed) {
-	int	err;
-	va_list	msg;
-	const char *reason;
-
-	va_start(msg, conn);
-	err = va_arg(msg, int);
-	reason = va_arg(msg, const char *);
-	va_end(msg);
-
+static int fireio_connectfailed(void *userdata, conn_t *conn, int err, const char *reason) {
 	if (reason != NULL)
 		echof(conn, "CONNECT", "Unable to connect to %s: %s, %c%s.\n",
 			firetalk_strprotocol(conn->proto),
@@ -1008,22 +713,15 @@ nFIRE_HANDLER(naim_connectfailed) {
 		conn->sn = str;
 		ua_connect(conn, 0, NULL);
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_error_msg) {
-	va_list	msg;
-	int	error;
-	const char *target, *desc;
+static int fireio_error_msg(void *userdata, conn_t *conn, int error, const char *target, const char *desc) {
 	buddywin_t *bwin;
 
-	va_start(msg, conn);
-	error = va_arg(msg, int);
-	target = va_arg(msg, const char *);
-	desc = va_arg(msg, const char *);
-	va_end(msg);
-
 	if ((error == FE_MESSAGETRUNCATED) && (awaytime > 0))
-		return;
+		return(HOOK_CONTINUE);;
 
 	if ((target != NULL) && ((bwin = bgetanywin(conn, target)) != NULL)) {
 		if (desc != NULL)
@@ -1049,16 +747,11 @@ nFIRE_HANDLER(naim_error_msg) {
 			status_echof(conn, "ERROR: %s\n",
 				firetalk_strerror(error));
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_error_disconnect) {
-	va_list	msg;
-	int	error;
-
-	va_start(msg, conn);
-	error = va_arg(msg, int);
-	va_end(msg);
-
+static int fireio_error_disconnect(void *userdata, conn_t *conn, int error) {
 	echof(conn, NULL, "Disconnected from %s: %s.\n",
 		conn->winname, firetalk_strerror(error));
 	conn->online = -1;
@@ -1071,51 +764,11 @@ nFIRE_HANDLER(naim_error_disconnect) {
 		ua_connect(conn, 0, NULL);
 	} else
 		echof(conn, NULL, "Type <font color=\"#00FF00\">/%s:connect</font> to reconnect.\n", conn->winname);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_needpass) {
-	va_list	msg;
-	char	*pass;
-	int	len;
-	const char *mypass;
-
-	va_start(msg, conn);
-	pass = va_arg(msg, char *);
-	len = va_arg(msg, int);
-	va_end(msg);
-
-	assert(len > 1);
-
-	if ((mypass = getvar(conn, "password")) == NULL) {
-		if (conn != curconn)
-			curconn = conn;
-		echof(conn, NULL, "Password required to connect to %s.\n",
-			conn->winname);
-		echof(conn, NULL, "Please type your password and press Enter.\n");
-		nw_getpass(&win_input, pass, len);
-		nw_erase(&win_input);
-		statrefresh();
-	} else {
-		strncpy(pass, mypass, len-1);
-		pass[len-1] = 0;
-	}
-}
-
-nFIRE_HANDLER(naim_userinfo_handler) {
-	va_list	msg;
-	const char *SN;
-	const unsigned char *info;
-	long	warning, online, idle, class;
-
-	va_start(msg, conn);
-	SN = va_arg(msg, const char *);
-	info = va_arg(msg, const unsigned char *);
-	warning = va_arg(msg, long);
-	online = va_arg(msg, long);
-	idle = va_arg(msg, long);
-	class = va_arg(msg, long);
-	va_end(msg);
-
+static int fireio_userinfo(void *userdata, conn_t *conn, const char *SN, const unsigned char *info, long warning, long online, long idle, long class) {
 	if (awayc > 0) {
 		int	i;
 
@@ -1137,7 +790,7 @@ nFIRE_HANDLER(naim_userinfo_handler) {
 				memmove(awayar+i, awayar+i+1, (awayc-i-1)*sizeof(*awayar));
 				awayc--;
 				awayar = realloc(awayar, awayc*sizeof(*awayar));
-				return;
+				return(HOOK_CONTINUE);;
 			}
 	}
 
@@ -1171,6 +824,8 @@ nFIRE_HANDLER(naim_userinfo_handler) {
 	  echof(conn, NULL,
 		"</B>&nbsp; &nbsp; &nbsp; &nbsp; <B>Profile</B>:<br> %s<br> <hr>", info);
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
 
@@ -1190,14 +845,8 @@ buddywin_t *cgetwin(conn_t *conn, const char *roomname) {
 	return(bwin);
 }
 
-nFIRE_HANDLER(naim_chat_joined) {
-	va_list	msg;
+static int fireio_chat_joined(void *userdata, conn_t *conn, const char *room) {
 	buddywin_t *bwin;
-	const char *room;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	bwin->e.chat->offline = 0;
@@ -1210,34 +859,25 @@ nFIRE_HANDLER(naim_chat_joined) {
 		ua_names(conn, 1, args);
 	}
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_left) {
-	va_list	msg;
-	const char *room;
+static int fireio_chat_left(void *userdata, conn_t *conn, const char *room) {
 	buddywin_t *bwin;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	va_end(msg);
 
 	if ((bwin = bgetwin(conn, room, CHAT)) != NULL) {
 		bwin->e.chat->offline = 1;
 		firetalk_chat_join(conn->conn, room);
 	}
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_kicked) {
-	va_list	msg;
+static int fireio_chat_kicked(void *userdata, conn_t *conn, const char *room, const char *by, const char *reason) {
 	buddywin_t *bwin;
-	const char *room, *by, *reason, *q;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	reason = va_arg(msg, const char *);
-	va_end(msg);
+	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
@@ -1248,35 +888,25 @@ nFIRE_HANDLER(naim_chat_kicked) {
 		bwin->waiting = 1;
 	window_echof(bwin, "You have been kicked from chat %s%s%s by <font color=\"#00FFFF\">%s</font> (</B><body>%s</body><B>).\n",
 			q, room, q, by, reason);
-	firetalk_chat_join(sess, room);
+	firetalk_chat_join(conn->conn, room);
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_invited) {
-	va_list	msg;
-	const char *room, *who, *message, *q;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	message = va_arg(msg, const char *);
-	va_end(msg);
+static int fireio_chat_invited(void *userdata, conn_t *conn, const char *room, const char *who, const char *message) {
+	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
 	echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> invites you to chat %s%s%s: </B><body>%s</body><B>.\n", who, q, room, q, message);
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_JOIN) {
-	va_list	msg;
+static int fireio_chat_user_joined(void *userdata, conn_t *conn, const char *room, const char *who, const char *extra) {
 	buddywin_t *bwin;
-	const char *room, *who, *q, *extra;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	extra = va_arg(msg, const char *);
-	va_end(msg);
+	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
@@ -1292,18 +922,13 @@ nFIRE_HANDLER(naim_chat_JOIN) {
 		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> (%s) has joined chat %s%s%s.\n",
 			who, extra, q, room, q);
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_PART) {
-	va_list	msg;
+static int fireio_chat_user_left(void *userdata, conn_t *conn, const char *room, const char *who, const char *reason) {
 	buddywin_t *bwin;
-	const char *room, *who, *reason, *q;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	reason = va_arg(msg, const char *);
-	va_end(msg);
+	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
@@ -1317,19 +942,13 @@ nFIRE_HANDLER(naim_chat_PART) {
 		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has left chat %s%s%s (</B><body>%s</body><B>).\n",
 			who, q, room, q, (*reason != 0)?reason:"quit");
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_KICK) {
-	va_list	msg;
+static int fireio_chat_user_kicked(void *userdata, conn_t *conn, const char *room, const char *who, const char *by, const char *reason) {
 	buddywin_t *bwin;
-	const char *room, *who, *by, *reason, *q;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	reason = va_arg(msg, const char *);
-	va_end(msg);
+	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
@@ -1339,18 +958,12 @@ nFIRE_HANDLER(naim_chat_KICK) {
 	window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has been kicked off chat %s%s%s by <font color=\"#00FFFF\">%s</font> (</B><body>%s</body><B>).\n",
 		who, q, room, q, by, reason);
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_KEYCHANGED) {
-	va_list	msg;
+static int fireio_chat_keychanged(void *userdata, conn_t *conn, const char *room, const char *what, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *what, *by;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	what = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatverbose") & CH_MISC)
@@ -1370,19 +983,13 @@ nFIRE_HANDLER(naim_chat_KEYCHANGED) {
 		FREESTR(bwin->e.chat->key);
 	}
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
 #ifdef RAWIRCMODES
-nFIRE_HANDLER(naim_chat_MODECHANGED) {
-	va_list	msg;
+static int fireio_chat_modechanged(void *userdata, conn_t *conn, const char *room, const char *mode, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *mode, *by;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	mode = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatverbose") & CH_MISC)
@@ -1392,36 +999,25 @@ nFIRE_HANDLER(naim_chat_MODECHANGED) {
 		window_echof(bwin, "<font color=\"#00FFFF\">%s</font> has set mode <font color=\"#FF00FF\">%s</font>.\n",
 			by, mode);
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 #endif
 
-nFIRE_HANDLER(naim_chat_oped) {
-	va_list	msg;
+static int fireio_chat_oped(void *userdata, conn_t *conn, const char *room, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *by;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatter") & CH_ATTACKED)
 		bwin->waiting = 1;
 	bwin->e.chat->isoper = 1;
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_OP) {
-	va_list	msg;
+static int fireio_chat_user_oped(void *userdata, conn_t *conn, const char *room, const char *who, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *who, *by;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatverbose") & CH_MISC)
@@ -1432,35 +1028,24 @@ nFIRE_HANDLER(naim_chat_OP) {
 			who, by);
 #endif
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_deoped) {
-	va_list	msg;
+static int fireio_chat_deoped(void *userdata, conn_t *conn, const char *room, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *by;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatter") & CH_ATTACKED)
 		bwin->waiting = 1;
 	bwin->e.chat->isoper = 0;
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_DEOP) {
-	va_list	msg;
+static int fireio_chat_user_deoped(void *userdata, conn_t *conn, const char *room, const char *who, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *who, *by;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	who = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatter") & CH_ATTACKS)
@@ -1472,18 +1057,13 @@ nFIRE_HANDLER(naim_chat_DEOP) {
 		who, by);
 #endif
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_TOPIC) {
-	va_list	msg;
+static int fireio_chat_topicchanged(void *userdata, conn_t *conn, const char *room, const char *topic, const char *by) {
 	buddywin_t *bwin;
-	const char *room, *topic, *by, *q;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	topic = va_arg(msg, const char *);
-	by = va_arg(msg, const char *);
-	va_end(msg);
+	const char *q;
 
 	q = (strchr(room, ' ') != NULL)?"\"":"";
 
@@ -1498,18 +1078,12 @@ nFIRE_HANDLER(naim_chat_TOPIC) {
 		window_echof(bwin, "Topic for %s: </B><body>%s</body><B>.\n",
 			room, topic);
 	bupdate();
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_chat_NICK) {
-	va_list	msg;
+static int fireio_chat_user_nickchanged(void *userdata, conn_t *conn, const char *room, const char *oldnick, const char *newnick) {
 	buddywin_t *bwin;
-	const char *room, *oldnick, *newnick;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	oldnick = va_arg(msg, const char *);
-	newnick = va_arg(msg, const char *);
-	va_end(msg);
 
 	bwin = cgetwin(conn, room);
 	if (getvar_int(conn, "chatter") & CH_MISC)
@@ -1517,77 +1091,8 @@ nFIRE_HANDLER(naim_chat_NICK) {
 	window_echof(bwin, "<font color=\"#00FFFF\">%s</font> is now known as <font color=\"#00FFFF\">%s</font>.\n",
 		oldnick, newnick);
 	bupdate();
-}
 
-nFIRE_HANDLER(naim_chat_NAMES) {
-	va_list		msg;
-	const char	*room, *nick;
-	int		oped;
-//	int		i, j;
-
-	va_start(msg, conn);
-	room = va_arg(msg, const char *);
-	nick = va_arg(msg, const char *);
-	oped = va_arg(msg, int);
-	va_end(msg);
-
-	if (namescomplete.buf != NULL) {
-		assert(namescomplete.len > 0);
-		if (namescomplete.foundmatch) {
-			if (!namescomplete.foundmult && (strncasecmp(nick, namescomplete.buf, namescomplete.len) == 0))
-				namescomplete.foundmult = 1;
-			return;
-		}
-		if (strlen(namescomplete.buf) > namescomplete.len) {
-			int	len = strlen(namescomplete.buf);
-
-			assert(len > 0);
-			if (namescomplete.buf[len-1] == ' ');
-				len--;
-			assert(len > 0);
-			if (namescomplete.buf[len-1] == ',');
-				len--;
-			assert(len > 0);
-			if (strncmp(namescomplete.buf, nick, len) == 0) {
-				namescomplete.foundmult = namescomplete.foundfirst = 1;
-				return;
-			} else if (!namescomplete.foundfirst) {
-				if (!namescomplete.foundmult && (strncasecmp(nick, namescomplete.buf, namescomplete.len) == 0))
-					namescomplete.foundmult = 1;
-				return;
-			}
-		}
-		if (strncasecmp(nick, namescomplete.buf, namescomplete.len) == 0) {
-			free(namescomplete.buf);
-			namescomplete.buf = strdup(nick);
-			namescomplete.foundmatch = 1;
-		}
-		return;
-	}
-
-	namec++;
-	names = realloc(names, namec*sizeof(*names));
-	names[namec-1] = malloc(strlen(nick) + oped + 1);
-	sprintf(names[namec-1], "%s%s", oped?"@":"", nick);
-//	for (i = 0, j = strlen(namesbuf); nick[i] != 0; i++, j++)
-//		if (isspace(nick[i]))
-//			namesbuf[j] = '_';
-//		else
-//			namesbuf[j] = nick[i];
-//	namesbuf[j] = ' ';
-//	namesbuf[j+1] = 0;
-}
-
-static int qsort_strcasecmp(const void *p1, const void *p2) {
-	register char **b1 = (char **)p1, **b2 = (char **)p2;
-
-	return(strcasecmp(*b1, *b2));
-}
-
-void	naim_chat_listmembers(conn_t *conn, const char *const chat) {
-	firetalk_chat_listmembers(conn->conn, chat);
-	if (names != NULL)
-		qsort(names, namec, sizeof(*names), qsort_strcasecmp);
+	return(HOOK_CONTINUE);
 }
 
 transfer_t *fnewtransfer(struct firetalk_transfer_t *handle, buddywin_t *bwin, const char *filename,
@@ -1613,22 +1118,10 @@ void	fremove(transfer_t *transfer) {
 	free(transfer);
 }
 
-nFIRE_HANDLER(naim_file_offer) {
-	va_list	msg;
-	buddywin_t *bwin;
-	struct firetalk_transfer_t *handle;
-	const char *from,
-		*filename;
-	long	size;
-
-	va_start(msg, conn);
-	handle = va_arg(msg, struct firetalk_transfer_t *);
-	from = va_arg(msg, const char *);
-	filename = va_arg(msg, const char *);
-	size = va_arg(msg, long);
-	va_end(msg);
-
+static int fireio_file_offer(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, const char *from, const char *filename, long size) {
 	if (bgetwin(conn, filename, TRANSFER) == NULL) {
+		buddywin_t *bwin;
+
 		bnewwin(conn, filename, TRANSFER);
 		bwin = bgetwin(conn, filename, TRANSFER);
 		assert(bwin != NULL);
@@ -1644,38 +1137,22 @@ nFIRE_HANDLER(naim_file_offer) {
 		echof(conn, NULL, "Ignoring duplicate file transfer request from <font color=\"#00FFFF\">%s</font> (%s, %lu B).\n",
 			from, filename, size);
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_file_start) {
-	va_list	msg;
-	transfer_t *transfer;
+static int fireio_file_start(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer) {
 	buddywin_t *bwin;
-	struct firetalk_transfer_t *handle;
-
-	va_start(msg, conn);
-	handle = va_arg(msg, struct firetalk_transfer_t *);
-	transfer = va_arg(msg, transfer_t *);
-	va_end(msg);
 
 	bwin = transfer->bwin;
 	window_echof(bwin, "Transfer of %s has begun.\n", bwin->e.transfer->remote);
 	bwin->e.transfer->started = nowf-0.1;
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_file_progress) {
-	va_list	msg;
-	transfer_t *transfer;
+static int fireio_file_progress(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, long bytes, long size) {
 	buddywin_t *bwin;
-	struct firetalk_transfer_t *handle;
-	long	bytes,
-		size;
-
-	va_start(msg, conn);
-	handle = va_arg(msg, struct firetalk_transfer_t *);
-	transfer = va_arg(msg, transfer_t *);
-	bytes = va_arg(msg, long);
-	size = va_arg(msg, long);
-	va_end(msg);
 
 	bwin = transfer->bwin;
 	assert(bwin->et == TRANSFER);
@@ -1696,20 +1173,12 @@ nFIRE_HANDLER(naim_file_progress) {
 			bytes, size, (int)(100.0*bytes/size));
 		bwin->e.transfer->lastupdate = now;
 	}
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_file_finish) {
-	va_list	msg;
-	transfer_t *transfer;
+static int fireio_file_finish(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, long size) {
 	buddywin_t *bwin;
-	struct firetalk_transfer_t *handle;
-	long	size;
-
-	va_start(msg, conn);
-	handle = va_arg(msg, struct firetalk_transfer_t *);
-	transfer = va_arg(msg, transfer_t *);
-	size = va_arg(msg, long);
-	va_end(msg);
 
 	bwin = transfer->bwin;
 	assert(handle == bwin->e.transfer->handle);
@@ -1726,28 +1195,23 @@ nFIRE_HANDLER(naim_file_finish) {
 	bwin->waiting = 1;
 	bwin->e.transfer->bytes = bwin->e.transfer->size;
 	bwin->e.transfer->size *= -1;
+
+	return(HOOK_CONTINUE);
 }
 
-nFIRE_HANDLER(naim_file_error) {
-	va_list	msg;
-	transfer_t *transfer;
+static int fireio_file_error(void *userdata, conn_t *conn, struct firetalk_transfer_t *handle, transfer_t *transfer, int error) {
 	buddywin_t *bwin;
-	struct firetalk_transfer_t *handle;
-	int	error;
-
-	va_start(msg, conn);
-	handle = va_arg(msg, struct firetalk_transfer_t *);
-	transfer = va_arg(msg, transfer_t *);
-	error = va_arg(msg, int);
-	va_end(msg);
 
 	bwin = transfer->bwin;
 	assert(handle == bwin->e.transfer->handle);
 	echof(conn, NULL, "Error receiving %s: %s.\n",
 		bwin->e.transfer->remote, firetalk_strerror(error));
 	bwin->waiting = 1;
+
+	return(HOOK_CONTINUE);
 }
 
+#if 0
 static time_t lastctcp = 0;
 
 nFIRE_CTCPHAND(naim_ctcp_VERSION) {
@@ -2070,91 +1534,7 @@ nFIRE_CTCPHAND(naim_ctcprep_default) {
 		echof(conn, NULL, "CTCP %s reply from <font color=\"#00FFFF\">%s</font>: %s.\n",
 			command, from, args);
 }
-
-conn_t	*naim_newconn(int proto) {
-	conn_t	*conn = calloc(1, sizeof(conn_t));
-
-	assert(conn != NULL);
-
-	conn->proto = proto;
-	naim_lastupdate(conn);
-
-	{
-		conn->conn = firetalk_create_conn(proto, conn);
-
-		firetalk_register_callback(conn->conn, FC_DOINIT,			naim_doinit);
-		firetalk_register_callback(conn->conn, FC_POSTSELECT,			naim_postselect);
-		firetalk_register_callback(conn->conn, FC_CONNECTED,			naim_connected);
-		firetalk_register_callback(conn->conn, FC_CONNECTFAILED,		naim_connectfailed);
-		firetalk_register_callback(conn->conn, FC_ERROR,			naim_error_msg);
-		firetalk_register_callback(conn->conn, FC_DISCONNECT,			naim_error_disconnect);
-		firetalk_register_callback(conn->conn, FC_SETIDLE,			naim_setidle);
-
-		firetalk_register_callback(conn->conn, FC_EVILED,			naim_warned);
-		firetalk_register_callback(conn->conn, FC_NEWNICK,			naim_newnick);
-		/* FC_PASSCHANGED */
-
-		firetalk_register_callback(conn->conn, FC_IM_GOTINFO,			naim_userinfo_handler);
-		firetalk_register_callback(conn->conn, FC_IM_USER_NICKCHANGED,		naim_nickchange);
-		firetalk_register_callback(conn->conn, FC_IM_GETMESSAGE,		naim_im_handle);
-		firetalk_register_callback(conn->conn, FC_IM_GETACTION,			naim_act_handle);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYADDED,		naim_buddyadded);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYREMOVED,		naim_buddyremoved);
-		firetalk_register_callback(conn->conn, FC_IM_DENYADDED,			naim_denyadded);
-		firetalk_register_callback(conn->conn, FC_IM_DENYREMOVED,		naim_denyremoved);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYONLINE,		naim_buddy_coming);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYOFFLINE,		naim_buddy_going);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYAWAY,			naim_buddy_away);
-		firetalk_register_callback(conn->conn, FC_IM_BUDDYUNAWAY,		naim_buddy_unaway);
-		firetalk_register_callback(conn->conn, FC_IM_IDLEINFO,			naim_buddy_idle);
-		firetalk_register_callback(conn->conn, FC_IM_TYPINGINFO,		naim_buddy_typing);
-		firetalk_register_callback(conn->conn, FC_IM_EVILINFO,			naim_buddy_eviled);
-		firetalk_register_callback(conn->conn, FC_IM_CAPABILITIES,		naim_buddy_caps);
-
-		firetalk_register_callback(conn->conn, FC_CHAT_JOINED,			naim_chat_joined);
-		firetalk_register_callback(conn->conn, FC_CHAT_LEFT,			naim_chat_left);
-		firetalk_register_callback(conn->conn, FC_CHAT_KICKED,			naim_chat_kicked);
-		firetalk_register_callback(conn->conn, FC_CHAT_KEYCHANGED,		naim_chat_KEYCHANGED);
-		firetalk_register_callback(conn->conn, FC_CHAT_GETMESSAGE,		naim_chat_getmessage);
-		firetalk_register_callback(conn->conn, FC_CHAT_GETACTION,		naim_chat_act_handle);
-		firetalk_register_callback(conn->conn, FC_CHAT_INVITED,			naim_chat_invited);
-#ifdef RAWIRCMODES
-		firetalk_register_callback(conn->conn, FC_CHAT_MODECHANGED,		naim_chat_MODECHANGED);
 #endif
-		firetalk_register_callback(conn->conn, FC_CHAT_OPPED,			naim_chat_oped);
-		firetalk_register_callback(conn->conn, FC_CHAT_DEOPPED,			naim_chat_deoped);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_JOINED,		naim_chat_JOIN);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_LEFT,		naim_chat_PART);
-		firetalk_register_callback(conn->conn, FC_CHAT_GOTTOPIC,		naim_chat_TOPIC);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_OPPED,		naim_chat_OP);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_DEOPPED,		naim_chat_DEOP);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_KICKED,		naim_chat_KICK);
-		firetalk_register_callback(conn->conn, FC_CHAT_USER_NICKCHANGED,	naim_chat_NICK);
-		firetalk_register_callback(conn->conn, FC_CHAT_LISTMEMBER,		naim_chat_NAMES);
-
-		firetalk_register_callback(conn->conn, FC_FILE_OFFER,			naim_file_offer);
-		firetalk_register_callback(conn->conn, FC_FILE_START,			naim_file_start);
-		firetalk_register_callback(conn->conn, FC_FILE_PROGRESS,		naim_file_progress);
-		firetalk_register_callback(conn->conn, FC_FILE_FINISH,			naim_file_finish);
-		firetalk_register_callback(conn->conn, FC_FILE_ERROR,			naim_file_error);
-
-		firetalk_register_callback(conn->conn, FC_NEEDPASS,			naim_needpass);
-
-		firetalk_subcode_register_request_callback(conn->conn, "VERSION",	naim_ctcp_VERSION);
-		firetalk_subcode_register_request_callback(conn->conn, "PING",		naim_ctcp_PING);
-		firetalk_subcode_register_request_callback(conn->conn, "LC",		naim_ctcp_LC);
-		firetalk_subcode_register_request_callback(conn->conn, "HEXTEXT",	naim_ctcp_HEXTEXT);
-		firetalk_subcode_register_request_callback(conn->conn, "AUTOPEER",	naim_ctcp_AUTOPEER);
-		firetalk_subcode_register_request_callback(conn->conn, NULL,		naim_ctcp_default);
-
-		firetalk_subcode_register_reply_callback(conn->conn, "HEXTEXT",		naim_ctcprep_HEXTEXT);
-		firetalk_subcode_register_reply_callback(conn->conn, "VERSION",		naim_ctcprep_VERSION);
-		firetalk_subcode_register_reply_callback(conn->conn, "AWAY",		naim_ctcprep_AWAY);
-		firetalk_subcode_register_reply_callback(conn->conn, NULL,		naim_ctcprep_default);
-	}
-
-	return(conn);
-}
 
 void	naim_lastupdate(conn_t *conn) {
 	int	autohide = script_getvar_int("autohide");
@@ -2163,4 +1543,16 @@ void	naim_lastupdate(conn_t *conn) {
 		conn->lastupdate = nowf;
 	else if ((conn->lastupdate + SLIDETIME) < nowf)
 		conn->lastupdate = nowf - SLIDETIME - SLIDETIME/autohide;
+}
+
+void	fireio_hook_init(void) {
+	void	*mod = NULL;
+
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_ignorelist, 10, NULL);
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_decrypt, 20, NULL);
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_log, 50, NULL);
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_beep, 50, NULL);
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_autobuddy, 50, NULL);
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_display_user, 100, NULL);
+	HOOK_ADD(proto_recvfrom, mod, fireio_recvfrom_display_chat, 150, NULL);
 }

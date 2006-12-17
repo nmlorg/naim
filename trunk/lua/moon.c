@@ -145,7 +145,7 @@ static int _nlua_hooks_recvfrom_add(lua_State *L) {
 	ref = luaL_ref(L, -2); //You can retrieve an object referred by reference r by calling lua_rawgeti(L, t, r). 
 	lua_pop(L, 2);
 
-	HOOK_ADD(recvfrom, mod, _nlua_recvfrom, weight, (void*)ref);
+	HOOK_ADD(proto_recvfrom, mod, _nlua_recvfrom, weight, (void*)ref);
 
 	lua_pushlightuserdata(L, (void *)ref);	/* opaque reference */
 	return(1);
@@ -159,7 +159,7 @@ static int _nlua_hooks_recvfrom_del(lua_State *L) {
 		return(luaL_typerror(L, 1, "light userdata"));
 	ref = (int)lua_touserdata(L, 1);
 
-	HOOK_DEL(recvfrom, mod, _nlua_recvfrom, (void*)ref);
+	HOOK_DEL(proto_recvfrom, mod, _nlua_recvfrom, (void*)ref);
 
 	if (luaL_findtable(L, LUA_GLOBALSINDEX, "naim.internal.hooks.recvfrom", 1) != NULL)
 		return(luaL_error(L, "recvfrom hooks table damaged"));
