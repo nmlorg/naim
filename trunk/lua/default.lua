@@ -160,8 +160,6 @@ function naim.internal.newconn(winname, handle)
 		groups = {},
 	}
 	setmetatable(naim.connections[winname], naim.internal.rwmetatable(naim.prototypes.connections))
-	setmetatable(naim.connections[winname].windows, naim.internal.rometatable("windows"))
-	setmetatable(naim.connections[winname].buddies, naim.internal.rometatable("buddies"))
 	setmetatable(naim.connections, naim.internal.rometatable("connections"))
 end
 
@@ -172,44 +170,34 @@ function naim.internal.delconn(winname)
 end
 
 function naim.internal.newwin(conn, winname, handle)
-	setmetatable(conn.windows, {})
 	conn.windows[winname] = {
 		handle = handle,
 		conn = conn,
 		name = winname,
 	}
 	setmetatable(conn.windows[winname], naim.internal.rwmetatable(naim.prototypes.windows))
-	setmetatable(conn.windows, naim.internal.rometatable("windows"))
 end
 
 function naim.internal.delwin(conn, winname)
-	setmetatable(conn.windows, {})
 	conn.windows[winname] = nil
-	setmetatable(conn.windows, naim.internal.rometatable("windows"))
 end
 
 function naim.internal.newbuddy(conn, account, handle)
-	setmetatable(conn.buddies, {})
 	conn.buddies[account] = {
 		handle = handle,
 		conn = conn,
 		name = account,
 	}
 	setmetatable(conn.buddies[account], naim.internal.rwmetatable(naim.prototypes.buddies))
-	setmetatable(conn.buddies, naim.internal.rometatable("buddies"))
 end
 
 function naim.internal.changebuddy(conn, account, newaccount)
-	setmetatable(conn.buddies, {})
 	conn.buddies[newaccount] = conn.buddies[account]
 	conn.buddies[account] = nil
-	setmetatable(conn.buddies, naim.internal.rometatable("buddies"))
 end
 
 function naim.internal.delbuddy(conn, account)
-	setmetatable(conn.buddies, {})
 	conn.buddies[account] = nil
-	setmetatable(conn.buddies, naim.internal.rometatable("buddies"))
 end
 
 
@@ -515,6 +503,16 @@ naim.commands.names = {
 
 
 
+naim.hooks.add('proto_connected', function(conn)
+	conn.online = true
+end, 100)
+
+naim.hooks.add('proto_disconnected', function(conn, errorcode)
+	conn.online = nil
+	conn.groups = {}
+	conn.buddies = {}
+end, 100)
+
 naim.hooks.add('proto_buddy_coming', function(conn, who)
 	
 end, 100)
@@ -763,7 +761,7 @@ naim.hooks.add('preselect', function(rfd, wfd, efd, maxfd)
 							objfunc(events[i].verb, events[i].objects)
 							table.insert(t, ", ")
 						end
-						table.insert(t, " and ")
+						table.insert(t, "and ")
 						objfunc(events[#events].verb, events[#events].objects)
  					end
 

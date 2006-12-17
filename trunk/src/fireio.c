@@ -745,7 +745,7 @@ static int fireio_error_msg(void *userdata, const char *signature, conn_t *conn,
 	return(HOOK_CONTINUE);
 }
 
-static int fireio_error_disconnect(void *userdata, const char *signature, conn_t *conn, int error) {
+static int fireio_disconnected(void *userdata, const char *signature, conn_t *conn, int error) {
 	echof(conn, NULL, "Disconnected from %s: %s.\n",
 		conn->winname, firetalk_strerror(error));
 	conn->online = -1;
@@ -1083,7 +1083,7 @@ void	fireio_hook_init(void) {
 	HOOK_ADD(proto_buddy_nickchanged, mod, fireio_buddy_nickchanged, 100, NULL);
 	HOOK_ADD(proto_warned,		mod, fireio_warned,		100, NULL);
 	HOOK_ADD(proto_error_msg,	mod, fireio_error_msg,		100, NULL);
-	HOOK_ADD(proto_error_disconnect, mod, fireio_error_disconnect,	100, NULL);
+	HOOK_ADD(proto_disconnected,	mod, fireio_disconnected,	100, NULL);
 	HOOK_ADD(proto_userinfo,	mod, fireio_userinfo,		100, NULL);
 	HOOK_ADD(proto_buddyadded,	mod, fireio_buddyadded,		100, NULL);
 	HOOK_ADD(proto_buddyremoved,	mod, fireio_buddyremoved,	100, NULL);
