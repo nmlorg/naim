@@ -1,3 +1,4 @@
+#labels Featured
 =General=
 ==How do I send an IM? &bull; How do I add someone to my buddy list?==
 To simply send a message to someone who is not in your buddy list, just type /msg
