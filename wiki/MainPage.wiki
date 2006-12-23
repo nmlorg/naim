@@ -23,7 +23,7 @@ Feel free to add whatever pages you see necessary, or edit any of the current on
 
 New users may find the [http://code.google.com/p/naim/wiki/FAQ FAQ] or the Quick Start guide to be helpful, while advanced
 users may find Key Binding and Settings and Preferences to be more interesting.
-There is also a list of Commands. We also maintain a collection of interesting
+There is also a list of [Commands Commands]. We also maintain a collection of interesting
 naim-related [http://code.google.com/p/naim/wiki/Links links].
 
 Lost screennames - Screennames suspended by AOL for unknown reason that used naim. To
