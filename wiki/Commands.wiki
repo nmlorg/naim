@@ -1,0 +1,221 @@
+The purpose of this page will be to document all of the commands available in naim.  Every command begins with a slash (/).  There is an help system available from within naim.  Type <code>/help</code> to start.
+
+== Connection Commands ==
+=== /newconn ===
+ * Syntax: /newconn [ label [ protocol ]]
+ * Examples: 
+ ** /newconn EFnet
+ ** /newconn my_conn TOC
+ * Description: Creates a new connection window.  The first example creates a new connection labeled 'EFnet'.  Naim automaticly assumes that it is of type IRC.  The second example creates a new connection labeled 'my_conn' of type TOC (which is the protocol that AIM usues)
+
+=== /delconn ===
+ * Syntax: /delconn [ label ]
+ * Examples:
+ ** /delconn
+ ** /delconn my_conn
+ * Description: Deletes/closes the specified connection.  If no connection is specified, than the currently active connection is deleted.  There must be at least one active connection.
+
+=== /connect ===
+ * Syntax: /connect [ name [ server [ port ]]]
+ * Examples:
+ ** /connect my_screenname
+ ** /connect nick irc.servercentral.net
+ * Description: Connect to a specified server.  The protocol used is dependant on the current connection
+
+=== /disconnect ===
+ * Syntax: /disconnect
+ * Description: Disconnect from the current server.
+
+== Chatting Commands ==
+=== /say ===
+ * Syntax: /say message
+ * Example: /say hello there
+ * Description: Sends a message to the current window.
+
+=== /msg ===
+ * Syntax: /msg user message
+ * Examples:
+ ** /msg #naim hello world!
+ ** /msg "naim help" help me!
+ * Description: Sends a message to another user or chatroom.
+
+=== /me ===
+ * Syntax: /me action
+ * Example: /me is happy
+ * Description: Sends an 'action' message to the current window
+
+=== /join ===
+ * Syntax: /join chat [ key ]
+ * Examples:
+ ** /join #myroom thepassword
+ ** /join 4:naim
+ * Description: Joins a chatroom using the specified password, if one is needed.
+
+=== /part===
+ * Syntax: /part [ window ]
+ * Example: /part #naim
+ * Description: Closes a window, or part a chatroom.  
+ * Alias: /close, /part
+
+=== /invite ===
+ * Syntax: /invite name [ chat ]
+ * Description: Invites someone to a chat.
+
+=== /info ===
+ * Syntax [ name ] 
+ * Description: Retrieves info about a user if specified, or the current user.  On AIM, this is the user's profile.  On IRC, this is the user's <code>/whois</code>
+ * Aliases: /wi, /whois
+
+== Window Commands ==
+=== /open ===
+ * Syntax: /open name
+ * Example: /open my_buddy
+ * Description: Opens a window for a buddy.  You can use this to open a window to talk to buddy not on your buddy list.  
+ * Alias: /window
+
+=== /close ===
+ * See /part
+
+=== /closeall ===
+ * Syntax: /closeall
+ * Description: Closes all open windows for offline buddies.
+
+=== /jump ===
+ * Syntax: /jump [ windowname ]
+ * Example: /jump EFnet:#naim
+ * Description: Jumps (switches to) the specified window.  If no window is specified, then /jump moves to the next 'active' window (represented by being colored yellow in your window list).
+
+=== /jumpback ===
+ * Syntax: /jumpback
+ * Description: Jumps to the previous window.
+
+=== /clear ===
+ * Syntax: /clear
+ * Description: Temporarily clear the scrollback for the current window.
+
+=== /clearall ===
+ * Syntax: /clearall
+ * Description: Performs a <code>/clear</code> on all open windows.
+
+=== /resize ===
+ * Syntax: /resize [ height ]
+ * Example: /resize 200
+ * Description: Resizes all windows.  Specifying a height allows you to access a large scrollback buffer, but beware that a large height will potentially take a while to re-draw.
+
+=== /winlist ===
+ * Syntax: [hidden | visible | auto]
+ * Example: /winlist auto
+ * Description: Controls the display behavoir of the window list:
+ ** Visible: The window list is always visible
+ ** Hidden: The window list is always hidden
+ ** Auto: The window list is only shown when switching windows, or there is a waiting active window.
+
+== Buddylist Mangement ==
+=== /addbuddy ===
+ * Syntax: /addbuddy buddy [ group [ realname ]]
+ * Examples:
+ ** /addbuddy "naim help"
+ ** /addbuddy "naim help" Friends "Dan Reed"
+ * Description: Adds a buddy to your permeanent buddy list.  You may specify a group for that buddy, and a "real name".  You can also use this command to change what group they're in.
+ * Aliases: /add, /friend, /groupbuddy
+
+=== /delbuddy ===
+ * Syntax: /delbuddy buddy
+ * Description: Removes a buddy from your buddy list.
+
+=== /tagbuddy ===
+ * Syntax: /tagbuddy name [ note ]
+ * Description: Tags a buddy with a reminder message.  Use <code>/tagbuddy name</code> with note to remove a note.
+ * Alias: /tag
+
+=== /namebuddy ===
+ * Syntax: /namebuddy name [ real name ]
+ * Description: Changes the read name for a buddy
+
+=== /sync ===
+ * Syntax: /sync
+ * Descripition: Uploads your buddy list to the server for safekeeping.  N.B. this command is ''not'' guaranteed to do anything.  See <code>/save</code>
+
+== IRC Specific Commands == 
+
+=== /kick ===
+ * Syntax: /kick name [ reason ]
+ * Example: /kick blahuser dont beg for ops!
+ * Descriptions: removes a user from an IRC chatroom.  An optional reason maybe be given
+
+=== /op ===
+ * Syntax: /op name
+ * Description: Gives another user 'operator' status in the current IRC chatroom.
+
+=== /deop ===
+ * Syntax: /deop name
+ * Description: Removes another user 'op' status.
+
+=== /topic ===
+ * Syntax: /topic [ topic ]
+ * Description: If no topic is specified, the current room topic is displayed.  Otherwise <code>/topic</code> changes the current topic.
+
+=== /ctcp ===
+ * Syntax: /ctcp name [ request [ message ]]
+ * Example:
+ ** /ctcp n_ version
+ * Description: Sends a CTCP (Client To Client Protocol) message to someone.
+
+== Other Commands ==
+
+=== /set ===
+ * Syntax: /set [ varname [ value [ dummy ]]]
+ * Example: /set showraw 1
+ * Description: View or change the value of a configureation or session variable.
+ * See [[Settings and Preferences]]
+
+=== /alias ===
+ * Syntax: /alias commandname script
+ * Examples:
+ ** /alias mode /msg :RAW $args1*
+ ** /alias k /msg :RAW KICK $cur $arg1 :$args2* 
+ * Description: Creates a new command alias
+ * Accessing arguemnts:
+ ** $arg1 - the first argument
+ ** $args1* -  all arguments after the first, including the first
+ ** $arg2 - the second argument
+ ** $args2* - all arguments after the second, including the second
+
+=== /modlist ===
+ * Syntax: /modlist
+ * Description: Search for and list all potential and resident naim modules.
+
+=== /modload ===
+ * Syntax: /modload module [ options ]
+ * Description: Load and initialize a dynamic module.
+
+=== /modunload ===
+ * Syntax: /modunload module
+ * Description: Deinitialize and unload a resident module.
+
+=== /exec ===
+ * Syntax: /exec [ -o ] command
+ * Examples: 
+ ** /exec sh /u/n/myscript.sh
+ ** /exec -o uname -a
+ * Description: Executes a shell command.  The optional -o switch causes any output to be 'said' to the current window.
+
+=== /eval ===
+ * Syntax: /eval commands
+ * Example: /eval /msg #naim $lasturl
+ * Description: Evaluates a command with $-variable substitution.  Can also evaluate lua commands
+ * See: [[Settings and Preferences]]
+
+=== /status ===
+ * Syntax: /status [connection]
+ * Example: /status AIM
+ * Description: Prints out various information about a specific connection.
+
+=== /offer ===
+ * Syntax: /offer name filename
+ * Description: [EXPERIMENTAL] Offer a file transfer request to someone.
+
+=== /accept ===
+ * Syntax: /accept filename
+ * Description: [EXPERIMENTAL] Accept a file transfer request in the current window.
+
