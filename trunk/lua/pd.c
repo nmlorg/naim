@@ -10,6 +10,8 @@
 #include "firetalk-int.h"
 #include "moon-int.h"
 
+#if 0
+
 struct firetalk_driver_connection_t {
 	firetalk_driver_t pd;
 };
@@ -523,7 +525,10 @@ static const firetalk_driver_t firetalk_protocol_template = {
 	destroy_conn:		_nlua_pd_destroy_conn,
 };
 
+#endif
+
 static int _nlua_create(lua_State *L) {
+#if 0
 	firetalk_driver_t *pd;
 
 	pd = malloc(sizeof(*pd));
@@ -536,6 +541,7 @@ static int _nlua_create(lua_State *L) {
 	pd->cookie = (struct firetalk_driver_cookie_t *)pd;
 
 	firetalk_register_protocol(pd);
+#endif
 
 	return(0);
 }
@@ -544,3 +550,4 @@ const struct luaL_reg naim_pdlib[] = {
 	{ "create",	_nlua_create },
 	{ NULL,		NULL }
 };
+
