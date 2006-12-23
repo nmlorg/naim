@@ -54,7 +54,7 @@ ARFLAGS = cru
 libfiretalk_a_AR = $(AR) $(ARFLAGS)
 libfiretalk_a_LIBADD =
 am_libfiretalk_a_OBJECTS = firetalk.$(OBJEXT) irc.$(OBJEXT) \
-	lily.$(OBJEXT) pdutil.$(OBJEXT) toc2.$(OBJEXT)
+	pdutil.$(OBJEXT)
 libfiretalk_a_OBJECTS = $(am_libfiretalk_a_OBJECTS)
 am_tester_OBJECTS = tester.$(OBJEXT)
 tester_OBJECTS = $(am_tester_OBJECTS)
@@ -201,10 +201,7 @@ libfiretalk_a_SOURCES = \
 	firetalk.c \
 	firetalk-int.h \
 	irc.c \
-	lily.c \
-	pdutil.c \
-	toc2.c \
-	toc2_uuids.h
+	pdutil.c
 
 tester_SOURCES = \
 	tester.c
