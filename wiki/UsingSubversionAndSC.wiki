@@ -1,0 +1,68 @@
+#summary Some notes on using naim's SVN/SC repository.
+
+= Introduction =
+
+I'm going to keep a running log here of what I'm doing as I set up naim's SC repository in the hopes that other people will find it useful for fixing it if it breaks.
+
+= Other documentation on SC =
+http://pmade.com/open-source-software/sc/manual
+
+= Setting up for the first time =
+== Setting up my environment ==
+I use an Ubuntu system. YMMV. Ubuntu is totally brain damaged when it comes to Ruby, I hear, so it's probably less work for you.
+
+{{{
+joshua@shebang:~/src/naim$ sudo apt-get install ruby
+blah blah blah
+The following NEW packages will be installed:
+  libruby1.8 ruby ruby1.8
+0 upgraded, 3 newly installed, 0 to remove and 70 not upgraded.
+Need to get 1661kB of archives.
+After unpacking 6099kB of additional disk space will be used.
+Do you want to continue [Y/n]?
+blah blah blah
+joshua@shebang:~/src/naim$
+joshua@shebang:~/tmp$ wget http://rubyforge.org/frs/download.php/11289/rubygems-0.9.0.tgz
+[...]
+joshua@shebang:~/tmp$ tar xzvf rubygems-0.9.0.tgz
+[...]
+joshua@shebang:~/tmp/rubygems-0.9.0$ sudo ruby setup.rb all
+[...]
+  Successfully built RubyGem
+  Name: sources
+  Version: 0.0.1
+  File: sources-0.0.1.gem
+joshua@shebang:~/tmp/rubygems-0.9.0$ sudo apt-get install rdoc
+[...]
+joshua@shebang:~/tmp/rubygems-0.9.0$ sudo gem install svnauto --include-dependencies
+[...]
+Successfully installed svnauto-1.0.2
+}}}
+
+== Setting up sc ==
+{{{
+joshua@shebang:~/src/naim$ *sc config --add*
+Repository Name (used with sc -r): *naim*
+Repository URL: *https://joshua.wise@naim.googlecode.com/svn/sc/*
+Directory where checkouts go (can be relative to ~/): |develop/naim| *src/naim/sc/*
+Create workspace /home/joshua/src/naim/sc/? *yes*
+joshua@shebang:~/src/naim$ *svn mkdir -m "Created /sc" https://joshua.wise@naim.googlecode.com/svn/sc/*
+Committed revision 133.
+}}}
+_Why /sc? We already had a trunk and branches directory, and I didn't know whether SC would romp on it. If we don't like it, it makes it easier to armarf it, and if we like it, we can just move it in its entirety on top of /svn/._
+{{{
+joshua@shebang:~/src/naim$ *sc -r naim create naim*
+Create project naim in naim (https://joshua.wise@naim.googlecode.com/svn/sc/)? *yes*
+Committed revision 134.
+Committed revision 135.
+Committed revision 136.
+Committed revision 137.
+Committed revision 138.
+Committed revision 139.
+Committed revision 140.
+Committed revision 141.
+Committed revision 142.
+Committed revision 143.
+Checked out revision 143.
+Checked out to: ~/src/naim/sc/naim-trunk
+}}}
