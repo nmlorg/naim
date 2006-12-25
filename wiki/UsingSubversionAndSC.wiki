@@ -2,8 +2,11 @@
 #labels Phase-Implementation
 
 = Introduction =
-
 I'm going to keep a running log here of what I'm doing as I set up naim's SC repository in the hopes that other people will find it useful for fixing it if it breaks.
+
+I've also decided to compile various bits of documentation on using SVN and SC for common tasks. Hopefully this page is useful to someone.
+
+`joshua`
 
 = Other documentation on SC =
 http://pmade.com/open-source-software/sc/manual
@@ -136,6 +139,19 @@ Committed revision 152.
 
 == Checking out an experimental branch -- the SVN way ==
 You can check out an experimental branch directly using svn. In my case, one would check out my branch using a command like `svn co https://naim.googlecode.com/svn/branches/exp/joshua-slcp-backport/ naim-joshua-slcp-backport` .
+
+== Checking out an experimental branch -- the SC way ==
+{{{
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ sc -r naim -p svn co -e joshua-slcp-backport
+Checked out to: ~/src/naim/sc/svn-exp-joshua-slcp-backport
+}}}
+
+== What changed? ==
+Assuming that the experimental branch is up to date (see above), you can:
+{{{
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ svn diff https://naim.googlecode.com/svn/trunk/ https://naim.googlecode.com/svn/branches/exp/joshua-slcp-backport/
+}}}
+which will generate a diff between trunk and the head of the experimental branch.
 
 = For your trouble =
 http://www.randomkitty.com/cats/hugstime.jpg
