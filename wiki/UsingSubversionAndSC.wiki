@@ -69,3 +69,56 @@ At this point, you will have a copy of the naim svn trunk hanging out in your ho
 You'll note, if you're observant, that I checked out a project called 'svn'. This is to preserve compatibility with the way Google Code has things laid out. The trunk is directly under a directory called 'svn' on the server, not in a subdirectory. So, we call the root directory the workspace, and we call the project name 'svn'. This is an evil nasty hack, but it works.
 
 We have to pass in the project name with '-p svn', because SC can't automatically detect a list of extant projects because https://naim.googlecode.com/ is not actually a Subversion repository.
+
+= Various common tasks by example =
+In this section, I'll describe a couple common tasks that one might perform with SC. A basic familiarity with Subversion is assumed.
+== Making an experimental branch ==
+In this case, I want to create an experimental branch that I can work on so I can finish porting SLCP over. I will call this branch "joshua-slcp-backport". I can have multiple experimental branches if I want to work on multiple things at once, so I'll keep this branch limited to working on one feature. SC gets a little confused about my svn setup here when I try to do things like this:
+
+{{{
+joshua@shebang:~/src/naim/sc/svn-trunk$ sc exp joshua-slcp-backport
+sc: the selected repository (https://joshua.wise@naim.googlecode.com/svn) is not in the configuration file, please use the 'sc config --add' command to add it first.
+}}}
+
+So, I have to explicitly tell it what to do.
+
+{{{
+joshua@shebang:~/src/naim/sc$ sc -r naim -p svn exp joshua-slcp-backport
+Create experimental branch joshua-slcp-backport off svn/trunk? yes
+
+Committed revision 148.
+
+Committed revision 149.
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/lua
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/lua/commands.c
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/lua/Makefile.in
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/NEWS
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/install-sh
+Checked out revision 149.
+Checked out: ~/src/naim/sc/svn-exp-joshua-slcp-backport
+joshua@shebang:~/src/naim/sc$
+}}}
+
+== Bringing an experimental branch up to date ==
+Again, you need to manually specify the options, instead of just running it from inside the directory.
+{{{
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ sc -r naim -p svn exp -u joshua-slcp-backport
+
+Committed revision 150.
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/lua
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/lua/commands.c
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/lua/Makefile.in
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/NEWS
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/install-sh
+Checked out revision 150.
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$
+}}}
+
+It does seem to perform a commit (or, minimally, increment the revision number), so don't update unless there's something to update to.
+
+= For your trouble =
+http://www.randomkitty.com/cats/hugstime.jpg
