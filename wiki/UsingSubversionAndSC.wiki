@@ -120,5 +120,22 @@ joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$
 
 It does seem to perform a commit (or, minimally, increment the revision number), so don't update unless there's something to update to.
 
+== Committing on an experimental branch ==
+Committing on an experimental branch is exactly like committing on the trunk.
+{{{
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ svn commit -m "Backport of SLCP driver (untested; no account to test with)"
+Sending        aclocal.m4
+Sending        configure
+Sending        libfiretalk/Makefile.am
+Sending        libfiretalk/Makefile.in
+Sending        libfiretalk/firetalk.c
+Sending        libfiretalk/lily.c
+Transmitting file data ......
+Committed revision 152.
+}}}
+
+== Checking out an experimental branch -- the SVN way ==
+You can check out an experimental branch directly using svn. In my case, one would check out my branch using a command like `svn co https://naim.googlecode.com/svn/branches/exp/joshua-slcp-backport/ naim-joshua-slcp-backport` .
+
 = For your trouble =
 http://www.randomkitty.com/cats/hugstime.jpg
