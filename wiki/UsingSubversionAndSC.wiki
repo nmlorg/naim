@@ -1,4 +1,5 @@
 #summary Some notes on using naim's SVN/SC repository.
+#labels Phase-Implementation
 
 = Introduction =
 
@@ -41,28 +42,30 @@ Successfully installed svnauto-1.0.2
 
 == Setting up sc ==
 {{{
-joshua@shebang:~/src/naim$ *sc config --add*
-Repository Name (used with sc -r): *naim*
-Repository URL: *https://joshua.wise@naim.googlecode.com/svn/sc/*
-Directory where checkouts go (can be relative to ~/): |develop/naim| *src/naim/sc/*
-Create workspace /home/joshua/src/naim/sc/? *yes*
-joshua@shebang:~/src/naim$ *svn mkdir -m "Created /sc" https://joshua.wise@naim.googlecode.com/svn/sc/*
-Committed revision 133.
+joshua@shebang:~/src/naim$ sc config --color
+joshua@shebang:~/src/naim$ sc config -a
+Repository Name (used with sc -r): naim
+Repository URL: https://joshua.wise@naim.googlecode.com/
+Directory where checkouts go (can be relative to ~/): |develop/naim| src/naim/sc/
+Create workspace /home/joshua/src/naim/sc/? y
+joshua@shebang:~/src/naim$ cd sc
+joshua@shebang:~/src/naim/sc$ sc -p svn checkout
+Repositories:
+1. naim (https://joshua.wise@naim.googlecode.com/)
+Please choose a repository: 1
+A    /home/joshua/src/naim/sc/svn-trunk/lua
+A    /home/joshua/src/naim/sc/svn-trunk/lua/commands.c
+A    /home/joshua/src/naim/sc/svn-trunk/lua/Makefile.in
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-trunk/NEWS
+A    /home/joshua/src/naim/sc/svn-trunk/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-trunk/install-sh
+Checked out revision 146.
+Checked out to: ~/src/naim/sc/svn-trunk
+joshua@shebang:~/src/naim/sc$
 }}}
-_Why /sc? We already had a trunk and branches directory, and I didn't know whether SC would romp on it. If we don't like it, it makes it easier to armarf it, and if we like it, we can just move it in its entirety on top of /svn/._
-{{{
-joshua@shebang:~/src/naim$ *sc -r naim create naim*
-Create project naim in naim (https://joshua.wise@naim.googlecode.com/svn/sc/)? *yes*
-Committed revision 134.
-Committed revision 135.
-Committed revision 136.
-Committed revision 137.
-Committed revision 138.
-Committed revision 139.
-Committed revision 140.
-Committed revision 141.
-Committed revision 142.
-Committed revision 143.
-Checked out revision 143.
-Checked out to: ~/src/naim/sc/naim-trunk
-}}}
+At this point, you will have a copy of the naim svn trunk hanging out in your home directory, in src/naim/sc/svn-trunk.
+
+You'll note, if you're observant, that I checked out a project called 'svn'. This is to preserve compatibility with the way Google Code has things laid out. The trunk is directly under a directory called 'svn' on the server, not in a subdirectory. So, we call the root directory the workspace, and we call the project name 'svn'. This is an evil nasty hack, but it works.
+
+We have to pass in the project name with '-p svn', because SC can't automatically detect a list of extant projects because https://naim.googlecode.com/ is not actually a Subversion repository.
