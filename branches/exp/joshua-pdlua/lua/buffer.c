@@ -102,7 +102,7 @@ static int _nlua_take(lua_State *L) {
 	if (size > buf->pos)
 		size = buf->pos;
 	lua_pushlstring(L, buf->buffer, size);
-	memmove(buf->buffer, buf->buffer + buf->pos, buf->size - buf->pos);
+	memmove(buf->buffer, buf->buffer + size, buf->size - buf->pos);
 	buf->pos -= size;
 	return 1;
 }
