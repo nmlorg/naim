@@ -532,6 +532,16 @@ naim.commands.on = {
 	end,
 }
 
+naim.commands.dofile = {
+	min = 1,
+	max = 1,
+	desc = "Load a file into the Lua interpreter",
+	args = { "file" },
+	func = function(conn, arg)
+		dofile(arg[1])
+	end
+}
+
 naim.commands.names = {
 	min = 0,
 	max = 1,
