@@ -128,7 +128,7 @@ function jaw.tafs.metartranslate(metar)
 				end
 				return neg .. t
 			end
-			oldtemp = "Temperature " .. proc(temp) .. ". Dew point " .. proc(dp) .. ". "
+			oldtemp = "Temperature " .. proc(temp) .. "C. Dew point " .. proc(dp) .. "C. "
 		elseif token:match("^CAVOK") then
 			translated = translated .. "Ceilings and Visibilities OK. "
 		elseif token:match("^NOSIG") then
@@ -138,9 +138,19 @@ function jaw.tafs.metartranslate(metar)
 		elseif token:match("^AUTO") then
 			translated = translated .. "Automatically observed. "
 		elseif token:match("^Q%d%d%d%d") then
-			translated = translated .. "Barometric pressure "..token:sub(2,5).." millibars. "
+			local t = token:sub(2,5)
+			if t:sub(1,1) == "" then 
+				t = t:sub(2)
+			end
+			translated = translated .. "Barometric pressure "..t.." millibars. "
 		elseif token:match("^SLP%d%d%d") then
-			translated = translated .. "Barometric pressure 10"..token:sub(2,3).."."..token:sub(4,4) .. " millibars. "
+			translated = translated .. "Sea level barometric pressure 10"..token:sub(4,5).."."..token:sub(6,6) .. " millibars. "
+		elseif token:match("^%d%d%d%d$") then
+			if token == "9999" then
+				translated = translated .. "Visibility unlimited. "
+			else
+				translated = translated .. "Visibility "..token.." meters. "
+			end
 		elseif token:match("^AO2") then
 			-- they have a precip sensor; who cares?
 		elseif token:match("^P%d%d%d%d") then
@@ -184,12 +194,17 @@ function jaw.tafs.metartranslate(metar)
 				token = token:sub(3)
 			end
 			translated = translated .. descriptor:sub(1,1):upper() .. descriptor:sub(2) .. trailer .. ". "
+		elseif token == "" then
+			-- nothing interesting
 		else
 			untranslated = untranslated .. token .. " "
 		end
 	end
 	if not gotadvancedtemp then
 		translated = translated .. oldtemp
+	end
+	while translated:sub(1,1) == " " do
+		translated = translated:sub(2)
 	end
 	if untranslated ~= "" then
 		translated = translated .. "Untranslated tokens: "..untranslated
@@ -199,12 +214,12 @@ end
 
 jaw.tafs.hook = naim.hooks.add('proto_recvfrom', function(conn, sn, dest, text, flags)
 	if text:match("^!metar ([A-Z0-9a-z]*)$") then
-		local d = text:match("^!metar ([A-Z0-9a-z]*)$")
+		local d = text:match("^!metar ([A-Z0-9a-z]*)$"):upper()
 		netlib.createcontext(function ()
-			conn:msg(sn..", METAR for "..d..": "..jaw.tafs.getmetar(d))
+			conn:msg(dest, sn..", METAR for "..d..": "..jaw.tafs.getmetar(d))
 		end)
 	elseif text:match("^!metar translate ([A-Z0-9a-z]*)$") then
-		local d = text:match("^!metar translate ([A-Z0-9a-z]*)$")
+		local d = text:match("^!metar translate ([A-Z0-9a-z]*)$"):upper()
 		netlib.createcontext(function ()
 			conn:msg(dest, sn..", Translated METAR for "..d..": "..jaw.tafs.metartranslate(jaw.tafs.getmetar(d)))
 		end)
