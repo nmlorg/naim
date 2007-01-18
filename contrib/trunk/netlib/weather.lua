@@ -4,13 +4,22 @@
 
 -- uses netlib
 
-assert(naim.netlib)
-naim.weather={ history={}}
+require("netlib")
+
+if netlib._APIVERSION < 1 then
+	error("weather.lua requires version 1 of netlib;  your version is "..netlib._APIVERSION)
+end
+
+if not naim then
+	error("Need to be run from within naim")
+end
+
+if not naim.weather then
+	naim.weather={ history={}}
+end
 
 function naim.weather.getdata(args)
-	
-	local data = naim.netlib.httpget(args.ctbl, "weather.yahooapis.com", "/forecastrss?p="..args.data)
-
+	local data = netlib.httpget("weather.yahooapis.com", "/forecastrss?p="..args)
 	city = data:match("<yweather:location.*city=\"([%w/\. ]+)\".*/>")
 
 	condition = data:match("<yweather:condition.*text=\"([%w/\. ]+)\".*/>")
@@ -49,18 +58,23 @@ function naim.weather.getdata(args)
 	end
 end
 
-if naim.weather.hook then naim.netlib.unregister(naim.weather.hook) naim.weather.hook = nil end
+if naim.weather.hook then naim.hooks.del('proto_recvfrom',naim.weather.hook) naim.weather.hook = nil end
 
-naim.weather.hook = naim.netlib.register(function (text, sn)
-	textmatch = text:match("^!weather (%d%d%d%d%d)$")
-	if textmatch then
-		naim.weather.history[sn] = textmatch
-		return textmatch
+naim.weather.hook = naim.hooks.add('proto_recvfrom', function (conn, sn, dest, text, flags)
+	if not dest then rcpt = sn else rcpt = dest end
+	if text:match("^!weather (%d%d%d%d%d)$") then
+		local zip = text:match("^!weather (%d%d%d%d%d)$")
+		naim.weather.history[sn] = zip
+		netlib.createcontext(function() conn:msg(rcpt,naim.weather.getdata(zip) ) end)
 	elseif text:match("^!weather$") then
-		if naim.weather.history[sn] then return naim.weather.history[sn] else return nil end
+		if not naim.weather.history[sn] then
+			conn:msg(rcpt,"What zipcode do you want the weather for?")
+		else
+			netlib.createcontext(function() conn:msg(rcpt, naim.weather.getdata(naim.weather.history[sn]))end)
+		end
+	
 	end
-end, function (args)
-	return naim.weather.getdata(args)
-end)
 
-naim.echo("[weather_em.lua] loaded.")
+end, 100)
+
+naim.echo("[weather.lua] loaded.")
