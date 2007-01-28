@@ -44,6 +44,8 @@ function jaw.tafs.metartranslate(metar)
 	local gotadvancedtemp = false
 	local oldtemp = ""
 	
+	metar = metar:gsub("\n","")
+	
 	local token = metar:match("(.-) ") -- drop the first token
 	metar = metar:sub(token:len()+2)
 	while metar:len() ~= 0 do
