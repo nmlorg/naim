@@ -118,6 +118,11 @@ tripped over the cat.
 
 }}}
 
+{{{
+[22:05:46] <n_> the best user experience will almost surely be to have a passive aggressive robot
+
+}}}
+
 === People (or the lack thereof) ===
 {{{
 [04:04:46] <joshua_> I keep a distance between my online identities and my 
