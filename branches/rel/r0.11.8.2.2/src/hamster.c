@@ -289,8 +289,6 @@ void	setaway(const int auto_flag) {
 	do {
 		status_echof(conn, "You are now away--hurry back!\n");
 		firetalk_set_away(conn->conn, awaymsg, auto_flag);
-		if (conn->online > 0)
-			naim_set_info(conn->conn, conn->profile);
 	} while ((conn = conn->next) != curconn);
 }
 
