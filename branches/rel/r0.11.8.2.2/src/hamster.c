@@ -107,8 +107,10 @@ static int sendto_encrypt(conn_t *conn, char **name, char **dest,
 		buddylist_t	*blist = rgetlist(conn, *dest);
 
 		if (blist != NULL) {
-			if (blist->crypt != NULL) {
+			if (blist->docrypt) {
 				int	i, j = 0;
+
+				assert(blist->crypt != NULL);
 
 				for (i = 0; i < *len; i++) {
 					(*message)[i] = (*message)[i] ^ (unsigned char)blist->crypt[j++];

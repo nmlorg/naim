@@ -565,6 +565,7 @@ static int recvfrom_decrypt(conn_t *conn, char **name, char **dest,
 	if ((*dest == NULL) && !(*flags & RF_ACTION)) {
 		buddylist_t	*blist = rgetlist(conn, *name);
 
+		// Note that docrypt is not checked here; we decrypt if we have a key. docrypt only applies to outgoing messages.
 		if ((blist != NULL) && (blist->crypt != NULL) && ((blist->peer <= 3) || (*flags & RF_ENCRYPTED))) {
 			int	i, j = 0;
 
@@ -578,6 +579,29 @@ static int recvfrom_decrypt(conn_t *conn, char **name, char **dest,
 					*len, i, (*message)[i]);
 				return(HOOK_STOP);
 			}
+			if (!blist->docrypt) {
+				buddywin_t *bwin = bgetwin(conn, *name, BUDDY);
+
+				blist->docrypt = 1;
+				if (bwin != NULL)
+					window_echof(bwin, "%s just sent an encrypted message, but encryption has been temporarily disabled. Reenabling.\n",
+						*name);
+				else
+					status_echof(conn, "%s just sent an encrypted message, but encryption has been temporarily disabled. Reenabling.\n",
+						*name);
+			}
+		}
+
+		if ((blist != NULL) && blist->docrypt && !(*flags & RF_ENCRYPTED)) {	// On the other hand, unencrypted messages will cause us to not send encrypted messages either.
+			buddywin_t *bwin = bgetwin(conn, *name, BUDDY);
+
+			blist->docrypt = 0;
+			if (bwin != NULL)
+				window_echof(bwin, "%s just sent an unencrypted message, but encryption has been negotiated. Temporarily disabling encryption.\n",
+					*name);
+			else
+				status_echof(conn, "%s just sent an unencrypted message, but encryption has been negotiated. Temporarily disabling encryption.\n",
+					*name);
 		}
 	}
 	return(HOOK_CONTINUE);
@@ -629,13 +653,11 @@ static int recvfrom_autobuddy(conn_t *conn, char **name, char **dest,
 
 static int recvfrom_display_user(conn_t *conn, char **name, char **dest,
 		unsigned char **message, int *len, int *flags) {
-	buddylist_t	*blist;
 	buddywin_t	*bwin;
 
 	if (*dest != NULL)
 		return(HOOK_CONTINUE);
 
-	blist = rgetlist(conn, *name);
 	bwin = bgetwin(conn, *name, BUDDY);
 
 	if (bwin == NULL) {
@@ -644,17 +666,17 @@ static int recvfrom_display_user(conn_t *conn, char **name, char **dest,
 		naim_lastupdate(conn);
 
 		if (*flags & RF_ACTION) {
-			if ((blist != NULL) && (blist->crypt != NULL))
+			if (*flags & RF_ENCRYPTED)
 				format = "<B>*&gt; %s</B>";
 			else
 				format = "*&gt; <B>%s</B>";
 		} else if (*flags & RF_AUTOMATIC) {
-			if ((blist != NULL) && (blist->crypt != NULL))
+			if (*flags & RF_ENCRYPTED)
 				format = "<B>-%s-</B>";
 			else
 				format = "-<B>%s</B>-";
 		} else {
-			if ((blist != NULL) && (blist->crypt != NULL))
+			if (*flags & RF_ENCRYPTED)
 				format = "<B>[%s]</B>";
 			else
 				format = "[<B>%s</B>]";
@@ -669,33 +691,31 @@ static int recvfrom_display_user(conn_t *conn, char **name, char **dest,
 	} else {
 		const char *format;
 
-		assert(blist != NULL);
 		assert(bwin->et == BUDDY);
-		assert(bwin->e.buddy == blist);
 
 		if (getvar_int(conn, "chatter") & IM_MESSAGE)
 			bwin->waiting = 1;
 		bwin->keepafterso = 1;
 
 		if (*flags & RF_ACTION) {
-			if (blist->crypt != NULL)
+			if (*flags & RF_ENCRYPTED)
 				format = "<B>* %s</B>";
 			else
 				format = "* <B>%s</B>";
 		} else if (*flags & RF_AUTOMATIC) {
-			if (blist->crypt != NULL)
+			if (*flags & RF_ENCRYPTED)
 				format = "<B>-%s-</B>";
 			else
 				format = "-<B>%s</B>-";
 		} else {
-			if (blist->crypt != NULL)
+			if (*flags & RF_ENCRYPTED)
 				format = "<B>%s:</B>";
 			else
 				format = "<B>%s</B>:";
 		}
 
 		WINTIME(&(bwin->nwin), IMWIN);
-		hwprintf(&(bwin->nwin), C(IMWIN,BUDDY), format, USER_NAME(blist));
+		hwprintf(&(bwin->nwin), C(IMWIN,BUDDY), format, USER_NAME(bwin->e.buddy));
 		hwprintf(&(bwin->nwin), C(IMWIN,TEXT), "%s<body>%s</body><br>", (strncmp(*message, "'s ", 3) == 0)?"":" ", *message);
 
 		if (!(*flags & RF_AUTOMATIC)) {
@@ -1983,7 +2003,7 @@ nFIRE_CTCPHAND(naim_ctcp_AUTOPEER) {
 				blist->crypt = NULL;
 				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOCRYPT");
 			}
-			blist->peer = 0;
+			blist->docrypt = blist->peer = 0;
 		} else if (strcasecmp(args, "+AUTOCRYPT") == 0) {
 			if (getvar_int(conn, "autocrypt") == 0)
 				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOCRYPT");
@@ -2007,6 +2027,7 @@ nFIRE_CTCPHAND(naim_ctcp_AUTOPEER) {
 				}
 
 				if ((blist->crypt == NULL) || (strcmp(blist->crypt, co) != 0)) {
+					blist->docrypt = 1;
 					STRREPLACE(blist->crypt, co);
 					if (getvar_int(conn, "autopeerverbose") > 0)
 						status_echof(conn, "Now encrypting messages sent to <font color=\"#00FFFF\">%s</font> with XOR [%s].\n",
@@ -2023,6 +2044,7 @@ nFIRE_CTCPHAND(naim_ctcp_AUTOPEER) {
 
 		if ((strcasecmp(args, "-AUTOCRYPT") == 0) || (strcasecmp(args, "-AUTOPEER") == 0)) {
 			if (blist->crypt != NULL) {
+				blist->docrypt = 0;
 				free(blist->crypt);
 				blist->crypt = NULL;
 				firetalk_subcode_send_request(conn->conn, from, "AUTOPEER", "-AUTOCRYPT");
