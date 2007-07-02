@@ -2127,9 +2127,9 @@ nFIRE_CTCPHAND(naim_ctcprep_AWAY) {
 	if (time >= 0)
 		echof(conn, NULL, "<font color=\"#00FFFF\">%s</font> has been away for %s: %s.\n",
 			from, dtime(time*60), rest);
-	else
-		echof(conn, NULL, "CTCP AWAY reply from <font color=\"#00FFFF\">%s</font>: %s.\n",
-			from, rest);
+	//else
+	//	echof(conn, NULL, "CTCP AWAY reply from <font color=\"#00FFFF\">%s</font>: %s.\n",
+	//		from, rest);
 }
 
 nFIRE_CTCPHAND(naim_ctcprep_default) {
