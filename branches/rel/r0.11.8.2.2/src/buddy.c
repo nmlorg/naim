@@ -73,7 +73,7 @@ static void
 
 		switch (curconn->curbwin->et) {
 		  case BUDDY:
-			if (curconn->curbwin->e.buddy->crypt != NULL)
+			if (curconn->curbwin->e.buddy->docrypt)
 				secs_setvar("ifcrypt", getvar(curconn, "statusbar_crypt"));
 			else
 				secs_setvar("ifcrypt", "");
@@ -973,7 +973,7 @@ void	bgoing(conn_t *conn, const char *buddy) {
 		if ((blist->peer <= 0) && (blist->crypt != NULL))
 			echof(conn, NULL, "Strangeness while marking %s offline: no autopeer negotiated, but autocrypt set!\n",
 				buddy);
-		blist->peer = 0;
+		blist->docrypt = blist->peer = 0;
 		if (blist->crypt != NULL) {
 			free(blist->crypt);
 			blist->crypt = NULL;
@@ -1129,7 +1129,7 @@ static void
 		free(buddy->tzname);
 		buddy->tzname = NULL;
 	}
-	buddy->peer = 0;
+	buddy->docrypt = buddy->peer = 0;
 	buddy->offline = 1;
 }
 
