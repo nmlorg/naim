@@ -341,6 +341,24 @@ nFIRE_HANDLER(naim_buddy_idle) {
 		bidle(conn, who, 0);
 }
 
+nFIRE_HANDLER(naim_buddy_status) {
+	conn_t		*conn = (conn_t *)client;
+	va_list		msg;
+	const char	*who, *message;
+	buddywin_t	*bwin;
+
+	va_start(msg, client);
+	who = va_arg(msg, const char *);
+	message = va_arg(msg, const char *);
+	va_end(msg);
+
+	if ((bwin = bgetwin(conn, who, BUDDY)) != NULL) {
+		STRREPLACE(bwin->blurb, message);
+		if (*message != 0)
+			window_echof(bwin, "%s is now available: %s\n", who, message);
+	}
+}
+
 nFIRE_HANDLER(naim_buddy_eviled) {
 	conn_t		*conn = (conn_t *)client;
 	va_list		msg;
@@ -2219,6 +2237,8 @@ conn_t	*naim_newconn(int proto) {
 			naim_buddy_unaway);
 		firetalk_register_callback(conn->conn, FC_IM_IDLEINFO,
 			naim_buddy_idle);
+		firetalk_register_callback(conn->conn, FC_IM_STATUSINFO,
+			naim_buddy_status);
 		firetalk_register_callback(conn->conn, FC_IM_TYPINGINFO,
 			naim_buddy_typing);
 		firetalk_register_callback(conn->conn, FC_IM_EVILINFO,
