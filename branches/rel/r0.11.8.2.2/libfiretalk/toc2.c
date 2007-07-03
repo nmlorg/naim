@@ -1575,7 +1575,7 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		}
 #ifdef DEBUG_ECHO
 		toc_echof(c, "got_data", "USER_INFO '%s' '%s' '%s' '%s' '%s' '%s' '%s'\n", args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
-		toc_echof(c, "got_data", "%u %s", args[8][0], args[8]);
+		toc_echof(c, "got_data", "%s", args[8]);
 #endif
 		name = args[1];
 		if (args[2][0] == 'T') {
@@ -1598,9 +1598,13 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		assert(third != NULL);
 		*third++ = 0;
 
-		if (!isaway)
-			assert(*away == 0);
-		else
+#ifdef DEBUG_ECHO
+		toc_echof(c, "got_data", "USER_INFO 1 %s\n", away);
+		toc_echof(c, "got_data", "USER_INFO 2 %s\n", info);
+		toc_echof(c, "got_data", "USER_INFO 3 %s\n", third);
+#endif
+
+		if (isaway || (*away != 0))
 			firetalk_callback_subcode_reply(c, name, "AWAY", away);
 
 		firetalk_callback_gotinfo(c, name, info, warning, online, idle, class);
@@ -1726,11 +1730,12 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		/* 1 source
 		** 2 base64-encoded strings, unidentified
 		*/
-		char	**barts;
+		char	**barts, *name;
 		int	i;
 
 		args = toc_parse_args(data, 3, ':');
 		assert(strcmp(arg0, args[0]) == 0);
+		name = strdup(args[1]);
 
 		barts = toc_parse_args(args[2], 255, ' ');
 		for (i = 0; (barts[i] != NULL) && (barts[i+1] != NULL) && (barts[i+2] != NULL); i += 3) {
@@ -1743,7 +1748,23 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 #endif
 					break;
 				}
+
+			if (type == 2) {
+				const char *s = firetalk_debase64(args[i+1]);
+				int	len;
+
+				assert(*s == 0);
+				len = s[1];
+				assert(s[len+2] == 0);
+				assert(s[len+3] == 0);
+#ifdef DEBUG_ECHO
+				toc_echof(c, "got_data", "BART STATUS_TEXT %s %s\n", name, s+2);
+#endif
+				firetalk_callback_statusinfo(c, name, s+2);
+			}
 		}
+
+		free(name);
 	} else if (strcmp(arg0, "NICK") == 0) {
 		/* NICK:<Nickname>
 		**    Tells you your correct nickname (ie how it should be capitalized and
