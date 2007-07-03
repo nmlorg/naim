@@ -1526,7 +1526,7 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 
 				if ((args[5][2] == ' ') || (args[5][2] == 0) || (args[5][2] == ','))
 					C = "";
-				else if (args[5][1] == 'U')
+				else if (args[5][2] == 'U')
 					C = " UNAVAILABLE";
 				else
 					C = " unknown2";
@@ -1599,7 +1599,7 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		*third++ = 0;
 
 #ifdef DEBUG_ECHO
-		toc_echof(c, "got_data", "USER_INFO 1 %s\n", away);
+		toc_echof(c, "got_data", "USER_INFO 1 %i %s\n", isaway, away);
 		toc_echof(c, "got_data", "USER_INFO 2 %s\n", info);
 		toc_echof(c, "got_data", "USER_INFO 3 %s\n", third);
 #endif
