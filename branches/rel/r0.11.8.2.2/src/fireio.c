@@ -353,9 +353,14 @@ nFIRE_HANDLER(naim_buddy_status) {
 	va_end(msg);
 
 	if ((bwin = bgetwin(conn, who, BUDDY)) != NULL) {
-		STRREPLACE(bwin->blurb, message);
-		if (*message != 0)
-			window_echof(bwin, "%s is now available: %s\n", who, message);
+		if (*message == 0)
+			FREESTR(bwin->status);
+		else {
+			if (!bwin->e.buddy->isaway && ((bwin->status == NULL) || (strcmp(bwin->status, message) != 0)))
+				window_echof(bwin, "<font color=\"#00FFFF\">%s</font> is available: %s\n",
+					user_name(NULL, 0, conn, bwin->e.buddy), message);
+			STRREPLACE(bwin->status, message);
+		}
 	}
 }
 

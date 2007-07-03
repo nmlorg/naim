@@ -158,7 +158,8 @@ typedef struct {
 
 typedef struct buddywin_ts {
 	char	*winname,
-		*blurb;
+		*blurb,
+		*status;
 	unsigned char
 		waiting:1,	/* text waiting to be read (overrides
 				** offline and isbuddy in bupdate())
