@@ -1602,7 +1602,7 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 #ifdef DEBUG_ECHO
 		toc_echof(c, "got_data", "%i %i %i %i", info[0], info[1], info[2], info[3]);
 #endif
-		assert((info[0] == '<') || ((info[0] == 0) && (info[1] == '<')));
+		assert((info[0] == -2) || (info[0] == '<') || ((info[0] == 0) && (info[1] == '<')));
 		if (info[0] == 0) {
 			int	i;
 
