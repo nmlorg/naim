@@ -1587,16 +1587,35 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		isaway = (args[6][2]=='U')?1:0;
 		warning = atol(args[3]);
 		idle = atol(args[5]);
-		info = aim_interpolate_variables(args[8], c->nickname);
-		info = aim_handle_ect(c, name, info, 1);
+		//info = aim_interpolate_variables(args[8], c->nickname);
+		//info = aim_handle_ect(c, name, info, 1);
+		info = args[8];
 
 		away = info;
 		info = strchr(info, -2);
 		assert(info != NULL);
 		*info++ = 0;
-		third = strchr(info, -2);
+		if (*away != 0)
+			away = strdup(aim_interpolate_variables(away, c->nickname));
+		else
+			away = NULL;
+#ifdef DEBUG_ECHO
+		toc_echof(c, "got_data", "%i %i %i %i", info[0], info[1], info[2], info[3]);
+#endif
+		assert((info[0] == '<') || ((info[0] == 0) && (info[1] == '<')));
+		if (info[0] == 0) {
+			int	i;
+
+			for (i = 0; info[i] != -2; i += 2)
+				;
+			third = info+i;
+			info = "<i>Profile is in an unprintable encoding.</i>";
+		} else
+			third = strchr(info, -2);
 		assert(third != NULL);
 		*third++ = 0;
+		info = aim_handle_ect(c, name, info, 1);
+		info = aim_interpolate_variables(info, c->nickname);
 
 #ifdef DEBUG_ECHO
 		toc_echof(c, "got_data", "USER_INFO 1 %i %s\n", isaway, away);
@@ -1604,8 +1623,10 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		toc_echof(c, "got_data", "USER_INFO 3 %s\n", third);
 #endif
 
-		if (isaway || (*away != 0))
+		if (away != NULL) {
 			firetalk_callback_subcode_reply(c, name, "AWAY", away);
+			free(away);
+		}
 
 		firetalk_callback_gotinfo(c, name, info, warning, online, idle, class);
 	} else if (strcmp(arg0, "CLIENT_EVENT2") == 0) {
