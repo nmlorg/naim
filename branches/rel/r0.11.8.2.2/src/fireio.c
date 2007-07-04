@@ -615,7 +615,8 @@ static int recvfrom_decrypt(conn_t *conn, char **name, char **dest,
 			}
 		}
 
-		if ((blist != NULL) && blist->docrypt && !(*flags & RF_ENCRYPTED)) {	// On the other hand, unencrypted messages will cause us to not send encrypted messages either.
+		// On the other hand, unencrypted messages will cause us to not send encrypted messages either.
+		if ((blist != NULL) && blist->docrypt && !(*flags & (RF_AUTOMATIC|RF_ENCRYPTED))) {
 			buddywin_t *bwin = bgetwin(conn, *name, BUDDY);
 
 			blist->docrypt = 0;

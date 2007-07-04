@@ -1606,10 +1606,21 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		if (info[0] == 0) {
 			int	i;
 
-			for (i = 0; info[i] != -2; i += 2)
-				;
+#ifdef DEBUG_ECHO
+			toc_echof(c, "got_data", "Not sure if this is UTF16 or what (it's not identified), but it's mostly just US-ASCII with a bunch of nils before each character.");
+#endif
+
+			for (i = 0; (info[i] != -2) && (info+i < data+l-1); i += 2)
+				if (info[i] == 0)
+					info[i/2] = info[i+1];
+				else
+					info[i/2] = '.';
+			info[i/2] = 0;
 			third = info+i;
-			info = "<i>Profile is in an unprintable encoding.</i>";
+
+#ifdef DEBUG_ECHO
+			toc_echof(c, "got_data", "%lu bytes left over after deUTF16izing.", (data+l-1)-(info+i));
+#endif
 		} else
 			third = strchr(info, -2);
 		assert(third != NULL);
