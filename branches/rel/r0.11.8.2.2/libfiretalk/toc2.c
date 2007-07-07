@@ -1587,8 +1587,6 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		isaway = (args[6][2]=='U')?1:0;
 		warning = atol(args[3]);
 		idle = atol(args[5]);
-		//info = aim_interpolate_variables(args[8], c->nickname);
-		//info = aim_handle_ect(c, name, info, 1);
 		info = args[8];
 
 		away = info;
