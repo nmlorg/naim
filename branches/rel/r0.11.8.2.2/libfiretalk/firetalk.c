@@ -2802,6 +2802,7 @@ void	*firetalk_dequeue(firetalk_queue_t *queue, const char *const key) {
 		if (strcmp(queue->keys[i], key) == 0) {
 			void	*data = queue->data[i];
 
+			free(queue->keys[i]);
 			memmove(queue->keys+i, queue->keys+i+1, (queue->count-i-1)*sizeof(*(queue->keys)));
 			memmove(queue->data+i, queue->data+i+1, (queue->count-i-1)*sizeof(*(queue->data)));
 			queue->count--;
