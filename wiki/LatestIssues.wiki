@@ -1,28 +1,28 @@
-Recently, naim has been spitting out an error message that looks like:
+== naim issues ==
+
+As of mid 2006, naim has been spitting out an error message that looks like:
+
 {{{
 *** ERROR: Server response was formatted incorrectly, can't find username in info HTML
 }}}
-before you go into #naim and complain, please read everything on this page, all the
-relevent mailing-list posts, _and_ make sure you have an up-to-date version of naim.
 
-== naim issues ==
-Whenever a buddy goes away, naim does a /wi on the buddy to attempt to discover away
-messages.  AOL's TOC server recently have been returning invalid data when naim tries to
-getinfo.
-Dan posted to the naim-users mailing list about this issue on 10/13/2006.  His post can be
-found at http://mail.n.ml.org/?1:mss:1648:200610:acamblbkfclhkbfpfdjk (you may with to use
-the mirrored link below, as it's in a slightly better format)
-The solution Dan came up with was to suppress this error message on the auto /wi.  naim
-version 0.11.8.2.1 has been released to address this issue.  0.11.8.2.1 is the latest
-stable version.
+=== Background ===
 
+Whenever a buddy goes away, naim does a /wi on the buddy to attempt to retrieve
+their away message. In mid 2006, AOL's TOC servers began returning an invalid
+response to the request naim sent to retrieve users' profiles, leading to the
+"Server response was formatted incorrectly" error above.
 
+naim 0.11.8.2.1 was released with a workaround that simply suppresses this error 
+message. naim 0.11.8.3 has been released and uses a different, previously 
+undocumented command to retrieve user profiles, and appears to work reliably.
 
 == mirrors ==
-the naim.n.ml.org website and mailing lists should still be the first place to check for
-information.  If the naim website is down, you may use the mirrors below, which is
-generally up-to-date:
 
-relevent messages from the mailing list: http://eminence32.net/naim/naim-users.html
+The naim.n.ml.org website and mailing lists should still be the first place to
+check for information. If the naim website is down, you may use the mirrors
+below, which is generally up-to-date:
+
+Relevent messages from the mailing list: http://eminence32.net/naim/naim-users.html
 
 naim tarballs: http://eminence32.net/naim/
