@@ -1,4 +1,4 @@
-== naim issues ==
+#summary Latest issues affecting naim users
 
 As of mid 2006, naim has been spitting out an error message that looks like:
 
