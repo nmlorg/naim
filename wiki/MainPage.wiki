@@ -8,7 +8,7 @@ be ported/copied/moves here in time.
 *Please read [http://code.google.com/p/naim/wiki/LatestIssues Latest Issues] before asking
 for help with naim*
 
-The current release of naim is 0.11.8.3.
+The current release of naim is 0.11.8.3.1.
 (http://code.google.com/p/naim/downloads/list)
 
 The latest dev versions of naim now have built-in support for Lua (see http://www.lua.org
