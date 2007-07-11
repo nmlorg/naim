@@ -86,14 +86,17 @@ extern void status_echof(void *conn, const unsigned char *format, ...);
 static void toc_echof(client_t c, const char *const where, const char *const format, ...) {
 	va_list ap;
 	char	buf[8*1024];
+	int	len;
 	void	statrefresh(void);
 
 	va_start(ap, format);
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 
-	while (buf[strlen(buf)-1] == '\n')
-		buf[strlen(buf)-1] = 0;
+	len = strlen(buf);
+	while ((len > 0) && (buf[len-1] == '\n'))
+		buf[--len] = 0;
+
 	if (*buf != 0)
 		status_echof(curconn, firetalk_htmlentities(buf));
 
@@ -1400,6 +1403,18 @@ static struct {
 	/* 999 */ {	FE_UNKNOWN,		0, NULL },
 };
 
+static char *decodeUTF16(const char *const end, char *s) {
+	int	i;
+
+	for (i = 0; (s[i] != -2) && (s+i < end-1); i += 2)
+		if (s[i] == 0)
+			s[i/2] = s[i+1];
+		else
+			s[i/2] = '.';
+	s[i/2] = 0;
+	return(s+i);
+}
+
 static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *bufferpos) {
 	char	*tempchr1, *arg0, **args,
 		data[TOC_SERVERSEND_MAXLEN - TOC_HEADER_LENGTH + 1];
@@ -1590,8 +1605,13 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		info = args[8];
 
 		away = info;
-		info = strchr(info, -2);
+
+		if (away[0] == 0)
+			info = decodeUTF16(data+l, away);
+		else
+			info = strchr(info, -2);
 		assert(info != NULL);
+		assert(*info == -2);
 		*info++ = 0;
 		if (*away != 0)
 			away = strdup(aim_interpolate_variables(away, c->nickname));
@@ -1601,27 +1621,12 @@ static fte_t toc_got_data(client_t c, unsigned char *buffer, unsigned short *buf
 		toc_echof(c, "got_data", "%i %i %i %i", info[0], info[1], info[2], info[3]);
 #endif
 		assert((info[0] == -2) || (info[0] == '<') || ((info[0] == 0) && (info[1] == '<')));
-		if (info[0] == 0) {
-			int	i;
-
-#ifdef DEBUG_ECHO
-			toc_echof(c, "got_data", "Not sure if this is UTF16 or what (it's not identified), but it's mostly just US-ASCII with a bunch of nils before each character.");
-#endif
-
-			for (i = 0; (info[i] != -2) && (info+i < data+l-1); i += 2)
-				if (info[i] == 0)
-					info[i/2] = info[i+1];
-				else
-					info[i/2] = '.';
-			info[i/2] = 0;
-			third = info+i;
-
-#ifdef DEBUG_ECHO
-			toc_echof(c, "got_data", "%lu bytes left over after deUTF16izing.", (data+l-1)-(info+i));
-#endif
-		} else
+		if (info[0] == 0)
+			third = decodeUTF16(data+l, info);
+		else
 			third = strchr(info, -2);
 		assert(third != NULL);
+		assert(*third == -2);
 		*third++ = 0;
 		info = aim_handle_ect(c, name, info, 1);
 		info = aim_interpolate_variables(info, c->nickname);
