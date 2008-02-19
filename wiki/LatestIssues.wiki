@@ -23,6 +23,6 @@ The naim.n.ml.org website and mailing lists should still be the first place to
 check for information. If the naim website is down, you may use the mirrors
 below, which is generally up-to-date:
 
-Relevent messages from the mailing list: https://andrewchin.net/naim/naim-users.html
+Relevent messages from the mailing list: http://andrewchin.net/naim/naim-users.html
 
-naim tarballs: https://andrewchin.net/naim/
+naim tarballs: http://andrewchin.net/naim/
