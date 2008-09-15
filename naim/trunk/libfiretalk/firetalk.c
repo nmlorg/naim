@@ -761,6 +761,18 @@ void firetalk_callback_im_buddyonline(client_t c, const char *const nickname, in
 		}
 }
 
+void firetalk_callback_im_buddyflags(client_t c, const char *const nickname, const int flags) {
+	struct s_firetalk_handle
+		*conn = firetalk_find_handle(c);
+	struct s_firetalk_buddy *buddyiter;
+
+	if ((buddyiter = firetalk_im_find_buddy(conn, nickname)) != NULL)
+		if ((buddyiter->flags != flags) && (buddyiter->online == 1)) {
+			buddyiter->flags = flags;
+			conn->callbacks[FC_IM_BUDDYFLAGS](conn, conn->clientstruct, nickname, flags);
+		}
+}
+
 void firetalk_callback_im_buddyaway(client_t c, const char *const nickname, const int away) {
 	struct s_firetalk_handle
 		*conn = firetalk_find_handle(c);
