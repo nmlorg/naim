@@ -769,7 +769,8 @@ void firetalk_callback_im_buddyflags(client_t c, const char *const nickname, con
 	if ((buddyiter = firetalk_im_find_buddy(conn, nickname)) != NULL)
 		if ((buddyiter->flags != flags) && (buddyiter->online == 1)) {
 			buddyiter->flags = flags;
-			conn->callbacks[FC_IM_BUDDYFLAGS](conn, conn->clientstruct, nickname, flags);
+			if (conn->callbacks[FC_IM_BUDDYFLAGS] != NULL)
+				conn->callbacks[FC_IM_BUDDYFLAGS](conn, conn->clientstruct, nickname, flags);
 		}
 }
 
