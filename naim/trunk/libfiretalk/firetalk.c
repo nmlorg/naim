@@ -847,13 +847,11 @@ void	firetalk_callback_typing(client_t c, const char *const name, const int typi
 	if (!conn->callbacks[FC_IM_TYPINGINFO])
 		return;
 
-	if ((buddyiter = firetalk_im_find_buddy(conn, name)) != NULL) {
-		assert(buddyiter->online != 0);
-		if (buddyiter->typing != typing) {
+	if ((buddyiter = firetalk_im_find_buddy(conn, name)) != NULL)
+		if (buddyiter->online && (buddyiter->typing != typing)) {
 			buddyiter->typing = typing;
 			conn->callbacks[FC_IM_TYPINGINFO](conn, conn->clientstruct, buddyiter->nickname, typing);
 		}
-	}
 }
 
 void	firetalk_callback_capabilities(client_t c, const char *const nickname, const char *const caps) {
