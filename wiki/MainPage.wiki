@@ -1,7 +1,6 @@
 ﻿== This Wiki ==
 
-This wiki is currently incomplete.  http://naimdoc.net is the original naim wiki and will
-be ported/copied/moves here in time.
+This wiki is currently incomplete.  Please feel free to add/correct any content.
 
 == Notices ==
 
