@@ -95,7 +95,7 @@ static void naim_sendto(conn_t *conn,
 
 	memmove(message, _message, len);
 	message[len] = 0;
-	HOOK_CALL(sendto, (conn, &name, &dest, &message, &len, &flags));
+	HOOK_CALL(sendto, conn, &name, &dest, &message, &len, &flags);
 	free(name);
 	free(dest);
 	free(message);

@@ -1,6 +1,6 @@
 /*  _ __   __ _ ___ __  __
 ** | '_ \ / _` |_ _|  \/  | naim
-** | | | | (_| || || |\/| | Copyright 1998-2003 Daniel Reed <n@ml.org>
+** | | | | (_| || || |\/| | Copyright 1998-2009 Daniel Reed <n@ml.org>
 ** |_| |_|\__,_|___|_|  |_| ncurses-based chat client
 */
 #ifndef modutil_h
@@ -18,7 +18,7 @@ typedef struct {
 		unsigned long passes, hits;
 		mod_hook_t func;
 		char	*name;
-		void	*mod;
+		void	*mod, *userdata;
 	} *hooks;
 } chain_t;
 #define HOOK_JUMP	1
@@ -27,64 +27,23 @@ typedef struct {
 
 #define HOOK_DECLARE(x)	chain_t chain_ ## x = { 0, NULL }
 #define HOOK_EXT_L(x)	extern chain_t chain_ ## x
-#define HOOK_CALL(x, args)					\
+#define HOOK_CALL(x, ...)					\
 	if ((chain_ ## x).count > 0) do { 			\
-		int	i;					\
-		for (i = 0; (i < chain_ ## x.count)		\
-			&& (chain_ ## x.hooks[i].passes++ || 1)	\
-			&& ((chain_ ## x.hooks[i].func args	\
-			 == HOOK_CONTINUE)			\
-			 || (chain_ ## x.hooks[i].hits++ && 0)); i++); \
-	} while (0)
-#define HOOK_ADD(x, m, f, w)					\
-	do { 							\
-		HOOK_EXT_L(x);					\
-		int	i;					\
-								\
-		HOOK_DEL(x, m, f);				\
-		for (i = 0; (i < chain_ ## x.count)		\
-			&& (chain_ ## x.hooks[i].weight <= w); i++); \
-		HOOK_INS(x, m, f, w, i);			\
-	} while (0)
-#define HOOK_INS(x, m, f, w, pos)				\
-	do {							\
-		HOOK_EXT_L(x);					\
-								\
-		if (pos > chain_ ## x.count)			\
-			pos = chain_ ## x.count;		\
-		chain_ ## x.hooks = realloc(chain_ ## x.hooks,	\
-			(chain_ ## x.count+1) *			\
-			sizeof(*(chain_ ## x.hooks)));		\
-		memmove(chain_ ## x.hooks+pos+1, chain_ ## x.hooks+pos, \
-			(chain_ ## x.count-pos) *		\
-			sizeof(*(chain_ ## x.hooks)));		\
-		chain_ ## x.hooks[pos].weight = w;		\
-		chain_ ## x.hooks[pos].passes = 0;		\
-		chain_ ## x.hooks[pos].hits = 0;		\
-		chain_ ## x.hooks[pos].func = (mod_hook_t)f;	\
-		chain_ ## x.hooks[pos].name = strdup(#f);	\
-		chain_ ## x.hooks[pos].mod = m;			\
-		chain_ ## x.count++;				\
-	} while (0)
-#define HOOK_DEL(x, m, f)					\
-	do { 							\
-		HOOK_EXT_L(x);					\
-		int	i;					\
-								\
-		for (i = 0; (i < chain_ ## x.count)		\
-			&& ((chain_ ## x.hooks[i].mod != m)	\
-			 || (chain_ ## x.hooks[i].func != (mod_hook_t)f)); i++); \
-		if (i < chain_ ## x.count) {			\
-			free(chain_ ## x.hooks[i].name);	\
-			memmove(chain_ ## x.hooks+i, chain_ ## x.hooks+i+1, \
-				(chain_ ## x.count-i-1) *	\
-				sizeof(*(chain_ ## x.hooks)));	\
-			chain_ ## x.hooks = realloc(chain_ ## x.hooks, \
-				(chain_ ## x.count-1) *		\
-				sizeof(*(chain_ ## x.hooks)));	\
-			chain_ ## x.count--;			\
+		int	i, ret;					\
+		for (i = 0; i < chain_ ## x.count; i++) {	\
+			chain_ ## x.hooks[i].passes++;		\
+			if (chain_ ## x.hooks[i].userdata != NULL) \
+				ret = chain_ ## x.hooks[i].func(chain_ ## x.hooks[i].userdata, ##__VA_ARGS__); \
+			else					\
+				ret = chain_ ## x.hooks[i].func(__VA_ARGS__); \
+			if (ret != HOOK_CONTINUE) {		\
+				chain_ ## x.hooks[i].hits++;	\
+				break;				\
+			}					\
 		}						\
 	} while (0)
+#define HOOK_ADD(x, m, f, w)	hook_add(#x, m, (mod_hook_t)f, NULL, w, #f)
+#define HOOK_DEL(x, m, f)	hook_del(#x, m, (mod_hook_t)f, NULL)
 
 #define MOD_REMAINLOADED	1
 #define MOD_FINISHED		0
@@ -109,6 +68,9 @@ typedef struct {
 #define MOD_FD_WRITE	MOD_FD_TYPE(1)
 
 /* modutil.c */
+void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *funcname);
+void	hook_del(const char *name, void *mod, mod_hook_t func, void *userdata);
+
 int	mod_fd_register(int fd, int type, char *buf, int buflen,
 		void (*func)());
 void	mod_fd_unregister(int i);
