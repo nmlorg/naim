@@ -33,7 +33,7 @@ static PyMethodDef NaimModule[] = {
 	{NULL, NULL, 0, NULL},
 };
 
-int	naim_init(void *mod, const char *str) {
+int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	Py_Initialize();
 	Py_InitModule("naim", NaimModule);
 	PyRun_SimpleString(default_py);
@@ -43,7 +43,9 @@ int	naim_init(void *mod, const char *str) {
 	return(MOD_REMAINLOADED);
 }
 
-int	naim_exit(void *mod, const char *str) {
+int	pynaim_LTX_naim_exit(void *mod, const char *str) {
+	HOOK_DEL(getcmd, mod, cmd_pynaim);
+
 	Py_Finalize();
 
 	return(MOD_FINISHED);
