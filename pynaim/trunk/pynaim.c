@@ -24,7 +24,7 @@ static PyObject* pynaim_echo(PyObject *self, PyObject *args) {
 	if (!PyArg_ParseTuple(args, "s:echo", &string))
 		return(NULL);
 
-	status_echof(curconn, string);
+	echof(curconn, NULL, string);
 	Py_RETURN_NONE;
 }
 
@@ -38,7 +38,7 @@ static PyObject* pynaim_eval(PyObject *self, PyObject *args) {
 	Py_RETURN_NONE;
 }
 
-static PyMethodDef NaimModule[] = {
+static PyMethodDef pynaimlib[] = {
 	{"echo", pynaim_echo, METH_VARARGS,
 	 "Display something on the screen with $-variable expansion."},
 	{"eval", pynaim_eval, METH_VARARGS,
@@ -48,7 +48,7 @@ static PyMethodDef NaimModule[] = {
 
 int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	Py_Initialize();
-	Py_InitModule("naim", NaimModule);
+	Py_InitModule("naim", pynaimlib);
 	PyRun_SimpleString(default_py);
 
 	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
