@@ -2849,8 +2849,7 @@ CONIOAOPT(string,connection)
 
 
 
-static int
-	cmd_unknown(conn_t *c, const char *cmd, int argc, const char **args) {
+static int cmd_unknown(conn_t *c, const char *cmd, const char *arg) {
 	echof(c, cmd, "Unknown command.\n");
 	return(HOOK_STOP);
 }
@@ -2923,7 +2922,7 @@ void	conio_handlecmd(const char *buf) {
 				break;
 		}
 	if (i == cmdc) {
-		HOOK_CALL(getcmd, (c, cmd, a, args));
+		HOOK_CALL(getcmd, (c, cmd, arg));
 		return;
 	}
 	assert(cmdar[i].maxarg <= CONIO_MAXPARMS);
