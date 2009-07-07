@@ -28,8 +28,21 @@ static PyObject* pynaim_echo(PyObject *self, PyObject *args) {
 	Py_RETURN_NONE;
 }
 
+static PyObject* pynaim_eval(PyObject *self, PyObject *args) {
+	const char *string;
+
+	if (!PyArg_ParseTuple(args, "s:eval", &string))
+		return(NULL);
+
+	secs_script_parse(string);
+	Py_RETURN_NONE;
+}
+
 static PyMethodDef NaimModule[] = {
-	{"echo", pynaim_echo, METH_VARARGS, "Does a status_echof call."},
+	{"echo", pynaim_echo, METH_VARARGS,
+	 "Display something on the screen with $-variable expansion."},
+	{"eval", pynaim_eval, METH_VARARGS,
+	 "Evaluate a command with $-variable substitution."},
 	{NULL, NULL, 0, NULL},
 };
 
