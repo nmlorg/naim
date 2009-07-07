@@ -4,6 +4,7 @@
 #include "_default_py.h"
 
 extern conn_t *curconn;
+void	*pynaim_mod = NULL;
 
 static int cmd_pynaim(conn_t *c, const char *cmd, const char *arg) {
 	if (strcasecmp(cmd, "PYEVAL") == 0)
@@ -47,8 +48,11 @@ static PyMethodDef pynaimlib[] = {
 };
 
 int	pynaim_LTX_naim_init(void *mod, const char *str) {
+	pynaim_mod = mod;
+
 	Py_Initialize();
 	Py_InitModule("naim", pynaimlib);
+	pynaim_hooks_init();
 	PyRun_SimpleString(default_py);
 
 	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
@@ -60,6 +64,8 @@ int	pynaim_LTX_naim_exit(void *mod, const char *str) {
 	HOOK_DEL(getcmd, mod, cmd_pynaim);
 
 	Py_Finalize();
+
+	pynaim_mod = NULL;
 
 	return(MOD_FINISHED);
 }
