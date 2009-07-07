@@ -574,7 +574,7 @@ nFIRE_HANDLER(naim_buddy_coming) {
 	va_end(msg);
 
 	bcoming(conn, who);
-	HOOK_CALL(proto_user_onlineval, (client, conn, who, NULL, NULL, 1));
+	HOOK_CALL(proto_user_onlineval, client, conn, who, NULL, NULL, 1);
 }
 
 nFIRE_HANDLER(naim_buddy_going) {
@@ -587,7 +587,7 @@ nFIRE_HANDLER(naim_buddy_going) {
 	va_end(msg);
 
 	bgoing(conn, who);
-	HOOK_CALL(proto_user_onlineval, (client, conn, who, NULL, NULL, 0));
+	HOOK_CALL(proto_user_onlineval, client, conn, who, NULL, NULL, 0);
 }
 
 
@@ -608,7 +608,7 @@ static void naim_recvfrom(conn_t *const conn,
 
 	memmove(message, _message, len);
 	message[len] = 0;
-	HOOK_CALL(recvfrom, (conn, &name, &dest, &message, &len, &flags));
+	HOOK_CALL(recvfrom, conn, &name, &dest, &message, &len, &flags);
 	free(name);
 	free(dest);
 	free(message);

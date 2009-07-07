@@ -194,7 +194,7 @@ void	event_handle(time_t now) {
 	}
 #endif
 
-	HOOK_CALL(periodic, (NULL, now));
+	HOOK_CALL(periodic, NULL, now);
 
 	bupdate();
 }

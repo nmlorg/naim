@@ -2922,7 +2922,7 @@ void	conio_handlecmd(const char *buf) {
 				break;
 		}
 	if (i == cmdc) {
-		HOOK_CALL(getcmd, (c, cmd, arg));
+		HOOK_CALL(getcmd, c, cmd, arg);
 		return;
 	}
 	assert(cmdar[i].maxarg <= CONIO_MAXPARMS);
