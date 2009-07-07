@@ -5,3 +5,11 @@ OBJ = pynaim.o
 
 pynaim.so: ${OBJ}
 	gcc -shared -o pynaim.so ${OBJ} ${LIBS}
+
+pynaim.o: pynaim.c _default_py.h
+
+_default_py.h: default.py
+	sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
+	    < default.py \
+	    | awk 'BEGIN {printf("static const char *default_py =\n");} /^.*$$/ {printf("\t\"%s\\n\"\n", $$0);} END {printf(";\n");}' \
+	    > _default_py.h

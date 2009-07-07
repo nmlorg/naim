@@ -1,6 +1,8 @@
 #include <Python.h>
 #include <naim/modutil.h>
 
+#include "_default_py.h"
+
 extern conn_t *curconn;
 
 static int cmd_pynaim(conn_t *c, const char *cmd, const char *arg) {
@@ -16,10 +18,10 @@ static int cmd_pynaim(conn_t *c, const char *cmd, const char *arg) {
 	return(HOOK_STOP);
 }
 
-static PyObject* pynaim_echof(PyObject *self, PyObject *args) {
+static PyObject* pynaim_echo(PyObject *self, PyObject *args) {
 	const char *string;
 
-	if (!PyArg_ParseTuple(args, "s:echof", &string))
+	if (!PyArg_ParseTuple(args, "s:echo", &string))
 		return(NULL);
 
 	status_echof(curconn, string);
@@ -27,13 +29,14 @@ static PyObject* pynaim_echof(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef NaimModule[] = {
-	{"echof", pynaim_echof, METH_VARARGS, "Does a status_echof call."},
+	{"echo", pynaim_echo, METH_VARARGS, "Does a status_echof call."},
 	{NULL, NULL, 0, NULL},
 };
 
 int	naim_init(void *mod, const char *str) {
 	Py_Initialize();
 	Py_InitModule("naim", NaimModule);
+	PyRun_SimpleString(default_py);
 
 	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
 
