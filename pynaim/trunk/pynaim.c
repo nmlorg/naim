@@ -3,12 +3,16 @@
 
 extern conn_t *curconn;
 
-static int cmd_pyeval(conn_t *c, const char *cmd, const char *arg) {
-	if (strcasecmp(cmd, "PYEVAL") != 0)
+static int cmd_pynaim(conn_t *c, const char *cmd, const char *arg) {
+	if (strcasecmp(cmd, "PYEVAL") == 0)
+		PyRun_SimpleString(arg);
+	else if (strcasecmp(cmd, "PYLOAD") == 0) {
+		FILE	*fp = fopen(arg, "r");
+
+		PyRun_SimpleFile(fp, arg);
+		fclose(fp);
+	} else
 		return(HOOK_CONTINUE);
-
-	PyRun_SimpleString(arg);
-
 	return(HOOK_STOP);
 }
 
@@ -18,11 +22,8 @@ static PyObject* pynaim_echof(PyObject *self, PyObject *args) {
 	if (!PyArg_ParseTuple(args, "s:echof", &string))
 		return(NULL);
 
-	if (curconn) {
-		status_echof(curconn, string);
-		return(Py_BuildValue("i", 0));
-	} else
-		return(NULL);
+	status_echof(curconn, string);
+	Py_RETURN_NONE;
 }
 
 static PyMethodDef NaimModule[] = {
@@ -34,7 +35,7 @@ int	naim_init(void *mod, const char *str) {
 	Py_Initialize();
 	Py_InitModule("naim", NaimModule);
 
-	HOOK_ADD(getcmd, mod, cmd_pyeval, 100);
+	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
 
 	return(MOD_REMAINLOADED);
 }
