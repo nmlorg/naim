@@ -20,7 +20,7 @@ def Init():
     if args:
       s %= args
     else:
-      s = '%s' % s
+      s = '%s' % (s,)
 
     rawecho(s)
   Echo.__doc__ = rawecho.__doc__
