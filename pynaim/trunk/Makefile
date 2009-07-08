@@ -4,12 +4,12 @@ LIBS = -lpython2.5
 OBJ = hooks.lo pynaim.lo
 
 pynaim.la: ${OBJ}
-	libtool --mode=link gcc -o pynaim.la -rpath /usr/local/lib/naim -module -avoid-version ${OBJ} ${LIBS}
+	libtool --mode=link ${CC} -o pynaim.la -rpath /usr/local/lib/naim -module -avoid-version ${OBJ} ${LIBS}
 
 pynaim.lo: pynaim.c _default_py.h
 
 %.lo: %.c
-	libtool --mode=compile gcc ${CPPFLAGS} -c -o $@ $<
+	libtool --mode=compile ${CC} ${CPPFLAGS} -c -o $@ $<
 
 _default_py.h: default.py
 	sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
