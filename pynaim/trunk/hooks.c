@@ -76,6 +76,6 @@ static PyMethodDef pynaim_hookslib[] = {
 };
 
 void	pynaim_hooks_init(PyObject *parent) {
-	PyObject* hooksObj = Py_InitModule("naim.hooks", pynaim_hookslib);
-    PyModule_AddObject(parent,"hooks",hooksObj);
+	PyObject *obj = Py_InitModule("naim.hooks", pynaim_hookslib);
+	PyModule_AddObject(parent, "hooks", obj);
 }
