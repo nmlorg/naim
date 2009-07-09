@@ -7,7 +7,7 @@ extern conn_t *curconn;
 void	pynaim_hooks_init(PyObject *parent);
 void	*pynaim_mod = NULL;
 
-static int cmd_pynaim(conn_t *c, const char *cmd, const char *arg) {
+static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 	if (strcasecmp(cmd, "PYEVAL") == 0)
 		PyRun_SimpleString(arg);
 	else if (strcasecmp(cmd, "PYLOAD") == 0) {
@@ -54,15 +54,22 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	Py_Initialize();
 	PyObject *naimmodule = Py_InitModule("naim", pynaimlib);
 	pynaim_hooks_init(naimmodule);
-	PyRun_SimpleString(default_py);
 
-	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
+	PyObject *eval_dict = PyDict_New();
+	PyDict_SetItemString(eval_dict, "__builtins__", PyEval_GetBuiltins());
+	PyObject *anonmodule = PyRun_String(default_py, Py_file_input, eval_dict, NULL);
+	Py_DECREF(anonmodule);
+	Py_DECREF(eval_dict);
+
+	PyRun_SimpleString("import naim");
+
+	HOOK_ADD(getcmd, mod, pynaim_getcmd, 100);
 
 	return(MOD_REMAINLOADED);
 }
 
 int	pynaim_LTX_naim_exit(void *mod, const char *str) {
-	HOOK_DEL(getcmd, mod, cmd_pynaim);
+	HOOK_DEL(getcmd, mod, pynaim_getcmd);
 
 	Py_Finalize();
 

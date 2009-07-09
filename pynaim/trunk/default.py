@@ -1,28 +1,24 @@
+import sys
+import traceback
 import naim
-import naim.hooks
 
-def Init():
-  import sys
-  import traceback
 
-  def Excepthook(exctype, value, tb):
-    for l in traceback.format_exception(exctype, value, tb):
-      naim.echo(l)
+def Excepthook(exctype, value, tb):
+  for l in traceback.format_exception(exctype, value, tb):
+    naim.echo(l)
 
-  sys.excepthook = Excepthook
+sys.excepthook = Excepthook
 
-  rawecho = naim.echo
 
-  def Echo(s, *args):
-    if args:
-      s %= args
-    else:
-      s = '%s' % (s,)
+rawecho = naim.echo
 
-    rawecho(s)
+def Echo(s, *args):
+  if args:
+    s %= args
+  else:
+    s = '%s' % (s,)
 
-  Echo.__doc__ = rawecho.__doc__
-  naim.echo = Echo
+  rawecho(s)
 
-Init()
-del Init
+Echo.__doc__ = rawecho.__doc__
+naim.echo = Echo
