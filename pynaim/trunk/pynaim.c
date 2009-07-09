@@ -4,6 +4,7 @@
 #include "_default_py.h"
 
 extern conn_t *curconn;
+void	pynaim_hooks_init(PyObject *parent);
 void	*pynaim_mod = NULL;
 
 static int cmd_pynaim(conn_t *c, const char *cmd, const char *arg) {
@@ -51,8 +52,8 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	pynaim_mod = mod;
 
 	Py_Initialize();
-	PyObject *naimModule = Py_InitModule("naim", pynaimlib);
-	pynaim_hooks_init(naimModule);
+	PyObject *naimmodule = Py_InitModule("naim", pynaimlib);
+	pynaim_hooks_init(naimmodule);
 	PyRun_SimpleString(default_py);
 
 	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
