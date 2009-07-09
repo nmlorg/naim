@@ -1,44 +1,10 @@
-"""pynaim weather bot (responds to !pyweather <zipcode>).
+"""pynaim weather bot (responds to !pyweather <zipcode>)."""
 
-To test from outside naim, just run:
-  python weather.py
-To run from within naim:
-  /modload path/to/pynaim
-  /pyload path/to/weather.py
-"""
-
-__author__ = 'Andrew Chin (eminence)'
+__author__ = 'eminence (Andrew Chin)'
 
 import httplib
 import re
-
-try:
-  import naim
-  ### THESE ARE QUICK HACKS
-  FakeNaim = None
-except ImportError:
-  print 'Not running from within naim!  Using FakeNaim'
-
-  class FakeNaim(object):
-    class FakeHooks(object):
-      def add(self, name, weight, func):
-        print 'Adding fake hook: %s %i %r' % (name, weight, func)
-
-    def __init__(self):
-      self.hooks = self.FakeHooks()
-
-    def echo(self, s, *args):
-      if args:
-        s %= args
-      else:
-        s = '%s' % (s,)
-
-      print s
-
-    def eval(self, s):
-      print s
-
-  naim = FakeNaim()
+import naim
 
 
 PYWEATHER_RE = re.compile('^!pyweather\s+(\d{5})$')
@@ -74,8 +40,5 @@ def WeatherRecvFrom(conn, src, dst, message, flags):
     naim.echo('failed to find condition match')
 
 
-naim.hooks.add('recvfrom', 200, WeatherRecvFrom)
-
-## manual test:
-if FakeNaim:
-  WeatherRecvFrom('conn','test', '#em32', '!pyweather 02906', 0)
+if __name__ == '__main__':
+  naim.hooks.add('recvfrom', 200, WeatherRecvFrom)
