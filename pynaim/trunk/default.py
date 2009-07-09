@@ -12,8 +12,8 @@ def Init():
   sys.excepthook = Excepthook
 
   # This is a gross hack. Someone please figure out what's going on here.
-  if not hasattr(naim, 'hooks'):
-    naim.hooks = sys.modules['naim.hooks']
+  #if not hasattr(naim, 'hooks'):
+  #  naim.hooks = sys.modules['naim.hooks']
 
   rawecho = naim.echo
   def Echo(s, *args):

@@ -51,8 +51,8 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	pynaim_mod = mod;
 
 	Py_Initialize();
-	Py_InitModule("naim", pynaimlib);
-	pynaim_hooks_init();
+	PyObject *naimModule = Py_InitModule("naim", pynaimlib);
+	pynaim_hooks_init(naimModule);
 	PyRun_SimpleString(default_py);
 
 	HOOK_ADD(getcmd, mod, cmd_pynaim, 100);
