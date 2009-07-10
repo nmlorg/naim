@@ -11,14 +11,55 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 	if (strcasecmp(cmd, "PYEVAL") == 0)
 		PyRun_SimpleString(arg);
 	else if (strcasecmp(cmd, "PYLOAD") == 0) {
+		char	*modname = strchr(arg, ' ');
+		int	freemodname = 0;
+
+		if (modname != NULL)
+			*modname++ = 0;
+
 		FILE	*fp = fopen(arg, "r");
 
 		if (fp == NULL)
 			echof(curconn, "PYLOAD", "%s", strerror(errno));
 		else {
-			PyRun_SimpleFile(fp, arg);
+			if (modname == NULL) {
+				if ((modname = strrchr(arg, '/')) == NULL)
+					modname = arg;
+				else
+					modname++;
+				modname = strdup(modname);
+				freemodname = 1;
+				char	*dot = strchr(modname, '.');
+				if (dot != NULL)
+					*dot = 0;
+			}
+
+			PyObject *module = PyImport_AddModule(modname);
+			PyObject *module_dict = PyModule_GetDict(module);
+			PyObject *exitfunc = PyDict_GetItemString(module_dict, "__exit__");
+			if (exitfunc != NULL) {
+				PyObject *arglist = Py_BuildValue("()");
+				PyObject *result = PyObject_CallObject(exitfunc, arglist);
+				Py_DECREF(arglist);
+				if (result == NULL)
+					PyErr_Print();
+				else
+					Py_DECREF(result);
+			}
+			PyDict_Clear(module_dict);
+			PyDict_SetItemString(module_dict, "__builtins__", PyEval_GetBuiltins());
+			PyObject *result = PyRun_File(fp, arg, Py_file_input, module_dict, NULL);
+			if (result == NULL)
+				PyErr_Print();
+			else {
+				Py_DECREF(result);
+				PyObject *mainmodule = PyImport_AddModule("__main__");
+				PyObject_SetAttrString(mainmodule, modname, module);
+			}
 			fclose(fp);
 		}
+		if (freemodname)
+			free(modname);
 	} else
 		return(HOOK_CONTINUE);
 	return(HOOK_STOP);
