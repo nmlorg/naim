@@ -9,9 +9,12 @@ import weather
 
 
 class WeatherTest(naimtest.TestCase):
-  def testWeatherRecvFrom(self):
+  def testWeatherToChan(self):
     weather.WeatherRecvFrom('conn','test', '#em32', '!pyweather 02906', 0)
-    self.assertEvaluated('/msg #em32 It is currently ')
+    self.assertEvaluated('/msg #em32 Currently in Providence')
+  def testWeatherToBot(self):
+    weather.WeatherRecvFrom('conn','test', 'pybot', '!pyweather 94035', 0)
+    self.assertEvaluated('/msg test Currently in Mount')
 
 
 if __name__ == '__main__':
