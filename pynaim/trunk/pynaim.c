@@ -13,14 +13,18 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 	else if (strcasecmp(cmd, "PYLOAD") == 0) {
 		FILE	*fp = fopen(arg, "r");
 
-		PyRun_SimpleFile(fp, arg);
-		fclose(fp);
+		if (fp == NULL)
+			echof(curconn, "PYLOAD", "%s", strerror(errno));
+		else {
+			PyRun_SimpleFile(fp, arg);
+			fclose(fp);
+		}
 	} else
 		return(HOOK_CONTINUE);
 	return(HOOK_STOP);
 }
 
-static PyObject* pynaim_echo(PyObject *self, PyObject *args) {
+static PyObject *pynaim_echo(PyObject *self, PyObject *args) {
 	const char *string;
 
 	if (!PyArg_ParseTuple(args, "s:echo", &string))
@@ -30,7 +34,7 @@ static PyObject* pynaim_echo(PyObject *self, PyObject *args) {
 	Py_RETURN_NONE;
 }
 
-static PyObject* pynaim_eval(PyObject *self, PyObject *args) {
+static PyObject *pynaim_eval(PyObject *self, PyObject *args) {
 	const char *string;
 
 	if (!PyArg_ParseTuple(args, "s:eval", &string))
