@@ -19,5 +19,7 @@ def PurrRecvfrom(conn, src, dst, message, flags):
     naim.eval('/ctcp %s ACTION purrs' % target)
 
 
-if __name__ == '__main__':
-  naim.hooks.add('recvfrom', 200, PurrRecvfrom)
+naim.hooks.add('recvfrom', 200, PurrRecvfrom)
+
+def __exit__():
+  naim.hooks.delete('recvfrom', PurrRecvfrom)

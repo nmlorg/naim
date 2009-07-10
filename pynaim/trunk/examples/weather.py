@@ -71,5 +71,7 @@ def WeatherRecvFrom(conn, src, dst, message, flags):
   fetcher.fetch(zip)
 
 
-if __name__ == '__main__':
-  naim.hooks.add('recvfrom', 200, WeatherRecvFrom)
+naim.hooks.add('recvfrom', 200, WeatherRecvFrom)
+
+def __exit__():
+  naim.hooks.delete('recvfrom', WeatherRecvFrom)

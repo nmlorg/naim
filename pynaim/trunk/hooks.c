@@ -41,22 +41,28 @@ static struct {
 	{"recvfrom", (mod_hook_t)pynaim_hooks_recvfrom},
 };
 
+mod_hook_t pynaim_getchain(const char *name) {
+	int	i;
+
+	for (i = 0; i < sizeof(hook_stubs)/sizeof(*hook_stubs); i++)
+		if (strcasecmp(name, hook_stubs[i].name) == 0)
+			return hook_stubs[i].func;
+
+	PyErr_SetString(PyExc_NameError, "unknown chain");
+	return(NULL);
+}
+
 static PyObject *pynaim_hooks_add(PyObject *self, PyObject *args) {
 	const char *name;
-	int	i, weight;
+	mod_hook_t func;
+	int	weight;
 	PyObject *callable;
 
 	if (!PyArg_ParseTuple(args, "siO:hooks.add", &name, &weight, &callable))
 		return(NULL);
 
-	for (i = 0; i < sizeof(hook_stubs)/sizeof(*hook_stubs); i++)
-		if (strcasecmp(name, hook_stubs[i].name) == 0)
-			break;
-
-	if (i == sizeof(hook_stubs)/sizeof(*hook_stubs)) {
-		PyErr_SetString(PyExc_NameError, "unknown chain");
+	if ((func = pynaim_getchain(name)) == NULL)
 		return(NULL);
-	}
 
 	if (!PyCallable_Check(callable)) {
 		PyErr_SetString(PyExc_TypeError, "parameter must be callable");
@@ -64,13 +70,33 @@ static PyObject *pynaim_hooks_add(PyObject *self, PyObject *args) {
 	}
 	Py_INCREF(callable);
 
-	hook_add(name, pynaim_mod, hook_stubs[i].func, callable, weight, "pynaim_hooks_run");
+	hook_add(name, pynaim_mod, func, callable, weight, "pynaim_hooks_run");
+
+	Py_RETURN_NONE;
+}
+
+static PyObject *pynaim_hooks_del(PyObject *self, PyObject *args) {
+	const char *name;
+	mod_hook_t func;
+	PyObject *callable;
+
+	if (!PyArg_ParseTuple(args, "sO:hooks.add", &name, &callable))
+		return(NULL);
+
+	if ((func = pynaim_getchain(name)) == NULL)
+		return(NULL);
+
+	hook_del(name, pynaim_mod, func, callable);
+
+	Py_DECREF(callable);
 
 	Py_RETURN_NONE;
 }
 
 static PyMethodDef pynaim_hookslib[] = {
 	{"add", pynaim_hooks_add, METH_VARARGS,
+	 ""},
+	{"delete", pynaim_hooks_del, METH_VARARGS,
 	 ""},
 	{NULL, NULL, 0, NULL},
 };
