@@ -10,6 +10,13 @@ def Excepthook(exctype, value, tb):
 sys.excepthook = Excepthook
 
 
+def Displayhook(obj):
+  if obj is not None:
+    naim.echo('%s', obj)
+
+sys.displayhook = Displayhook
+
+
 rawecho = naim.echo
 
 def Echo(s, *args):
