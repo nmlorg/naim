@@ -5,21 +5,26 @@
 */
 #include "naim-int.h"
 #include <naim/modutil.h>
-#include <ltdl.h>
 
-static inline chain_t *_hook_findchain(const char *name) {
-	extern lt_dlhandle dl_self;
-	chain_t *hook;
-	char	buf[100];
+chain_t	**hook_chains = NULL;
+int	hook_chainc = 0;
 
-	snprintf(buf, sizeof(buf), "chain_%s", name);
+chain_t	*hook_findchain(const char *name) {
+	int	i;
 
-	hook = lt_dlsym(dl_self, buf);
-	return(hook);
+	for (i = 0; i < hook_chainc; i++)
+		if (strcasecmp(hook_chains[i]->name, name) == 0)
+			return(hook_chains[i]);
+
+	hook_chainc++;
+	hook_chains = realloc(hook_chains, hook_chainc*sizeof(*hook_chains));
+	hook_chains[hook_chainc-1] = calloc(1, sizeof(**hook_chains));
+	hook_chains[hook_chainc-1]->name = strdup(name);
+	return(hook_chains[i]);
 }
 
 void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *funcname) {
-	chain_t	*chain = _hook_findchain(name);
+	chain_t	*chain = hook_findchain(name);
 	int	pos;
 
 	for (pos = 0; (pos < chain->count) && (chain->hooks[pos].weight <= weight); pos++)
@@ -38,7 +43,7 @@ void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int 
 }
 
 void	hook_del(const char *name, void *mod, mod_hook_t func, void *userdata) {
-	chain_t	*chain = _hook_findchain(name);
+	chain_t	*chain = hook_findchain(name);
 	int	i;
 
 	for (i = 0; (i < chain->count)

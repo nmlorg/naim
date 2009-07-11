@@ -562,8 +562,6 @@ nFIRE_HANDLER(naim_buddyremoved) {
 	}
 }
 
-HOOK_DECLARE(proto_user_onlineval);
-
 nFIRE_HANDLER(naim_buddy_coming) {
 	conn_t		*conn = (conn_t *)client;
 	va_list		msg;
@@ -592,7 +590,6 @@ nFIRE_HANDLER(naim_buddy_going) {
 
 
 
-HOOK_DECLARE(recvfrom);
 static void naim_recvfrom(conn_t *const conn,
 		const char *const _name, 
 		const char *const _dest,

@@ -12,6 +12,7 @@
 
 typedef int (*mod_hook_t)(void *mod, ...);
 typedef struct {
+	char	*name;
 	int	count;
 	struct {
 		int	weight;
@@ -25,19 +26,24 @@ typedef struct {
 #define HOOK_STOP	0
 #define HOOK_CONTINUE	(-1)
 
-#define HOOK_DECLARE(x)	chain_t chain_ ## x = { 0, NULL }
-#define HOOK_EXT_L(x)	extern chain_t chain_ ## x
 #define HOOK_CALL(x, ...)					\
-	if ((chain_ ## x).count > 0) do { 			\
-		int	i, ret;					\
-		for (i = 0; i < chain_ ## x.count; i++) {	\
-			chain_ ## x.hooks[i].passes++;		\
-			if (chain_ ## x.hooks[i].userdata != NULL) \
-				ret = chain_ ## x.hooks[i].func(chain_ ## x.hooks[i].userdata, ##__VA_ARGS__); \
+	do {							\
+		static chain_t *_chain = NULL;			\
+		int	i;					\
+								\
+		if (_chain == NULL)				\
+			_chain = hook_findchain(#x);		\
+								\
+		for (i = 0; i < _chain->count; i++) {		\
+			int	ret;				\
+								\
+			_chain->hooks[i].passes++;		\
+			if (_chain->hooks[i].userdata != NULL)	\
+				ret = _chain->hooks[i].func(_chain->hooks[i].userdata, ##__VA_ARGS__); \
 			else					\
-				ret = chain_ ## x.hooks[i].func(__VA_ARGS__); \
+				ret = _chain->hooks[i].func(__VA_ARGS__); \
 			if (ret != HOOK_CONTINUE) {		\
-				chain_ ## x.hooks[i].hits++;	\
+				_chain->hooks[i].hits++;	\
 				break;				\
 			}					\
 		}						\
@@ -68,6 +74,7 @@ typedef struct {
 #define MOD_FD_WRITE	MOD_FD_TYPE(1)
 
 /* modutil.c */
+chain_t	*hook_findchain(const char *name);
 void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *funcname);
 void	hook_del(const char *name, void *mod, mod_hook_t func, void *userdata);
 

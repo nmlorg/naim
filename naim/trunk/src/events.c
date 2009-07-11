@@ -30,7 +30,6 @@ void	updateidletime(void) {
 	bupdate();
 }
 
-HOOK_DECLARE(periodic);
 void	event_handle(time_t now) {
 	long	idletime = secs_getvar_int("idletime");
 	int	tprint, logtprint, autoaway, lagcheck, dailycol, regularcol;

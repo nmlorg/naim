@@ -34,6 +34,8 @@ extern time_t	now, awaytime;
 extern double	nowf, changetime;
 extern const char	*home, *sty;
 extern char	*statusbar_text;
+extern chain_t	**hook_chains;
+extern int	hook_chainc;
 
 extern int
 	scrollbackoff G_GNUC_INTERNAL,
@@ -1744,57 +1746,38 @@ CONIOAOPT(string,reason)
 	}
 }
 
-//extern void	(*conio_chains)();
 CONIOFUNC(chains) {
 CONIOALIA(tables)
 CONIODESC(Manipulate data control tables)
 CONIOAOPT(string,chain)
-	char	buf[1024];
 	chain_t	*chain;
-	lt_dlhandle self;
 	int	i;
 
 	if (argc == 0) {
-		const char *chains[] = { "getcmd", "notify", "periodic", "recvfrom", "sendto", "proto_user_onlineval" };
+		int	first = 1;
 
-		for (i = 0; i < sizeof(chains)/sizeof(*chains); i++) {
-			if (i > 0)
-				echof(conn, NULL, "-\n");
-			conio_chains(conn, 1, chains+i);
+		for (i = 0; i < hook_chainc; i++) {
+			if (hook_chains[i]->count > 0) {
+				if (!first)
+					echof(conn, NULL, "&nbsp;\n");
+				first = 0;
+				conio_chains(conn, 1, &(hook_chains[i]->name));
+			}
 		}
 		echof(conn, NULL, "See <font color=\"#00FF00\">/help chains</font> for more information.\n");
 		return;
 	}
-#ifdef DLOPEN_SELF_LIBNAIM_CORE
-	self = lt_dlopen("cygnaim_core-0.dll");
-#else
-	self = lt_dlopen(NULL);
-#endif
-	if (self == NULL) {
-		echof(conn, "TABLES", "Unable to perform self-symbol lookup: %s.\n",
-			lt_dlerror());
-		return;
-	}
-	snprintf(buf, sizeof(buf), "chain_%s", args[0]);
-	if ((chain = lt_dlsym(self, buf)) == NULL) {
-		echof(conn, "TABLES", "Unable to find chain %s (%s): %s.\n", 
-			args[0], buf, lt_dlerror());
-		lt_dlclose(self);
-		return;
-	}
-	lt_dlclose(self);
+	chain = hook_findchain(args[0]);
 
 	echof(conn, NULL, "Chain %s, containing %i hook%s.\n",
-		args[0], chain->count, (chain->count==1)?"":"s");
+		chain->name, chain->count, (chain->count==1)?"":"s");
 	for (i = 0; i < chain->count; i++) {
-		const char
-			*modname, *hookname;
+		const char *modname, *hookname;
 
 		if (chain->hooks[i].mod == NULL)
 			modname = "core";
 		else {
-			const lt_dlinfo
-				*dlinfo = lt_dlgetinfo(chain->hooks[i].mod);
+			const lt_dlinfo *dlinfo = lt_dlgetinfo(chain->hooks[i].mod);
 
 			modname = dlinfo->name;
 		}
@@ -1803,8 +1786,12 @@ CONIOAOPT(string,chain)
 			hookname++;
 		if ((strncmp(hookname, modname, strlen(modname)) == 0) && (hookname[strlen(modname)] == '_'))
 			hookname += strlen(modname)+1;
-		echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>() weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
-			i, modname, hookname, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
+		if (chain->hooks[i].userdata == NULL)
+			echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>() weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
+				i, modname, hookname, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
+		else
+			echof(conn, NULL, " <font color=\"#808080\">%i: <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(<B>%#p</B>) weight <B>%i</B> at <B>%#p</B> (%lu passes, %lu stops)</font>\n",
+				i, modname, hookname, chain->hooks[i].userdata, chain->hooks[i].weight, chain->hooks[i].func, chain->hooks[i].passes, chain->hooks[i].hits);
 	}
 }
 
@@ -2860,7 +2847,6 @@ void	conio_hook_init(void) {
 	HOOK_ADD(getcmd, mod, cmd_unknown, 1000);
 }
 
-HOOK_DECLARE(getcmd);
 void	conio_handlecmd(const char *buf) {
 	conn_t	*c = NULL;
 	char	line[1024], *cmd, *arg, *tmp;
