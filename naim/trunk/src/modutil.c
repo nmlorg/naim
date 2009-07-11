@@ -5,6 +5,12 @@
 */
 #include "naim-int.h"
 #include <naim/modutil.h>
+#include <ltdl.h>
+
+extern conn_t *curconn;
+
+extern chain_t **hook_chains G_GNUC_INTERNAL;
+extern int hook_chainc G_GNUC_INTERNAL;
 
 chain_t	**hook_chains = NULL;
 int	hook_chainc = 0;
@@ -23,7 +29,7 @@ chain_t	*hook_findchain(const char *name) {
 	return(hook_chains[i]);
 }
 
-void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *funcname) {
+void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *hookname) {
 	chain_t	*chain = hook_findchain(name);
 	int	pos;
 
@@ -37,9 +43,26 @@ void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int 
 	chain->hooks[pos].hits = 0;
 	chain->hooks[pos].func = func;
 	chain->hooks[pos].userdata = userdata;
-	chain->hooks[pos].name = strdup(funcname);
+	chain->hooks[pos].name = strdup(hookname);
 	chain->hooks[pos].mod = mod;
 	chain->count++;
+
+	if (mod != NULL) {
+		const lt_dlinfo *dlinfo = lt_dlgetinfo(mod);
+		const char *modname = dlinfo->name;
+
+		if (*hookname == '_')
+			hookname++;
+		if ((strncmp(hookname, modname, strlen(modname)) == 0) && (hookname[strlen(modname)] == '_'))
+			hookname += strlen(modname)+1;
+
+		if (userdata == NULL)
+			echof(curconn, NULL, "Registering <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>() in chain %s.\n",
+				modname, hookname, name);
+		else
+			echof(curconn, NULL, "Registering <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(%#p) in chain %s.\n",
+				modname, hookname, userdata, name);
+	}
 }
 
 void	hook_del(const char *name, void *mod, mod_hook_t func, void *userdata) {
@@ -51,12 +74,31 @@ void	hook_del(const char *name, void *mod, mod_hook_t func, void *userdata) {
 		 || (chain->hooks[i].func != func)
 		 || (chain->hooks[i].userdata != userdata)); i++)
 		;
-	if (i < chain->count) {
-		free(chain->hooks[i].name);
-		memmove(chain->hooks+i, chain->hooks+i+1, (chain->count-i-1) * sizeof(*(chain->hooks)));
-		chain->hooks = realloc(chain->hooks, (chain->count-1) * sizeof(*(chain->hooks)));
-		chain->count--;
+	if (i == chain->count)
+		return;
+
+	if (mod != NULL) {
+		const lt_dlinfo *dlinfo = lt_dlgetinfo(mod);
+		const char *modname = dlinfo->name,
+			*hookname = chain->hooks[i].name;
+
+		if (*hookname == '_')
+			hookname++;
+		if ((strncmp(hookname, modname, strlen(modname)) == 0) && (hookname[strlen(modname)] == '_'))
+			hookname += strlen(modname)+1;
+
+		if (userdata == NULL)
+			echof(curconn, NULL, "Removing <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>() from chain %s.\n",
+				modname, hookname, name);
+		else
+			echof(curconn, NULL, "Removing <font color=\"#FF0000\">%s</font>:<font color=\"#00FFFF\">%s</font>(%#p) from chain %s.\n",
+				modname, hookname, userdata, name);
 	}
+
+	free(chain->hooks[i].name);
+	memmove(chain->hooks+i, chain->hooks+i+1, (chain->count-i-1) * sizeof(*(chain->hooks)));
+	chain->hooks = realloc(chain->hooks, (chain->count-1) * sizeof(*(chain->hooks)));
+	chain->count--;
 }
 
 mod_fd_list_t	*mod_fd_listar = NULL;

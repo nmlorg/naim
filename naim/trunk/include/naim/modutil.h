@@ -75,7 +75,7 @@ typedef struct {
 
 /* modutil.c */
 chain_t	*hook_findchain(const char *name);
-void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *funcname);
+void	hook_add(const char *name, void *mod, mod_hook_t func, void *userdata, int weight, const char *hookname);
 void	hook_del(const char *name, void *mod, mod_hook_t func, void *userdata);
 
 int	mod_fd_register(int fd, int type, char *buf, int buflen,
