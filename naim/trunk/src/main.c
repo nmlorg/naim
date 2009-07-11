@@ -39,7 +39,6 @@ extern const char
 	*invocation G_GNUC_INTERNAL;
 extern char
 	naimrcfilename[1024] G_GNUC_INTERNAL;
-extern lt_dlhandle dl_self G_GNUC_INTERNAL;
 
 conn_t	*curconn = NULL;
 faimconf_t
@@ -55,7 +54,6 @@ const char
 	*sty = NULL,
 	*invocation = NULL;
 char	naimrcfilename[1024];
-lt_dlhandle dl_self = NULL;
 
 
 
@@ -300,11 +298,6 @@ int	main_stub(int argc, char **args) {
 		return(1);
 	}
 	lt_dlsetsearchpath(DLSEARCHPATH);
-#ifdef DLOPEN_SELF_LIBNAIM_CORE
-	dl_self = lt_dlopen("cygnaim_core-0.dll");
-#else
-	dl_self = lt_dlopen(NULL);
-#endif
 
 	{
 		const char	*args[] = { "dummy", "AIM" };
@@ -504,7 +497,6 @@ int	main_stub(int argc, char **args) {
 	echof(curconn, NULL, "Goodbye.\n");
 	statrefresh();
 	wshutitdown();
-	lt_dlclose(dl_self);
 	lt_dlexit();
 	return(0);
 }

@@ -79,7 +79,6 @@ void	logim(conn_t *conn, const char *source, const char *target,
 	fflush(conn->logfile);
 }
 
-HOOK_DECLARE(sendto);
 static void naim_sendto(conn_t *conn,
 		const char *const _name,
 		const char *const _dest,
