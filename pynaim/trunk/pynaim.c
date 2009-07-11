@@ -8,8 +8,21 @@ void	pynaim_hooks_init(PyObject *parent);
 void	*pynaim_mod = NULL;
 
 static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
-	if (strcasecmp(cmd, "PYEVAL") == 0)
-		PyRun_SimpleString(arg);
+	if (strcasecmp(cmd, "PYEVAL") == 0) {
+        PyObject *result = PyRun_String(arg, Py_single_input, PyModule_GetDict(PyImport_AddModule("__main__")), NULL);
+
+        if (result) {
+            //echof(curconn, NULL, "Ran %s correctly", arg);
+            PyObject *result_str = PyObject_Repr(result); // a string representation of result
+            const char *str_str = PyString_AsString(result_str);
+            echof(curconn, NULL, str_str);
+            Py_DECREF(result);
+            Py_DECREF(result_str);
+        }
+        else
+            PyErr_Print();  // prints with naim.echo.  see default.py
+        
+    }
 	else if (strcasecmp(cmd, "PYLOAD") == 0) {
 		char	*modname = strchr(arg, ' ');
 		int	freemodname = 0;
