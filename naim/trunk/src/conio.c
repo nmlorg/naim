@@ -1769,8 +1769,7 @@ CONIOAOPT(string,chain)
 	}
 	chain = hook_findchain(args[0]);
 
-	echof(conn, NULL, "Chain %s, containing %i hook%s.\n",
-		chain->name, chain->count, (chain->count==1)?"":"s");
+	echof(conn, NULL, "Chain %s:\n", chain->name);
 	for (i = 0; i < chain->count; i++) {
 		const char *modname, *hookname;
 
