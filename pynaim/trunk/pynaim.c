@@ -4,7 +4,8 @@
 #include "_default_py.h"
 
 extern conn_t *curconn;
-void	pynaim_hooks_init(PyObject *parent);
+void	pynaim_conn_init(void);
+void	pynaim_hooks_init(void);
 void	*pynaim_mod = NULL;
 
 static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
@@ -103,8 +104,11 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 
 	Py_Initialize();
 	PyObject *naimmodule = Py_InitModule("naim", pynaimlib);
-	pynaim_hooks_init(naimmodule);
-    pynaim_conn_init(naimmodule);
+	PyObject *naim_typesmodule = Py_InitModule("naim.types", NULL);
+	PyModule_AddObject(naimmodule, "types", naim_typesmodule);
+
+	pynaim_hooks_init();
+	pynaim_conn_init();
 
 	PyObject *eval_dict = PyDict_New();
 	PyDict_SetItemString(eval_dict, "__builtins__", PyEval_GetBuiltins());
