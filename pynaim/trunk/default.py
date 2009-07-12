@@ -3,18 +3,23 @@ import traceback
 import naim
 
 
-def Excepthook(exctype, value, tb):
-  for l in traceback.format_exception(exctype, value, tb):
-    naim.echo(l)
+class DummyStdout(object):
+  def __init__(self):
+    self._remainder = ''
 
-sys.excepthook = Excepthook
+  def write(self, s):
+    s = self._remainder + s
+    self._remainder = ''
 
+    for s in s.splitlines(True):
+      if s[-1] != '\n':
+        self._remainder = s
+        return
 
-def Displayhook(obj):
-  if obj is not None:
-    naim.echo('%s', obj)
+      naim.echo(s)
 
-sys.displayhook = Displayhook
+sys.stdout = DummyStdout()
+sys.stderr = DummyStdout()
 
 
 rawecho = naim.echo
