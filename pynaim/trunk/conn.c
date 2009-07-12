@@ -17,7 +17,7 @@ static PyGetSetDef _Connection_getset[] = {
 
 static PyTypeObject _ConnectionType = {
 	PyObject_HEAD_INIT(NULL)
-	tp_name: "naim.Connection",
+	tp_name: "naim.types.Connection",
 	tp_basicsize: sizeof(_ConnectionObject),
 	tp_flags: Py_TPFLAGS_DEFAULT,
 	tp_getset: _Connection_getset,
@@ -25,10 +25,10 @@ static PyTypeObject _ConnectionType = {
 	tp_new: PyType_GenericNew,
 };
 
-void	pynaim_conn_init(PyObject *parent) {
+void	pynaim_conn_init(void) {
 	if (PyType_Ready(&_ConnectionType) < 0)
 		return;
 
 	Py_INCREF(&_ConnectionType);
-	PyModule_AddObject(parent, "Connection", (PyObject *)&_ConnectionType);
+	PyModule_AddObject(PyImport_AddModule("naim.types"), "Connection", (PyObject *)&_ConnectionType);
 }
