@@ -26,7 +26,7 @@ static PyTypeObject _ConnectionType = {
 };
 
 PyObject *pynaim_conn_wrap(conn_t *conn) {
-	_ConnectionObject *connobj = PyObject_New(_ConnectionObject, (PyObject *)&_ConnectionType);
+	_ConnectionObject *connobj = PyObject_New(_ConnectionObject, &_ConnectionType);
 
 	connobj->conn = conn;
 
