@@ -104,6 +104,7 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	Py_Initialize();
 	PyObject *naimmodule = Py_InitModule("naim", pynaimlib);
 	pynaim_hooks_init(naimmodule);
+    pynaim_conn_init(naimmodule);
 
 	PyObject *eval_dict = PyDict_New();
 	PyDict_SetItemString(eval_dict, "__builtins__", PyEval_GetBuiltins());
