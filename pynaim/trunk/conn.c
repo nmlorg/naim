@@ -25,6 +25,14 @@ static PyTypeObject _ConnectionType = {
 	tp_new: PyType_GenericNew,
 };
 
+PyObject *pynaim_conn_wrap(conn_t *conn) {
+	_ConnectionObject *connobj = PyObject_New(_ConnectionObject, (PyObject *)&_ConnectionType);
+
+	connobj->conn = conn;
+
+	return (PyObject *)connobj;
+}
+
 void	pynaim_conn_init(void) {
 	if (PyType_Ready(&_ConnectionType) < 0)
 		return;

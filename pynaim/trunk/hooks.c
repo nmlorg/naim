@@ -3,6 +3,7 @@
 
 extern conn_t *curconn;
 extern void *pynaim_mod;
+PyObject *pynaim_conn_wrap(conn_t *conn);
 
 static int _run(void *userdata, PyObject *arglist) {
 	PyObject *callable = (PyObject *)userdata,
@@ -28,7 +29,9 @@ static int _periodic(void *userdata, void *dummy, time_t now) {
 }
 
 static int _recvfrom(void *userdata, conn_t *conn, char **src, char **dst, unsigned char **message, int *len, int *flags) {
-	PyObject *arglist = Py_BuildValue("(isss#i)", 0, *src, *dst, *message, *len, *flags);
+	PyObject *connobj = pynaim_conn_wrap(conn);
+	PyObject *arglist = Py_BuildValue("(Osss#i)", connobj, *src, *dst, *message, *len, *flags);
+	Py_DECREF(connobj);
 
 	return _run(userdata, arglist);
 }
