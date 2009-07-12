@@ -1,48 +1,33 @@
 #include <Python.h>
+#include <naim/modutil.h>
 
 typedef struct {
-    PyObject_HEAD
-        /* Type-specific fields go here. */
-        /* TODO(?) add the naim connection specific fields here? */
-    int my_val;
-} naim_ConnectionObject;
+	PyObject_HEAD
+	conn_t	*conn;
+} _ConnectionObject;
 
-PyObject* noddy_getattr(PyObject *o, PyObject *attr_name) {
-    PyObject* cats = PyString_FromString("cats");
-    if (PyObject_Compare(cats, attr_name) == 0) {
-        Py_DECREF(cats);
-        return Py_BuildValue("s", "mrow");
-    } else {
-        Py_DECREF(cats);
-        PyErr_SetString(PyExc_AttributeError,"Unknown attribute");
-        return NULL;
-    }
+static PyObject *_winname_get(_ConnectionObject *self, void *closure) {
+	return PyString_FromString(self->conn->winname);
 }
 
-static PyTypeObject naim_ConnectionType = {
-    PyObject_HEAD_INIT(NULL)
-    tp_name: "naim.Connection",
-    tp_basicsize: sizeof(naim_ConnectionObject),
-    tp_getattro: noddy_getattr, // TODO(?) switch to using tp_getset
-    tp_flags: Py_TPFLAGS_DEFAULT,
-    tp_doc: "Connection Object",
+static PyGetSetDef _Connection_getset[] = {
+	{"winname", (getter)_winname_get, NULL, "Connection name", NULL},
 };
 
-
-
-static PyMethodDef noddy_methods[] = {
-        {NULL}  /* Sentinel */
+static PyTypeObject _ConnectionType = {
+	PyObject_HEAD_INIT(NULL)
+	tp_name: "naim.Connection",
+	tp_basicsize: sizeof(_ConnectionObject),
+	tp_flags: Py_TPFLAGS_DEFAULT,
+	tp_getset: _Connection_getset,
+	tp_doc: "Connection Object",
+	tp_new: PyType_GenericNew,
 };
 
-void pynaim_conn_init(PyObject *parent) {
+void	pynaim_conn_init(PyObject *parent) {
+	if (PyType_Ready(&_ConnectionType) < 0)
+		return;
 
-    naim_ConnectionType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&naim_ConnectionType) < 0)
-        return;
-
-    //TODO(?) write an object that actually implements this ConnectionType
-
-    Py_INCREF(&naim_ConnectionType);
-    PyModule_AddObject(parent, "Connection", (PyObject *)&naim_ConnectionType);
-
+	Py_INCREF(&_ConnectionType);
+	PyModule_AddObject(parent, "Connection", (PyObject *)&_ConnectionType);
 }
