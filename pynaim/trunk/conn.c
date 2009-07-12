@@ -12,6 +12,7 @@ static PyObject *_winname_get(_ConnectionObject *self, void *closure) {
 
 static PyGetSetDef _Connection_getset[] = {
 	{"winname", (getter)_winname_get, NULL, "Connection name", NULL},
+	{NULL},
 };
 
 static PyTypeObject _ConnectionType = {
