@@ -22,6 +22,22 @@ static int _run(void *userdata, PyObject *arglist) {
 	return(ret);
 }
 
+static int _delconn(void *userdata, conn_t *conn, const char *winname) {
+	PyObject *connobj = pynaim_conn_wrap(conn);
+	PyObject *arglist = Py_BuildValue("(Os)", connobj, winname);
+	Py_DECREF(connobj);
+
+	return _run(userdata, arglist);
+}
+
+static int _newconn(void *userdata, conn_t *conn, const char *winname, const char *protostr) {
+	PyObject *connobj = pynaim_conn_wrap(conn);
+	PyObject *arglist = Py_BuildValue("(Oss)", connobj, winname, protostr);
+	Py_DECREF(connobj);
+
+	return _run(userdata, arglist);
+}
+
 static int _periodic(void *userdata, void *dummy, time_t now) {
 	PyObject *arglist = Py_BuildValue("(l)", (long)now);
 
@@ -40,6 +56,8 @@ static struct {
 	const char *name;
 	mod_hook_t func;
 } _stubs[] = {
+	{"delconn", (mod_hook_t)_delconn},
+	{"newconn", (mod_hook_t)_newconn},
 	{"periodic", (mod_hook_t)_periodic},
 	{"recvfrom", (mod_hook_t)_recvfrom},
 };
