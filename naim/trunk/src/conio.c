@@ -2360,6 +2360,8 @@ CONIOAOPT(string,protocol)
 		echof(newconn, NULL, "You can now <font color=\"#00FF00\">/connect &lt;name&gt; [&lt;server&gt;]</font> to log on.\n");
 	}
 	bupdate();
+
+	HOOK_CALL(newconn, newconn, newconn->winname, protostr);
 }
 
 CONIOFUNC(delconn) {
@@ -2386,6 +2388,8 @@ CONIOAOPT(string,label)
 			return;
 		}
 	}
+
+	HOOK_CALL(delconn, conn, conn->winname);
 
 	do_delconn(conn);
 }
