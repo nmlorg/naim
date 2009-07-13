@@ -19,24 +19,22 @@ static PyGetSetDef _Connection_getset[] = {
 };
 
 static PyObject *_Connection_msg(PyObject *self, PyObject *args) {
-    const char *dst;
-    const char *msg;
-    _ConnectionObject* rawself = (_ConnectionObject*)self;
+	const char *dst, *msg;
+	_ConnectionObject* rawself = (_ConnectionObject *)self;
 
-    if (!PyArg_ParseTuple(args, "ss:msg", &dst, &msg))
-        return(NULL);
+	if (!PyArg_ParseTuple(args, "ss:msg", &dst, &msg))
+		return(NULL);
 
-    char *tosend[] = {dst, msg};
-    conio_msg(rawself->conn, 2, tosend);
-    Py_RETURN_NONE;
+	char	*tosend[] = {dst, msg};
 
+	conio_msg(rawself->conn, 2, tosend);
+	Py_RETURN_NONE;
 }
 
 static PyMethodDef _Connection_methods[] = {
-    {"msg", _Connection_msg, METH_VARARGS,
-        "Send a message on a connection"
-    },
-    {NULL}  /* Sentinel */
+	{"msg", _Connection_msg, METH_VARARGS,
+	 "Send a message on a connection"},
+	{NULL},  /* Sentinel */
 };
 
 static PyTypeObject _ConnectionType = {
@@ -47,7 +45,7 @@ static PyTypeObject _ConnectionType = {
 	tp_getset: _Connection_getset,
 	tp_doc: "Connection Object",
 	tp_new: PyType_GenericNew,
-    tp_methods: _Connection_methods
+	tp_methods: _Connection_methods,
 };
 
 static PyObject *_connections = NULL;
