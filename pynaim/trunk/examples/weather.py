@@ -11,7 +11,8 @@ import naim
 PYWEATHER_RE = re.compile('^!pyweather\s+(\d{5})$')
 
 class weatherFetcher:
-  def __init__(self,src,dst):
+  def __init__(self,conn,src,dst):
+    self.conn = conn
     if dst and dst[0] == '#':
       self.target = dst
     ## a privmsg will cause dst to be None
@@ -19,11 +20,11 @@ class weatherFetcher:
       self.target = src
 
   def fetch(self,zip):
-    conn = httplib.HTTPConnection('weather.yahooapis.com')
-    conn.request('GET', '/forecastrss?p=%s' % zip)
-    r = conn.getresponse()
+    httpconn = httplib.HTTPConnection('weather.yahooapis.com')
+    httpconn.request('GET', '/forecastrss?p=%s' % zip)
+    r = httpconn.getresponse()
     if r.status != 200:
-      naim.eval('msg %s %s' % (self.target, 'Failed to open weather URL!'))
+      self.conn.msg(self.target,"Failed to open weather URL!")
       return
 
     data = r.read()
@@ -31,12 +32,12 @@ class weatherFetcher:
     p.StartElementHandler = self.start_element
 
     p.Parse(data)
-    naim.eval("/msg %s %s" % (self.target,
+    self.conn.msg(self.target,
       "Currently in %s: %s temp=%s%s windspeed=%s%s windchill=%s%s humidity=%d%% visibility=%s%s pressure=%s%s" %
       (self.city, self.condition, self.temp, self.tempUnit, self.speed, self.speedUnit,
        self.windchill, self.tempUnit, self.humidity, self.vis, self.distanceUnit, 
        self.pressure, self.pressureUnit)
-     ))
+     )
 
   def start_element(self,name, attrs):
     if name == "yweather:condition":
@@ -59,7 +60,7 @@ class weatherFetcher:
 
 
 def WeatherRecvFrom(conn, src, dst, message, flags):
-  naim.echo('Message from %s to %s: %s', src, dst, message)
+  #naim.echo('Message from %s to %s: %s', src, dst, message)
 
 
   m = PYWEATHER_RE.match(message)
@@ -67,7 +68,7 @@ def WeatherRecvFrom(conn, src, dst, message, flags):
     return
 
   zip = m.group(1)
-  fetcher = weatherFetcher(src,dst)
+  fetcher = weatherFetcher(conn,src,dst)
   fetcher.fetch(zip)
 
 
