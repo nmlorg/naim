@@ -1,5 +1,4 @@
 import sys
-import traceback
 import naim
 
 
@@ -34,3 +33,25 @@ def Echo(s, *args):
 
 Echo.__doc__ = rawecho.__doc__
 naim.echo = Echo
+
+
+class Commands(object):
+  def __init__(self, conn):
+    self._conn = conn
+
+naim.types.Commands = Commands
+
+def RegisterCommand(name, cfunc, desc, minarg, maxarg):
+  def f(self, *args):
+    if not minarg <= len(args) <= maxarg:
+      raise TypeError('%s takes between %i and %i arguments (%i given)' % (
+          name, minarg, maxarg, len(args)))
+
+    self._conn._conio_stub(cfunc, args)
+
+  f.__name__ = name
+  f.__doc__ = desc
+
+  setattr(Commands, name, f)
+
+naim._RegisterCommand = RegisterCommand

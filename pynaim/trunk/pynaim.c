@@ -108,13 +108,14 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	PyModule_AddObject(naimmodule, "types", naim_typesmodule);
 
 	pynaim_hooks_init();
-	pynaim_conn_init();
 
 	PyObject *eval_dict = PyDict_New();
 	PyDict_SetItemString(eval_dict, "__builtins__", PyEval_GetBuiltins());
 	PyObject *anonmodule = PyRun_String(default_py, Py_file_input, eval_dict, NULL);
 	Py_DECREF(anonmodule);
 	Py_DECREF(eval_dict);
+
+	pynaim_conn_init();
 
 	PyRun_SimpleString("import naim");
 
