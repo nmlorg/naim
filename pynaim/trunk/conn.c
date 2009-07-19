@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <structmember.h>
 #include <naim/modutil.h>
 
 extern conn_t *curconn;
@@ -7,6 +8,7 @@ extern void *pynaim_mod;
 typedef struct {
 	PyObject_HEAD
 	conn_t	*conn;
+	PyObject *commands;
 } _ConnectionObject;
 
 static PyObject *_winname_get(_ConnectionObject *self, void *closure) {
@@ -18,22 +20,37 @@ static PyGetSetDef _Connection_getset[] = {
 	{NULL},
 };
 
-static PyObject *_Connection_msg(PyObject *self, PyObject *args) {
-	const char *dst, *msg;
-	_ConnectionObject* rawself = (_ConnectionObject *)self;
+static PyMemberDef _Connection_members[] = {
+	{"commands", T_OBJECT_EX, offsetof(_ConnectionObject, commands), 0, "Commands"},
+	{NULL},
+};
 
-	if (!PyArg_ParseTuple(args, "ss:msg", &dst, &msg))
+static PyObject *_Connection_conio_stub(PyObject *self, PyObject *arglist) {
+	_ConnectionObject *connobj = (_ConnectionObject *)self;
+	PyObject *cfunc, *funcargs;
+
+	if (!PyArg_ParseTuple(arglist, "OO", &cfunc, &funcargs))
 		return(NULL);
 
-	char	*tosend[] = {dst, msg};
+	void	(*func)(conn_t *conn, int argc, const char **args) = PyCObject_AsVoidPtr(cfunc);
 
-	conio_msg(rawself->conn, 2, tosend);
+	const char *args[CONIO_MAXPARMS] = {0};
+	int	i, funcargc = PyTuple_Size(funcargs);
+
+	for (i = 0; i < funcargc; i++) {
+		PyObject *funcarg = PyTuple_GetItem(funcargs, i);
+
+		args[i] = PyString_AsString(funcarg);
+	}
+
+	func(connobj->conn, funcargc, args);
+
 	Py_RETURN_NONE;
 }
 
 static PyMethodDef _Connection_methods[] = {
-	{"msg", _Connection_msg, METH_VARARGS,
-	 "Send a message on a connection"},
+	{"_conio_stub", _Connection_conio_stub, METH_VARARGS,
+	 "(Internal)"},
 	{NULL},  /* Sentinel */
 };
 
@@ -45,8 +62,46 @@ static PyTypeObject _ConnectionType = {
 	tp_getset: _Connection_getset,
 	tp_doc: "Connection Object",
 	tp_new: PyType_GenericNew,
+	tp_members: _Connection_members,
 	tp_methods: _Connection_methods,
 };
+
+typedef struct {
+	const char *c;
+	void	(*func)(conn_t *conn, int argc, char **args);
+	const char *aliases[CONIO_MAXPARMS],
+		*desc;
+	const struct {
+		const char required,
+			type,
+			*name;
+	}	args[CONIO_MAXPARMS];
+	int	minarg,
+		maxarg,
+		where;
+} cmdar_t;
+
+extern cmdar_t cmdar[];
+extern int cmdc;
+
+static void _register_cmdar() {
+	PyObject *registerfunc = PyObject_GetAttrString(PyImport_AddModule("naim"), "_RegisterCommand");
+	int	i;
+
+	for (i = 0; i < cmdc; i++) {
+		PyObject *cfunc = PyCObject_FromVoidPtr(cmdar[i].func, NULL);
+		PyObject *arglist = Py_BuildValue("(sOsii)", cmdar[i].c, cfunc, cmdar[i].desc, cmdar[i].minarg, cmdar[i].maxarg);
+		Py_DECREF(cfunc);
+		PyObject *result = PyObject_CallObject(registerfunc, arglist);
+		Py_DECREF(arglist);
+		if (result == NULL)
+			PyErr_Print();
+		else
+			Py_DECREF(result);
+	}
+
+	Py_DECREF(registerfunc);
+}
 
 static PyObject *_connections = NULL;
 
@@ -61,6 +116,14 @@ PyObject *pynaim_conn_wrap(conn_t *conn) {
 	_ConnectionObject *connobj = PyObject_New(_ConnectionObject, &_ConnectionType);
 
 	connobj->conn = conn;
+
+	PyObject *arglist = Py_BuildValue("(O)", connobj);
+	PyObject *commandsobj = PyObject_CallObject(PyObject_GetAttrString(PyImport_AddModule("naim.types"), "Commands"), arglist);
+	Py_DECREF(arglist);
+	if (commandsobj == NULL)
+		PyErr_Print();
+	else
+		connobj->commands = commandsobj;
 
 	return (PyObject *)connobj;
 }
@@ -86,6 +149,8 @@ void	pynaim_conn_init(void) {
 
 	Py_INCREF(&_ConnectionType);
 	PyModule_AddObject(PyImport_AddModule("naim.types"), "Connection", (PyObject *)&_ConnectionType);
+
+	_register_cmdar();
 
 	_connections = PyDict_New();
 	PyObject *connections_proxy = PyDictProxy_New(_connections);
