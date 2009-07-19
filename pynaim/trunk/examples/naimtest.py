@@ -93,9 +93,9 @@ class TestCase(unittest.TestCase):
           if not arg1.match(arg2):
             break
       else:
-        break
-    else:
-      raise self.failureException('%s not called' % (args,))
+        return
+
+    raise self.failureException('%s not called' % (args,))
 
 
 main = unittest.main
