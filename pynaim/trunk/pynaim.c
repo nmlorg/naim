@@ -10,6 +10,11 @@ void	*pynaim_mod = NULL;
 
 static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 	if (strcasecmp(cmd, "PYEVAL") == 0) {
+		if (arg == NULL) {
+			echof(c, cmd, "Command requires an argument.");
+			return(HOOK_STOP);
+		}
+
 		PyObject *result = PyRun_String(arg, Py_single_input, PyModule_GetDict(PyImport_AddModule("__main__")), NULL);
 
 		if (result == NULL)
@@ -17,6 +22,11 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 		else
 			Py_DECREF(result);
 	} else if (strcasecmp(cmd, "PYLOAD") == 0) {
+		if (arg == NULL) {
+			echof(c, cmd, "Command requires an argument.");
+			return(HOOK_STOP);
+		}
+
 		char	*modname = strchr(arg, ' ');
 		int	freemodname = 0;
 
