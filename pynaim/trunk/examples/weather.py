@@ -24,7 +24,7 @@ class weatherFetcher:
     httpconn.request('GET', '/forecastrss?p=%s' % zip)
     r = httpconn.getresponse()
     if r.status != 200:
-      self.conn.msg(self.target,"Failed to open weather URL!")
+      self.conn.commands.msg(self.target,"Failed to open weather URL!")
       return
 
     data = r.read()
@@ -32,7 +32,7 @@ class weatherFetcher:
     p.StartElementHandler = self.start_element
 
     p.Parse(data)
-    self.conn.msg(self.target,
+    self.conn.commands.msg(self.target,
       "Currently in %s: %s temp=%s%s windspeed=%s%s windchill=%s%s humidity=%d%% visibility=%s%s pressure=%s%s" %
       (self.city, self.condition, self.temp, self.tempUnit, self.speed, self.speedUnit,
        self.windchill, self.tempUnit, self.humidity, self.vis, self.distanceUnit, 
