@@ -90,10 +90,8 @@ static void _register_cmdar() {
 
 	for (i = 0; i < cmdc; i++) {
 		PyObject *cfunc = PyCObject_FromVoidPtr(cmdar[i].func, NULL);
-		PyObject *arglist = Py_BuildValue("(sOsii)", cmdar[i].c, cfunc, cmdar[i].desc, cmdar[i].minarg, cmdar[i].maxarg);
+		PyObject *result = PyObject_CallFunction(registerfunc, "(sOsii)", cmdar[i].c, cfunc, cmdar[i].desc, cmdar[i].minarg, cmdar[i].maxarg);
 		Py_DECREF(cfunc);
-		PyObject *result = PyObject_CallObject(registerfunc, arglist);
-		Py_DECREF(arglist);
 		if (result == NULL)
 			PyErr_Print();
 		else
@@ -117,9 +115,9 @@ PyObject *pynaim_conn_wrap(conn_t *conn) {
 
 	connobj->conn = conn;
 
-	PyObject *arglist = Py_BuildValue("(O)", connobj);
-	PyObject *commandsobj = PyObject_CallObject(PyObject_GetAttrString(PyImport_AddModule("naim.types"), "Commands"), arglist);
-	Py_DECREF(arglist);
+	PyObject *commandsfunc = PyObject_GetAttrString(PyImport_AddModule("naim.types"), "Commands");
+	PyObject *commandsobj = PyObject_CallFunctionObjArgs(commandsfunc, connobj, NULL);
+	Py_DECREF(commandsfunc);
 	if (commandsobj == NULL)
 		PyErr_Print();
 	else

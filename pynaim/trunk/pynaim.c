@@ -44,9 +44,7 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 			PyObject *module_dict = PyModule_GetDict(module);
 			PyObject *exitfunc = PyDict_GetItemString(module_dict, "__exit__");
 			if (exitfunc != NULL) {
-				PyObject *arglist = Py_BuildValue("()");
-				PyObject *result = PyObject_CallObject(exitfunc, arglist);
-				Py_DECREF(arglist);
+				PyObject *result = PyObject_CallFunction(exitfunc, NULL);
 				if (result == NULL)
 					PyErr_Print();
 				else
