@@ -17,7 +17,28 @@ HOOKS = []
 ECHOES = []
 EVALS = []
 
+
+class _MockCommands(object):
+  def __init__(self, commandlog):
+    self._commandlog = commandlog
+
+  def __getattr__(self, key):
+    def f(*args):
+      self._commandlog.append((key,) + args)
+
+    return f
+
+
+class _MockConnection(object):
+  def __init__(self, winname):
+    self.winname = winname
+    self._commandlog = []
+    self.commands = _MockCommands(self._commandlog)
+
+
 class _MockNaim(object):
+  connections = {'dummy': _MockConnection('dummy')}
+
   class hooks(object):
     @staticmethod
     def add(name, weight, func):
@@ -43,7 +64,7 @@ class TestCase(unittest.TestCase):
   def assertHooked(self, name, weight, func):
     k = (name, weight, func)
     if k not in HOOKS:
-      raise self.failureException('%s not hooked' % k)
+      raise self.failureException('%s not hooked' % (k,))
 
   def assertEchoed(self, s):
     for e in ECHOES:
@@ -58,6 +79,23 @@ class TestCase(unittest.TestCase):
         return
 
     raise self.failureException('%r was not evaluated' % s)
+
+  def assertCommand(self, *args):
+    for command in _MockNaim.connections['dummy']._commandlog:
+      if len(command) != len(args):
+        continue
+
+      for arg1, arg2 in zip(args, command):
+        if isinstance(arg1, str):
+          if arg1 != arg2:
+            break
+        else:
+          if not arg1.match(arg2):
+            break
+      else:
+        break
+    else:
+      raise self.failureException('%s not called' % (args,))
 
 
 main = unittest.main

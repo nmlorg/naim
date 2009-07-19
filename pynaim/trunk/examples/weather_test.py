@@ -5,16 +5,20 @@
 __author__ = 'nmlorg (Daniel Reed)'
 
 import naimtest
+import re
 import weather
 
 
 class WeatherTest(naimtest.TestCase):
   def testWeatherToChan(self):
-    weather.WeatherRecvFrom('conn','test', '#em32', '!pyweather 02906', 0)
-    self.assertEvaluated('/msg #em32 Currently in Providence')
+    conn = naimtest._MockNaim.connections['dummy']
+    weather.WeatherRecvFrom(conn, 'test', '#em32', '!pyweather 02906', 0)
+    self.assertCommand('msg', '#em32', re.compile('^Currently in Providence'))
+
   def testWeatherToBot(self):
-    weather.WeatherRecvFrom('conn','test', 'pybot', '!pyweather 94035', 0)
-    self.assertEvaluated('/msg test Currently in Mount')
+    conn = naimtest._MockNaim.connections['dummy']
+    weather.WeatherRecvFrom(conn, 'test', 'pybot', '!pyweather 94035', 0)
+    self.assertCommand('msg', 'test', re.compile('^Currently in Mount'))
 
 
 if __name__ == '__main__':
