@@ -14,9 +14,9 @@ def PurrRecvfrom(conn, src, dst, message, flags):
   message = message.strip()
   if ' ' in message:
     victim = message.split()[1]
-    naim.eval('/ctcp %s ACTION purrs at %s' % (target, victim))
+    conn.commands.ctcp(target, 'ACTION', 'purrs at %s' % victim)
   else:
-    naim.eval('/ctcp %s ACTION purrs' % target)
+    conn.commands.ctcp(target, 'ACTION', 'purrs')
 
 
 naim.hooks.add('recvfrom', 200, PurrRecvfrom)
