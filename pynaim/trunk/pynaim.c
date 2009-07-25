@@ -19,6 +19,7 @@ static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 
 		PyEval_RestoreThread(_pythreadstate_save);
 
+		echof(c, NULL, ">>> %s", arg);
 		PyObject *result = PyRun_String(arg, Py_single_input, PyModule_GetDict(PyImport_AddModule("__main__")), NULL);
 
 		if (result == NULL)
@@ -42,7 +43,7 @@ static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 		FILE	*fp = fopen(arg, "r");
 
 		if (fp == NULL)
-			echof(curconn, "PYLOAD", "%s", strerror(errno));
+			echof(c, "PYLOAD", "%s", strerror(errno));
 		else {
 			if (modname == NULL) {
 				if ((modname = strrchr(arg, '/')) == NULL)
