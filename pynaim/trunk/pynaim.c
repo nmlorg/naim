@@ -8,12 +8,16 @@ void	pynaim_conn_init(void);
 void	pynaim_hooks_init(void);
 void	*pynaim_mod = NULL;
 
-static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
+static PyThreadState *_pythreadstate_save = NULL;
+
+static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 	if (strcasecmp(cmd, "PYEVAL") == 0) {
 		if (arg == NULL) {
 			echof(c, cmd, "Command requires an argument.");
 			return(HOOK_STOP);
 		}
+
+		PyEval_RestoreThread(_pythreadstate_save);
 
 		PyObject *result = PyRun_String(arg, Py_single_input, PyModule_GetDict(PyImport_AddModule("__main__")), NULL);
 
@@ -21,6 +25,8 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 			PyErr_Print();
 		else
 			Py_DECREF(result);
+
+		_pythreadstate_save = PyEval_SaveThread();
 	} else if (strcasecmp(cmd, "PYLOAD") == 0) {
 		if (arg == NULL) {
 			echof(c, cmd, "Command requires an argument.");
@@ -50,6 +56,8 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 					*dot = 0;
 			}
 
+			PyEval_RestoreThread(_pythreadstate_save);
+
 			PyObject *module = PyImport_AddModule(modname);
 			PyObject *module_dict = PyModule_GetDict(module);
 			PyObject *exitfunc = PyDict_GetItemString(module_dict, "__exit__");
@@ -70,6 +78,9 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 				PyObject *mainmodule = PyImport_AddModule("__main__");
 				PyObject_SetAttrString(mainmodule, modname, module);
 			}
+
+			_pythreadstate_save = PyEval_SaveThread();
+
 			fclose(fp);
 		}
 		if (freemodname)
@@ -79,7 +90,7 @@ static int pynaim_getcmd(conn_t *c, const char *cmd, const char *arg) {
 	return(HOOK_STOP);
 }
 
-static PyObject *pynaim_echo(PyObject *self, PyObject *args) {
+static PyObject *_echo(PyObject *self, PyObject *args) {
 	const char *string;
 
 	if (!PyArg_ParseTuple(args, "s:echo", &string))
@@ -89,7 +100,7 @@ static PyObject *pynaim_echo(PyObject *self, PyObject *args) {
 	Py_RETURN_NONE;
 }
 
-static PyObject *pynaim_eval(PyObject *self, PyObject *args) {
+static PyObject *_eval(PyObject *self, PyObject *args) {
 	const char *string;
 
 	if (!PyArg_ParseTuple(args, "s:eval", &string))
@@ -100,9 +111,9 @@ static PyObject *pynaim_eval(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef pynaimlib[] = {
-	{"echo", pynaim_echo, METH_VARARGS,
+	{"echo", _echo, METH_VARARGS,
 	 "Display something on the screen with $-variable expansion."},
-	{"eval", pynaim_eval, METH_VARARGS,
+	{"eval", _eval, METH_VARARGS,
 	 "Evaluate a command with $-variable substitution."},
 	{NULL, NULL, 0, NULL},
 };
@@ -110,6 +121,7 @@ static PyMethodDef pynaimlib[] = {
 int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	pynaim_mod = mod;
 
+	PyEval_InitThreads();
 	Py_Initialize();
 	PyObject *naimmodule = Py_InitModule("naim", pynaimlib);
 	PyObject *naim_typesmodule = Py_InitModule("naim.types", NULL);
@@ -127,13 +139,17 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 
 	PyRun_SimpleString("import naim");
 
-	HOOK_ADD(getcmd, mod, pynaim_getcmd, 100);
+	HOOK_ADD(getcmd, mod, _getcmd, 100);
+
+	_pythreadstate_save = PyEval_SaveThread();
 
 	return(MOD_REMAINLOADED);
 }
 
 int	pynaim_LTX_naim_exit(void *mod, const char *str) {
-	HOOK_DEL(getcmd, mod, pynaim_getcmd);
+	HOOK_DEL(getcmd, mod, _getcmd);
+
+	PyEval_RestoreThread(_pythreadstate_save);
 
 	Py_Finalize();
 
