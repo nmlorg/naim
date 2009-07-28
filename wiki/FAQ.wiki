@@ -45,6 +45,9 @@ to the end. GNU Screen uses the Ctrl-A key for detaching, switching windows, etc
 to the beginning of the line when running naim under screen, simply press Ctrl-A a (that
 is, hold Ctrl, press 'a', let go of Ctrl, and press 'a' a second time).
 
+==How can I prevent naim from automatically running in screen?==
+You can either re-compile, and don't use the `--enable-detach` option, or you can use the `--noscreen` option when starting naim.
+
 ==When using /bind, what keys are A1, A3, B2, C1, and C3?==
 According to the ncurses header file, these keys correspond to the Home, End, PgUp, and
 PgDn keys on the numeric keypad, as such:
@@ -141,6 +144,8 @@ workaround (it puts your away message in your profile when you go /away), so nai
 other naim users' away messages, but I am unfamiliar with any mechanism to retrieve a
 WinAIM, etc. user's message (other than sending them an IM and hoping they send back an
 autoresponse).
+
+*This has been fixed in the latest naim versions*
 
 ==How does Gaim get the away message when you do the GetInfo? Why does naim use TOC instead of Oscar? Isn't Oscar newer?==
 Many other AIM clients use an alternative protocol, Oscar, which does have this
