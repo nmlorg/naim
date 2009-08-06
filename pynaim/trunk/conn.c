@@ -4,6 +4,8 @@
 
 extern conn_t *curconn;
 extern void *pynaim_mod;
+void	pynaim_pausethreads(void);
+void	pynaim_resumethreads(void);
 
 typedef struct {
 	PyObject_HEAD
@@ -126,17 +128,29 @@ PyObject *pynaim_conn_wrap(conn_t *conn) {
 	return (PyObject *)connobj;
 }
 
-static int _newconn(conn_t *conn, const char *name, const char *protostr) {
+static void _donewconn(conn_t *conn) {
 	PyObject *connobj = pynaim_conn_wrap(conn);
 
 	PyDict_SetItemString(_connections, conn->winname, connobj);
 	Py_DECREF(connobj);
+}
+
+static int _newconn(conn_t *conn, const char *name, const char *protostr) {
+	pynaim_pausethreads();
+
+	_donewconn(conn);
+
+	pynaim_resumethreads();
 
 	return HOOK_CONTINUE;
 }
 
 static int _delconn(conn_t *conn, const char *name) {
+	pynaim_pausethreads();
+
 	PyDict_DelItemString(_connections, conn->winname);
+
+	pynaim_resumethreads();
 
 	return HOOK_CONTINUE;
 }
@@ -156,7 +170,7 @@ void	pynaim_conn_init(void) {
 
 	conn_t	*conn = curconn;
 	do {
-		_newconn(conn, NULL, NULL);
+		_donewconn(conn);
 	} while ((conn = conn->next) != curconn);
 
 	HOOK_ADD(newconn, pynaim_mod, _newconn, 50);

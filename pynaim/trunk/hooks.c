@@ -4,6 +4,8 @@
 extern conn_t *curconn;
 extern void *pynaim_mod;
 PyObject *pynaim_conn_wrap(conn_t *conn);
+void	pynaim_pausethreads(void);
+void	pynaim_resumethreads(void);
 
 static int _run(void *userdata, PyObject *arglist) {
 	PyObject *callable = (PyObject *)userdata,
@@ -19,10 +21,15 @@ static int _run(void *userdata, PyObject *arglist) {
 			ret = PyInt_AsLong(result);
 		Py_DECREF(result);
 	}
+
+	pynaim_resumethreads();
+
 	return(ret);
 }
 
 static int _delconn(void *userdata, conn_t *conn, const char *winname) {
+	pynaim_pausethreads();
+
 	PyObject *connobj = pynaim_conn_wrap(conn);
 	PyObject *arglist = Py_BuildValue("(Os)", connobj, winname);
 	Py_DECREF(connobj);
@@ -31,6 +38,8 @@ static int _delconn(void *userdata, conn_t *conn, const char *winname) {
 }
 
 static int _newconn(void *userdata, conn_t *conn, const char *winname, const char *protostr) {
+	pynaim_pausethreads();
+
 	PyObject *connobj = pynaim_conn_wrap(conn);
 	PyObject *arglist = Py_BuildValue("(Oss)", connobj, winname, protostr);
 	Py_DECREF(connobj);
@@ -39,12 +48,16 @@ static int _newconn(void *userdata, conn_t *conn, const char *winname, const cha
 }
 
 static int _periodic(void *userdata, void *dummy, time_t now) {
+	pynaim_pausethreads();
+
 	PyObject *arglist = Py_BuildValue("(l)", (long)now);
 
 	return _run(userdata, arglist);
 }
 
 static int _recvfrom(void *userdata, conn_t *conn, char **src, char **dst, unsigned char **message, int *len, int *flags) {
+	pynaim_pausethreads();
+
 	PyObject *connobj = pynaim_conn_wrap(conn);
 	PyObject *arglist = Py_BuildValue("(Osss#i)", connobj, *src, *dst, *message, *len, *flags);
 	Py_DECREF(connobj);
