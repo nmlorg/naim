@@ -10,6 +10,18 @@ void	*pynaim_mod = NULL;
 
 static PyThreadState *_pythreadstate_save = NULL;
 
+void	pynaim_pausethreads(void) {
+	assert(_pythreadstate_save != NULL);
+	PyEval_RestoreThread(_pythreadstate_save);
+	_pythreadstate_save = NULL;
+}
+
+void	pynaim_resumethreads(void) {
+	assert(_pythreadstate_save == NULL);
+	_pythreadstate_save = PyEval_SaveThread();
+	assert(_pythreadstate_save != NULL);
+}
+
 static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 	if (strcasecmp(cmd, "PYEVAL") == 0) {
 		if (arg == NULL) {
@@ -17,7 +29,7 @@ static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 			return(HOOK_STOP);
 		}
 
-		PyEval_RestoreThread(_pythreadstate_save);
+		pynaim_pausethreads();
 
 		echof(c, NULL, ">>> %s", arg);
 		PyObject *result = PyRun_String(arg, Py_single_input, PyModule_GetDict(PyImport_AddModule("__main__")), NULL);
@@ -27,7 +39,7 @@ static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 		else
 			Py_DECREF(result);
 
-		_pythreadstate_save = PyEval_SaveThread();
+		pynaim_resumethreads();
 	} else if (strcasecmp(cmd, "PYLOAD") == 0) {
 		if (arg == NULL) {
 			echof(c, cmd, "Command requires an argument.");
@@ -57,7 +69,7 @@ static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 					*dot = 0;
 			}
 
-			PyEval_RestoreThread(_pythreadstate_save);
+			pynaim_pausethreads();
 
 			PyObject *module = PyImport_AddModule(modname);
 			PyObject *module_dict = PyModule_GetDict(module);
@@ -80,7 +92,7 @@ static int _getcmd(conn_t *c, const char *cmd, const char *arg) {
 				PyObject_SetAttrString(mainmodule, modname, module);
 			}
 
-			_pythreadstate_save = PyEval_SaveThread();
+			pynaim_resumethreads();
 
 			fclose(fp);
 		}
@@ -142,7 +154,7 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 
 	HOOK_ADD(getcmd, mod, _getcmd, 100);
 
-	_pythreadstate_save = PyEval_SaveThread();
+	pynaim_resumethreads();
 
 	return(MOD_REMAINLOADED);
 }
@@ -150,7 +162,7 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 int	pynaim_LTX_naim_exit(void *mod, const char *str) {
 	HOOK_DEL(getcmd, mod, _getcmd);
 
-	PyEval_RestoreThread(_pythreadstate_save);
+	pynaim_pausethreads();
 
 	Py_Finalize();
 
