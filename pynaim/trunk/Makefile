@@ -1,7 +1,7 @@
 CC = gcc
 CPPFLAGS = -Wall -I/usr/include/python2.5 -I../naim-current/libfiretalk -I../naim-current/include
 LIBS = -lpython2.5
-OBJ = hooks.lo pynaim.lo conn.lo
+OBJ = conn.lo hooks.lo pd.lo pynaim.lo
 
 pynaim.la: ${OBJ}
 	libtool --mode=link ${CC} -o pynaim.la -rpath /usr/local/lib/naim -module -avoid-version ${OBJ} ${LIBS}
