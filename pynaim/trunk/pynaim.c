@@ -149,6 +149,7 @@ int	pynaim_LTX_naim_init(void *mod, const char *str) {
 	Py_DECREF(eval_dict);
 
 	pynaim_conn_init();
+	pynaim_pd_init();
 
 	PyRun_SimpleString("import naim");
 
