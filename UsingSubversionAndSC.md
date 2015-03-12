@@ -1,0 +1,209 @@
+# Introduction #
+I'm going to keep a running log here of what I'm doing as I set up naim's SC repository in the hopes that other people will find it useful for fixing it if it breaks.
+
+I've also decided to compile various bits of documentation on using SVN and SC for common tasks. Hopefully this page is useful to someone.
+
+`joshua`
+
+# Other documentation on SC #
+http://pmade.com/open-source-software/sc/manual
+
+# Setting up for the first time #
+## Setting up my environment ##
+I use an Ubuntu system. YMMV. Ubuntu is totally brain damaged when it comes to Ruby, I hear, so it's probably less work for you.
+
+```
+joshua@shebang:~/src/naim$ sudo apt-get install ruby
+blah blah blah
+The following NEW packages will be installed:
+  libruby1.8 ruby ruby1.8
+0 upgraded, 3 newly installed, 0 to remove and 70 not upgraded.
+Need to get 1661kB of archives.
+After unpacking 6099kB of additional disk space will be used.
+Do you want to continue [Y/n]?
+blah blah blah
+joshua@shebang:~/src/naim$
+joshua@shebang:~/tmp$ wget http://rubyforge.org/frs/download.php/11289/rubygems-0.9.0.tgz
+[...]
+joshua@shebang:~/tmp$ tar xzvf rubygems-0.9.0.tgz
+[...]
+joshua@shebang:~/tmp/rubygems-0.9.0$ sudo ruby setup.rb all
+[...]
+  Successfully built RubyGem
+  Name: sources
+  Version: 0.0.1
+  File: sources-0.0.1.gem
+joshua@shebang:~/tmp/rubygems-0.9.0$ sudo apt-get install rdoc
+[...]
+joshua@shebang:~/tmp/rubygems-0.9.0$ sudo gem install svnauto --include-dependencies
+[...]
+Successfully installed svnauto-1.0.2
+```
+
+## Setting up sc ##
+```
+joshua@shebang:~/src/naim$ sc config --color
+joshua@shebang:~/src/naim$ sc config -a
+Repository Name (used with sc -r): naim
+Repository URL: https://joshua.wise@naim.googlecode.com/
+Directory where checkouts go (can be relative to ~/): |develop/naim| src/naim/sc/
+Create workspace /home/joshua/src/naim/sc/? y
+joshua@shebang:~/src/naim$ cd sc
+joshua@shebang:~/src/naim/sc$ sc -p svn checkout
+Repositories:
+1. naim (https://joshua.wise@naim.googlecode.com/)
+Please choose a repository: 1
+A    /home/joshua/src/naim/sc/svn-trunk/lua
+A    /home/joshua/src/naim/sc/svn-trunk/lua/commands.c
+A    /home/joshua/src/naim/sc/svn-trunk/lua/Makefile.in
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-trunk/NEWS
+A    /home/joshua/src/naim/sc/svn-trunk/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-trunk/install-sh
+Checked out revision 146.
+Checked out to: ~/src/naim/sc/svn-trunk
+joshua@shebang:~/src/naim/sc$
+```
+At this point, you will have a copy of the naim svn trunk hanging out in your home directory, in src/naim/sc/svn-trunk.
+
+You'll note, if you're observant, that I checked out a project called 'svn'. This is to preserve compatibility with the way Google Code has things laid out. The trunk is directly under a directory called 'svn' on the server, not in a subdirectory. So, we call the root directory the workspace, and we call the project name 'svn'. This is an evil nasty hack, but it works.
+
+We have to pass in the project name with '-p svn', because SC can't automatically detect a list of extant projects because https://naim.googlecode.com/ is not actually a Subversion repository.
+
+# Various common tasks by example #
+In this section, I'll describe a couple common tasks that one might perform with SC. A basic familiarity with Subversion is assumed.
+## Making an experimental branch ##
+In this case, I want to create an experimental branch that I can work on so I can finish porting SLCP over. I will call this branch "joshua-slcp-backport". I can have multiple experimental branches if I want to work on multiple things at once, so I'll keep this branch limited to working on one feature. SC gets a little confused about my svn setup here when I try to do things like this:
+
+```
+joshua@shebang:~/src/naim/sc/svn-trunk$ sc exp joshua-slcp-backport
+sc: the selected repository (https://joshua.wise@naim.googlecode.com/svn) is not in the \
+configuration file, please use the 'sc config --add' command to add it first.
+```
+
+So, I have to explicitly tell it what to do.
+
+```
+joshua@shebang:~/src/naim/sc$ sc -r naim -p svn exp joshua-slcp-backport
+Create experimental branch joshua-slcp-backport off svn/trunk? yes
+
+Committed revision 148.
+
+Committed revision 149.
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/lua
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/lua/commands.c
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/lua/Makefile.in
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/NEWS
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-exp-joshua-slcp-backport/install-sh
+Checked out revision 149.
+Checked out: ~/src/naim/sc/svn-exp-joshua-slcp-backport
+joshua@shebang:~/src/naim/sc$
+```
+
+## Bringing an experimental branch up to date ##
+Again, you need to manually specify the options, instead of just running it from inside the directory.
+```
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ sc -r naim -p svn exp -u \
+joshua-slcp-backport
+
+Committed revision 150.
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/lua
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/lua/commands.c
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/lua/Makefile.in
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/NEWS
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-merge-tmp-14749/install-sh
+Checked out revision 150.
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$
+```
+
+It does seem to perform a commit (or, minimally, increment the revision number), so don't update unless there's something to update to.
+
+## Committing on an experimental branch ##
+Committing on an experimental branch is exactly like committing on the trunk.
+```
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ svn commit -m \
+"Backport of SLCP driver (untested; no account to test with)"
+Sending        aclocal.m4
+Sending        configure
+Sending        libfiretalk/Makefile.am
+Sending        libfiretalk/Makefile.in
+Sending        libfiretalk/firetalk.c
+Sending        libfiretalk/lily.c
+Transmitting file data ......
+Committed revision 152.
+```
+
+## Checking out an experimental branch -- the SVN way ##
+You can check out an experimental branch directly using svn. In my case, one would check out my branch using a command like `svn co https://naim.googlecode.com/svn/branches/exp/joshua-slcp-backport/ naim-joshua-slcp-backport` .
+
+## Checking out an experimental branch -- the SC way ##
+```
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ sc -r naim -p svn co -e joshua-slcp-backport
+Checked out to: ~/src/naim/sc/svn-exp-joshua-slcp-backport
+```
+
+## What changed? ##
+Assuming that the experimental branch is up to date (see above), you can:
+```
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ svn diff https://naim.googlecode.com/svn/trunk/ https://naim.googlecode.com/svn/branches/exp/joshua-slcp-backport/
+```
+which will generate a diff between trunk and the head of the experimental branch.
+
+## Pushing up to trunk ##
+Talk to Dan first. Once he gives you the go-ahead, tell SC to merge the experimental branch back down to the trunk:
+```
+joshua@shebang:~/src/naim/sc/svn-exp-joshua-slcp-backport$ sc -r naim -p svn exp --down joshua-slcp-backport
+
+Committed revision 155.
+A    /home/joshua/src/naim/sc/svn-merge-tmp-16463/lua
+A    /home/joshua/src/naim/sc/svn-merge-tmp-16463/lua/commands.c
+blah blah blah
+A    /home/joshua/src/naim/sc/svn-merge-tmp-16463/aclocal.m4
+A    /home/joshua/src/naim/sc/svn-merge-tmp-16463/install-sh
+Checked out revision 155.
+U    configure
+U    libfiretalk/Makefile.in
+U    libfiretalk/firetalk.c
+U    libfiretalk/lily.c
+U    libfiretalk/Makefile.am
+U    aclocal.m4
+Sending        aclocal.m4
+Sending        configure
+Sending        libfiretalk/Makefile.am
+Sending        libfiretalk/Makefile.in
+Sending        libfiretalk/firetalk.c
+Sending        libfiretalk/lily.c
+Transmitting file data ......
+Committed revision 156.
+```
+
+Then update your trunk to see the changes:
+```
+joshua@shebang:~/src/naim/sc/svn-trunk$ svn up
+U    configure
+U    libfiretalk/Makefile.in
+U    libfiretalk/firetalk.c
+U    libfiretalk/lily.c
+U    libfiretalk/Makefile.am
+U    aclocal.m4
+Updated to revision 156.
+```
+
+If you look at the log, you'll see:
+```
+joshua@shebang:~/src/naim/sc/svn-trunk$ svn log configure
+------------------------------------------------------------------------
+r156 | joshua.wise | 2006-12-25 15:43:20 -0500 (Mon, 25 Dec 2006) | 1 line
+
+sc: merging branch using tags https://joshua.wise@naim.googlecode.com//svn/tags/exp/PRE-joshua-slcp-backport and 
+https://joshua.wise@naim.googlecode.com//svn/branches/exp/joshua-slcp-backport
+```
+
+SC makes the merge process a lot less painful, but the tradeoff is that you get less useful log messages. It is significantly better than plain subversion, however. (To get better history tracking through branches, one needs to move up to git.)
+
+# For your trouble #
+![http://www.randomkitty.com/cats/hugstime.jpg](http://www.randomkitty.com/cats/hugstime.jpg)

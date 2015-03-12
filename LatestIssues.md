@@ -1,0 +1,26 @@
+As of mid 2006, naim has been spitting out an error message that looks like:
+
+```
+*** ERROR: Server response was formatted incorrectly, can't find username in info HTML
+```
+
+### Background ###
+
+Whenever a buddy goes away, naim does a /wi on the buddy to attempt to retrieve
+their away message. In mid 2006, AOL's TOC servers began returning an invalid
+response to the request naim sent to retrieve users' profiles, leading to the
+"Server response was formatted incorrectly" error above.
+
+naim 0.11.8.2.1 was released with a workaround that simply suppresses this error
+message. naim 0.11.8.3 has been released and uses a different, previously
+undocumented command to retrieve user profiles, and appears to work reliably.
+
+## mirrors ##
+
+The naim.n.ml.org website and mailing lists should still be the first place to
+check for information. If the naim website is down, you may use the mirrors
+below, which is generally up-to-date:
+
+Relevent messages from the mailing list: https://andrewchin.net/naim/naim-users.html
+
+naim tarballs: https://andrewchin.net/naim/
