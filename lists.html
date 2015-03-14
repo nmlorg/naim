@@ -3,16 +3,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 	<title>naim</title>
-	<link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
 	<style type="text/css">
 		A {
 			text-decoration: none;
 		}
-		html {
-			overflow-y: scroll;
-		}
 		body {
-			font-family: "Droid Sans", sans-serif;
+			font-family: Verdana, Helvetica, sans-serif;
 			margin: 25px;
 			text-align: justify;
 		}
@@ -28,12 +24,10 @@
 
   (function() {
     var ga = document.createElement('script');
-    ga.type = 'text/javascript';
-    ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 
         'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(ga, s);
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
   })();
 
   // Google Friend Connect
@@ -75,12 +69,10 @@
 
   (function() {
     var fc = document.createElement('script');
-    fc.type = 'text/javascript';
-    fc.async = true;
     fc.src = 'http://www.google.com/friendconnect/script/friendconnect.js';
     fc.onload = startFriendConnect;
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(fc, s);
+    fc.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(fc);
   })();
 </script>
 
@@ -103,7 +95,7 @@
 <font size="-1">&nbsp;</font><br/>
 <font size="+2"><b>naim</b></font><br/>
 <font size="-1">&nbsp; &nbsp; A console AIM, ICQ, IRC, and Lily CMC client.</font><br/>
-<br/>
+<font size="-1"><span id="topdesc">&nbsp;</span></font><br/>
 </td>
 <!--H--></tr></table>
 
@@ -112,91 +104,87 @@
 <!--E--></td></tr></table>
 <!--D--></td></tr></table>
 <!--D--><table width="100%" bgcolor="#787878" border="0" cellpadding="1" cellspacing="0"><tr>
-
-<td width="14.285714285714285%">
+<td width="11.111111111111%">
 <!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to About';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="about"><font color="#FFFFFF">About</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to Download';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="download"><font color="#FFFFFF">Download</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to OS Packages';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="packages"><font color="#FFFFFF">OS&nbsp;Packages</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to Quickstart';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="quickstart"><font color="#FFFFFF">Quickstart</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to NaimWiki (opens new window)';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="http://code.google.com/p/naim/w/list" target="NaimWiki"><font color="#FFFFFF">NaimWiki</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to Issue Tracker (opens new window)';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="http://code.google.com/p/naim/issues/list" target="Issue Tracker"><font color="#FFFFFF">Issue&nbsp;Tracker</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to Screenshots';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="screenshots"><font color="#FFFFFF">Screenshots</font></a></b>&nbsp;&nbsp;</font></div>
+<!--G--></td></tr></table>
+<!--F--></td></tr></table>
+<!--E--></td></tr></table>
+</td>
+<td width="11.111111111111%">
+<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
+<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--G--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#606060';"><font size="-2">&nbsp;&nbsp;<b><a href="about"><font color="#FFFFFF"><nobr>About</nobr></font></a></b>&nbsp;&nbsp;</font></div>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to Mailing Lists';" onMouseOut="this.style.background = '#606060'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="lists"><font color="#FFFFFF">Mailing&nbsp;Lists</font></a></b>&nbsp;&nbsp;</font></div>
 <!--G--></td></tr></table>
-  
 <!--F--></td></tr></table>
 <!--E--></td></tr></table>
 </td>
-
-<td width="14.285714285714285%">
+<td width="11.111111111111%">
 <!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
 <!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#303030';"><font size="-2">&nbsp;&nbsp;<b><a href="download"><font color="#FFFFFF"><nobr>Downloads</nobr></font></a></b>&nbsp;&nbsp;</font></div>
+<div align="center" onMouseOver="this.style.background = '#484848'; document.getElementById('topdesc').innerHTML = 'Go to Additional Docs';" onMouseOut="this.style.background = '#303030'; document.getElementById('topdesc').innerHTML = '&nbsp;';"><font size="-2">&nbsp;&nbsp;<b><a href="docs/"><font color="#FFFFFF">Additional&nbsp;Docs</font></a></b>&nbsp;&nbsp;</font></div>
 <!--G--></td></tr></table>
-  
 <!--F--></td></tr></table>
 <!--E--></td></tr></table>
 </td>
-
-<td width="14.285714285714285%">
-<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
-<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#303030';"><font size="-2">&nbsp;&nbsp;<b><a href="packages"><font color="#FFFFFF"><nobr>OS Packages</nobr></font></a></b>&nbsp;&nbsp;</font></div>
-<!--G--></td></tr></table>
-  
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-</td>
-
-<td width="14.285714285714285%">
-<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
-<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#303030';"><font size="-2">&nbsp;&nbsp;<b><a href="quickstart"><font color="#FFFFFF"><nobr>Quickstart</nobr></font></a></b>&nbsp;&nbsp;</font></div>
-<!--G--></td></tr></table>
-  
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-</td>
-
-<td width="14.285714285714285%">
-<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
-<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#303030';"><font size="-2">&nbsp;&nbsp;<b><a href="http://code.google.com/p/naim/w/list"><font color="#FFFFFF"><nobr>NaimWiki</nobr></font></a></b>&nbsp;&nbsp;</font></div>
-<!--G--></td></tr></table>
-  
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-</td>
-
-<td width="14.285714285714285%">
-<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
-<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#303030';"><font size="-2">&nbsp;&nbsp;<b><a href="http://code.google.com/p/naim/issues/list"><font color="#FFFFFF"><nobr>Issue Tracker</nobr></font></a></b>&nbsp;&nbsp;</font></div>
-<!--G--></td></tr></table>
-  
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-</td>
-
-<td width="14.285714285714285%">
-<!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  
-<!--G--><table width="100%" bgcolor="#303030" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#303030';"><font size="-2">&nbsp;&nbsp;<b><a href="screenshots"><font color="#FFFFFF"><nobr>Screenshots</nobr></font></a></b>&nbsp;&nbsp;</font></div>
-<!--G--></td></tr></table>
-  
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-</td>
-
 <!--D--></tr></table>
 <!--D--><table width="100%" bgcolor="#787878" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--E--><table width="100%" bgcolor="#909090" border="0" cellpadding="1" cellspacing="0"><tr><td>
@@ -204,64 +192,49 @@
 <!--G--><table width="100%" bgcolor="#C0C0C0" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--H--><table width="100%" border="0" cellspacing="30" cellpadding="0"><tr><td>
 
+	  <ul style="margin: 0">
+		<li><font color="#B00000"><b>naim-announce</b></font> [<a href="mailto:naim-announce-subscribe@n.ml.org">subscribe</a>] [<a href="mailto:naim-announce-help@n.ml.org">help</a>] [<a href="http://mail.n.ml.org/?0">archive</a>]<br/>
 
+The &lt;<font color="#B00000">naim-announce</font>@n.ml.org&gt; mailing list is
+used to announce major events related to naim, including new release versions
+and changes to any of the supported services (AOL Instant Messenger/ICQ, EFnet
+IRC, Undernet IRC, and The lily CMC) that might require end-site or end-user
+changes. Messages sent to <font color="#B00000">naim-announce</font> will also
+be sent to both other naim-* lists; <font color="#B00000">naim-announce</font>
+is primarily intended for package maintainers and site administrators.
 
-&nbsp; &nbsp; &nbsp;
-naim is a console client for <a target="_top" href="http://en.wikipedia.org/wiki/AOL_Instant_Messenger"><img src="images/35px-Wikipedia-logo" width="15" height="15" alt="[Wikipedia]" border="0"/>AOL Instant Messenger (AIM)</a>, <a target="_top" href="http://en.wikipedia.org/wiki/ICQ"><img src="images/35px-Wikipedia-logo" width="15" height="15" alt="[Wikipedia]" border="0"/>AOL I Seek You (ICQ)</a>, <a target="_top" href="http://en.wikipedia.org/wiki/Internet_Relay_Chat"><img src="images/35px-Wikipedia-logo" width="15" height="15" alt="[Wikipedia]" border="0"/>Internet Relay Chat (IRC)</a>, and <a target="_top" href="http://en.wikipedia.org/wiki/Lily_(CMC)"><img src="images/35px-Wikipedia-logo" width="15" height="15" alt="[Wikipedia]" border="0"/>The lily CMC</a>.
+		</li>
+		<li><font color="#909000"><b>naim-users</b></font> [<a href="mailto:naim-users-subscribe@n.ml.org">subscribe</a>] [<a href="mailto:naim-users-help@n.ml.org">help</a>] [<a href="http://mail.n.ml.org/?1">archive</a>]<br/>
 
-<!--H--></td></tr></table>
-<!--G--></td></tr></table>
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-<!--D--></td></tr></table>
-<!--D--><table width="100%" bgcolor="#787878" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--E--><table width="100%" bgcolor="#909090" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#A8A8A8" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--G--><table width="100%" bgcolor="#C0C0C0" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--H--><table width="100%" border="0" cellspacing="30" cellpadding="0"><tr><td>
+The &lt;<font color="#909000">naim-users</font>@n.ml.org&gt; mailing list is the
+appropriate place to discuss all issues where feedback from and/or the consensus
+of the larger naim-using community is needed. The naim-using community may use
+this list for any purposes of its own, but the technical team relies on this
+list as a place to send polished RFCs and to thoughtfully discuss major changes
+before implementation.
 
-	<ul style="margin: 0">
+		</li>
+		<li><font color="#009090"><b>naim-technical</b></font> [<a href="mailto:naim-technical-subscribe@n.ml.org">subscribe</a>] [<a href="mailto:naim-technical-help@n.ml.org">help</a>] [<a href="http://mail.n.ml.org/?2">archive</a>]<br/>
+
+The &lt;<font color="#009090">naim-technical</font>@n.ml.org&gt; mailing list is
+for technical discussion between naim developers (programmers and other highly
+interested individuals). It is used to discuss work that has not been refined to
+the point of releasing a complete RFC to <font
+color="#909000">naim-users</font>. Examples of expected topics include the
+ongoing naimNG work, future work to create new protocol drivers, etc. This is
+<b>not</b> the place to ask user questions, even if they are of a technical
+nature.
+
+		</li>
 		<li>
-		<a href="http://node4.cdn.modestbox.com/yZ-UqSGa~iFWMdVOiYz~A-nNpGBj~o8VsR1ETgX~hp1cj-M/naim/voiceover.mp3"><img src="/icons/sound1" alt="" border="0"/></a>
-		naim includes unique features like zero-configuration peer to peer encryption, automatic message queueing, and incoming message modification (to correct common spelling mistakes and expand common abbreviations; see <code>/help filter</code>).
-		<font size="-1">(<a href="http://www.takemyvoice.com/">Voiceover provided by Scott "Scooter" Fortney</a>.)</font>
+
+To subscribe to any of the three naim-* lists, send a blank email to its
+subscribe address. For example, to subscribe to the <font
+color="#909000">naim-users</font> list, send a blank email to
+&lt;naim-users-subscribe@n.ml.org&gt;.
+
 		</li>
-		<li>naim also includes powerful dynamic module support, allowing developers to modify all major aspects of naim's behavior. 
-		  <ul>
-			<li>Third-party plug-ins have been used to extend naim's functionality for use in embedded monitoring clients, and for use as host to automatic clients ("bots").</li>
-			<li>The naim-modules package (distributed below) includes several example plug-ins, including a telnet server (nsocket), an interactive bot (naimusers), and a simple anti-spam measure (nantispam).</li>
-		  </ul>
-		</li>
-		<li>When combined with <a href="http://site.n.ml.org/info/screen/">GNU Screen</a>, naim is great to use as a chat client as well as an answering machine. Individual users can detach, log out, pack up and go home, then log back in from anywhere on the Internet to resume their naim session.</li>
-		<li>naim is maintained by an <a href="http://shell.n.ml.org/n/OSS/">OPEN, DIRECTED COMMUNITY</a>, and has been in development since <a href="http://shell.n.ml.org/n/nc/oldnaim/">October, 1998</a>.</li>
-	</ul>
-
-<!--H--></td></tr></table>
-<!--G--></td></tr></table>
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-<!--D--></td></tr></table>
-<!--D--><table width="100%" bgcolor="#787878" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--E--><table width="100%" bgcolor="#909090" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#A8A8A8" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--G--><table width="100%" bgcolor="#C0C0C0" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--H--><table width="100%" border="0" cellspacing="30" cellpadding="0"><tr><td>
-
-	<ul style="margin: 0">
-		<li><a href="quickstart"><b>Quickstart</b></a> - Get started using naim.</li>
-		<li><a href="screenshots"><b>Screen shots</b></a> - What naim looks like.</li>
-		<li><a href="packages"><b>Packaged versions</b></a> - naim is distributed in source code from this site. However, naim executables may already be available for your platform!</li>
-		<li><a href="lists"><b>Mailing lists</b></a> - Stay up-to-date with new releases, get help using naim, and participate in development.</li>
-		<li><a href="docs/"><b>Additional documentation</b></a> - Formal protocol specifications, development traces, and architecture descriptions.</li>
-		<li>Online help:
-		  <ul>
-			<li>Your first step should be to check the community-edited <a href="http://naimdoc.net/index.php/FAQ"><b>frequently asked questions file</b></a>. New users and experienced users alike may find it an interesting read to help strengthen their naim skills.</li>
-			<li>Additional documentation is available from the <a href="http://naimdoc.net/"><b>NaimWiki</b></a>.</li>
-		  </ul></li>
-		<li><b>If you have any questions about naim, please contact Daniel Reed &lt;<a href="mailto:n@ml.org">n@ml.org</a>&gt;.</b></li>
-	</ul>
-
-
+	  </ul>
 
 <!--H--></td></tr></table>
 <!--G--></td></tr></table>
@@ -314,4 +287,3 @@ naim is a console client for <a target="_top" href="http://en.wikipedia.org/wiki
 
 </body>
 </html>
-
