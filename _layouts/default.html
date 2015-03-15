@@ -2,7 +2,7 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-	<title>naim</title>
+	<title>naim: {{title}}</title>
 	<link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
 	<style type="text/css">
 		A {
@@ -116,7 +116,7 @@
 <td width="14.285714285714285%">
 <!--E--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--F--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-  {% if sect.url == section %}
+  {% if sect.name == title %}
 <!--G--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <div align="center" onMouseOver="this.style.background = '#484848';" onMouseOut="this.style.background = '#606060';"><font size="-2">&nbsp;&nbsp;<b><a href="{{sect.url}}"><font color="#FFFFFF"><nobr>{{sect.name}}</nobr></font></a></b>&nbsp;&nbsp;</font></div>
 <!--G--></td></tr></table>
