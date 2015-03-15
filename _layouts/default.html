@@ -35,58 +35,9 @@
     var s = document.getElementsByTagName('script')[0];
     s.parentNode.insertBefore(ga, s);
   })();
-
-  // Google Friend Connect
-  function startFriendConnect() {
-    var skin = {
-        'HEIGHT': '285',
-        'BORDER_COLOR': '#909090',
-        'ENDCAP_BG_COLOR': '#909090',
-        'ENDCAP_TEXT_COLOR': '#333333',
-        'ENDCAP_LINK_COLOR': '#ffffff',
-        'ALTERNATE_BG_COLOR': '#C0C0C0',
-        'CONTENT_BG_COLOR': '#C0C0C0',
-        'CONTENT_LINK_COLOR': '#376ddd',
-        'CONTENT_TEXT_COLOR': '#333333',
-        'CONTENT_SECONDARY_LINK_COLOR': '#7777cc',
-        'CONTENT_SECONDARY_TEXT_COLOR': '#666666',
-        'CONTENT_HEADLINE_COLOR': '',
-        'DEFAULT_COMMENT_TEXT': '- add your comment here -',
-        'HEADER_TEXT': 'Comments',
-        'POSTS_PER_PAGE': '5',
-    };
-    google.friendconnect.container.setParentUrl('/');  // location of rpc_relay.html and canvas.html
-    google.friendconnect.container.renderMembersGadget(
-    {
-        'id': 'div-1228865485989',
-        'site': '18190491089889355627',
-    }, skin);
-    google.friendconnect.container.renderWallGadget(
-    {
-        'id': 'div-1228867740377',
-        'site': '18190491089889355627',
-        'view-params': {
-            'scope': 'SITE',
-            'allowAnonymousPost': 'true',
-            'features': 'video,comment',
-        },
-    }, skin);
-  }
-
-  (function() {
-    var fc = document.createElement('script');
-    fc.type = 'text/javascript';
-    fc.async = true;
-    fc.src = 'http://www.google.com/friendconnect/script/friendconnect.js';
-    fc.onload = startFriendConnect;
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(fc, s);
-  })();
 </script>
 
-<table border="0" cellpadding="0" cellspacing="10" align="center"><tr><td width="282"></td><td valign="top">
-
-<!--A--><table width="784" border="0" cellpadding="0" cellspacing="0"><tr><td>
+<!--A--><table width="784" border="0" cellpadding="0" cellspacing="0" align="center"><tr><td>
 <!--B--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--C--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
 <!--D--><table width="100%" bgcolor="#787878" border="0" cellpadding="1" cellspacing="0"><tr><td>
@@ -158,26 +109,6 @@
 <!--C--></td></tr></table>
 <!--B--></td></tr></table>
 <!--A--></td></tr></table>
-
-</td><td width="282" valign="top">
-
-<!--B--><table width="100%" bgcolor="#484848" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--C--><table width="100%" bgcolor="#606060" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--D--><table width="100%" bgcolor="#787878" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--E--><table width="100%" bgcolor="#909090" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--F--><table width="100%" bgcolor="#909090" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<!--G--><table width="100%" bgcolor="#909090" border="0" cellpadding="1" cellspacing="0"><tr><td>
-<div id="div-1228865485989" style="width: 282px; border: 1px solid #909090;"></div>
-<div id="div-1228867740377" style="width: 282px; border: 1px solid #909090;"></div>
-<!--G--></td></tr></table>
-<!--F--></td></tr></table>
-<!--E--></td></tr></table>
-<!--D--></td></tr></table>
-<!--C--></td></tr></table>
-<!--B--></td></tr></table>
-<!--A--></td></tr></table>
-
-</td></tr></table>
 
 &nbsp;<br/>
 &nbsp;<br/>
