@@ -1,0 +1,14 @@
+- name: About
+  url: .
+- name: Downloads
+  url: download
+- name: OS Packages
+  url: packages
+- name: Quickstart
+  url: quickstart
+- name: NaimWiki
+  url: http://code.google.com/p/naim/w/list
+- name: Issue Tracker
+  url: http://code.google.com/p/naim/issues/list
+- name: Screenshots
+  url: screenshots
