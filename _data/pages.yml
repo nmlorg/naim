@@ -7,8 +7,8 @@
 - name: Quickstart
   url: quickstart
 - name: NaimWiki
-  url: http://code.google.com/p/naim/w/list
+  url: https://github.com/nmlorg/naim/tree/master/wiki
 - name: Issue Tracker
-  url: http://code.google.com/p/naim/issues/list
+  url: https://github.com/nmlorg/naim/issues
 - name: Screenshots
   url: screenshots
